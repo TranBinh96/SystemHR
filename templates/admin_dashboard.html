@@ -2,8 +2,11 @@
 <html lang="{{ current_lang }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ t.admin_dashboard }} - OKI VIETNAM HR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Admin Dashboard - OKI VIETNAM HR</title>
+    <meta name="theme-color" content="#136dec"/>
+    <link rel="manifest" href="/static/manifest.json"/>
+    <link rel="icon" type="image/svg+xml" href="/static/icon.svg"/>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -25,22 +28,14 @@
         }
     </script>
     <style>
-        body {
-            font-family: 'Manrope', sans-serif;
-        }
-        /* Hide scrollbar */
-        ::-webkit-scrollbar {
-            display: none;
-        }
-        * {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        body { font-family: 'Manrope', sans-serif; }
+        ::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark">
     <div class="min-h-screen">
-        <!-- Sidebar (Desktop) -->
+        <!-- Sidebar Desktop -->
         <aside class="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
             <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-slate-900 px-6 pb-4 border-r border-slate-200 dark:border-slate-800">
                 <div class="flex h-20 shrink-0 items-center gap-3">
@@ -48,55 +43,88 @@
                         <span class="material-symbols-outlined text-white text-2xl" style="font-variation-settings: 'FILL' 1;">admin_panel_settings</span>
                     </div>
                     <div>
-                        <h1 class="text-lg font-bold text-slate-900 dark:text-slate-100">ADMIN PANEL</h1>
-                        <p class="text-xs text-slate-500">OKI VIETNAM</p>
+                        <h1 class="text-lg font-bold text-slate-900 dark:text-slate-100">OKI VIETNAM</h1>
+                        <p class="text-xs text-slate-500">Admin Panel</p>
                     </div>
                 </div>
                 <nav class="flex flex-1 flex-col">
-                    <ul role="list" class="flex flex-1 flex-col gap-y-7">
+                    <ul role="list" class="flex flex-1 flex-col gap-y-5">
+                        <!-- BẢNG ĐIỀU KHIỂN -->
                         <li>
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Bảng điều khiển</div>
                             <ul role="list" class="-mx-2 space-y-1">
                                 <li>
                                     <a href="{{ url_for('admin_dashboard') }}" class="bg-primary/10 text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
                                         <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-                                        {{ t.admin_dashboard }}
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ url_for('register') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                        <span class="material-symbols-outlined">group</span>
-                                        {{ t.user_management }}
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                        <span class="material-symbols-outlined">task_alt</span>
-                                        {{ t.approve_requests }}
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                        <span class="material-symbols-outlined">bar_chart</span>
-                                        {{ t.reports }}
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                        <span class="material-symbols-outlined">settings</span>
-                                        {{ t.settings }}
+                                        Bảng điều khiển
                                     </a>
                                 </li>
                             </ul>
                         </li>
+
+                        <!-- NGƯỜI DÙNG -->
+                        <li>
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Người dùng</div>
+                            <ul role="list" class="-mx-2 space-y-1">
+                                <li>
+                                    <a href="{{ url_for('admin_users') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">group</span>
+                                        Người dùng
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ url_for('admin_positions') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">badge</span>
+                                        Chức vụ
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- ĐĂNG KÝ -->
+                        <li>
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Đăng ký</div>
+                            <ul role="list" class="-mx-2 space-y-1">
+                                <li>
+                                    <a href="{{ url_for('admin_meals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">restaurant</span>
+                                        Quản lý Thực đơn
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- THỐNG KÊ -->
+                        <li>
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Thống kê</div>
+                            <ul role="list" class="-mx-2 space-y-1">
+                                <li>
+                                    <a href="{{ url_for('admin_overtime_approvals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">schedule</span>
+                                        Thống kê Làm thêm
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ url_for('admin_stats') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">bar_chart</span>
+                                        Thống kê Suất ăn
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ url_for('profile') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">help</span>
+                                        Hỗ trợ
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- User Profile at bottom -->
                         <li class="mt-auto">
-                            <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg mb-3 border border-red-200 dark:border-red-800">
-                                <p class="text-xs font-semibold text-red-600 dark:text-red-400 mb-1">Administrator</p>
+                            <a href="{{ url_for('profile') }}" class="block p-3 bg-slate-50 dark:bg-slate-800 rounded-lg mb-3 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                                <p class="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">Xin chào</p>
                                 <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ user }}</p>
-                                <p class="text-xs text-slate-500">{{ session.get('user_id') }}</p>
-                            </div>
-                            <a href="{{ url_for('logout') }}" class="group -mx-2 flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
-                                <span class="material-symbols-outlined">logout</span>
-                                {{ t.logout }}
+                                <p class="text-xs text-slate-500">Admin</p>
                             </a>
                         </li>
                     </ul>
@@ -111,7 +139,7 @@
                 <div class="flex h-16 items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
                     <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
                         <div class="flex flex-1 items-center">
-                            <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">{{ t.admin_dashboard }}</h2>
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Bảng Điều Khiển</h2>
                         </div>
                         <div class="flex items-center gap-x-4 lg:gap-x-6">
                             <select onchange="window.location.href='/set-language/' + this.value" class="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm font-medium">
@@ -125,179 +153,157 @@
             </header>
 
             <!-- Main Content Area -->
-            <main class="pt-6 pb-10 lg:pt-10">
+            <main class="pt-6 pb-24 lg:pt-10 lg:pb-10">
                 <div class="px-4 sm:px-6 lg:px-8">
-                    <!-- Stats Cards -->
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                        <div class="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                            <div class="p-6">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                                            <span class="material-symbols-outlined text-blue-600 text-2xl" style="font-variation-settings: 'FILL' 1;">group</span>
-                                        </div>
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6 mb-8">
+                        <!-- Card 1: Tổng nhân viên -->
+                        <div class="bg-white dark:bg-slate-900 p-5 lg:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-2xl">group</span>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">Nhân sự</span>
+                            </div>
+                            <h3 class="text-[10px] lg:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">Tổng nhân viên</h3>
+                            <div class="flex items-center gap-4">
+                                <p class="text-5xl lg:text-6xl font-black text-slate-900 dark:text-slate-100">{{ total_users or 0 }}</p>
+                                <div class="flex-1 space-y-1">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-slate-500 dark:text-slate-400">Làm việc:</span>
+                                        <span class="text-lg lg:text-xl font-bold text-slate-900 dark:text-slate-100">{{ working_users or 0 }}</span>
                                     </div>
-                                    <div class="ml-5 w-0 flex-1">
-                                        <dl>
-                                            <dt class="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">{{ t.total_users }}</dt>
-                                            <dd class="text-2xl font-bold text-slate-900 dark:text-slate-100">45</dd>
-                                        </dl>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-slate-500 dark:text-slate-400">Công tác:</span>
+                                        <span class="text-lg lg:text-xl font-bold text-blue-600 dark:text-blue-400">{{ business_trip_users or 0 }}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                            <div class="p-6">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
-                                            <span class="material-symbols-outlined text-orange-600 text-2xl" style="font-variation-settings: 'FILL' 1;">pending_actions</span>
-                                        </div>
+                        <!-- Card 2: Chờ phê duyệt -->
+                        <div class="bg-white dark:bg-slate-900 p-5 lg:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-2xl">pending_actions</span>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400">Yêu cầu</span>
+                            </div>
+                            <h3 class="text-[10px] lg:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Chờ phê duyệt</h3>
+                            <p class="text-3xl lg:text-4xl font-black text-slate-900 dark:text-slate-100 mb-3">--</p>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 italic">Không có yêu cầu chờ xử lý</p>
+                        </div>
+
+                        <!-- Card 3: Tăng ca hôm nay -->
+                        <div class="bg-white dark:bg-slate-900 p-5 lg:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-2xl">schedule</span>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">Hôm nay</span>
+                            </div>
+                            <h3 class="text-[10px] lg:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">Tăng ca hôm nay</h3>
+                            <div class="flex items-center gap-4">
+                                <p class="text-5xl lg:text-6xl font-black text-slate-900 dark:text-slate-100">{{ overtime_count or 0 }}</p>
+                                <div class="flex-1 space-y-1">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-slate-500 dark:text-slate-400">Số người:</span>
+                                        <span class="text-lg lg:text-xl font-bold text-slate-900 dark:text-slate-100">{{ overtime_count or 0 }}</span>
                                     </div>
-                                    <div class="ml-5 w-0 flex-1">
-                                        <dl>
-                                            <dt class="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">{{ t.pending_requests }}</dt>
-                                            <dd class="text-2xl font-bold text-slate-900 dark:text-slate-100">12</dd>
-                                        </dl>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-slate-500 dark:text-slate-400">Tổng giờ:</span>
+                                        <span class="text-lg lg:text-xl font-bold text-green-600 dark:text-green-400">{{ "%.1f"|format(overtime_hours or 0) }}h</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                            <div class="p-6">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                                            <span class="material-symbols-outlined text-purple-600 text-2xl" style="font-variation-settings: 'FILL' 1;">schedule</span>
-                                        </div>
-                                    </div>
-                                    <div class="ml-5 w-0 flex-1">
-                                        <dl>
-                                            <dt class="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">{{ t.total_overtime }}</dt>
-                                            <dd class="text-2xl font-bold text-slate-900 dark:text-slate-100">342h</dd>
-                                        </dl>
-                                    </div>
+                        <!-- Card 4: Đăng ký cơm ngày mai -->
+                        <div class="bg-white dark:bg-slate-900 p-5 lg:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-purple-600 dark:text-purple-400 text-2xl">restaurant</span>
                                 </div>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">Dịch vụ</span>
                             </div>
-                        </div>
-
-                        <div class="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                            <div class="p-6">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                                            <span class="material-symbols-outlined text-green-600 text-2xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
-                                        </div>
+                            <h3 class="text-[10px] lg:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">Đăng ký cơm ngày mai</h3>
+                            <div class="flex items-center gap-4">
+                                <p class="text-5xl lg:text-6xl font-black text-slate-900 dark:text-slate-100">{{ total_meals or 0 }}</p>
+                                <div class="flex-1 space-y-1">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-slate-500 dark:text-slate-400">Thường:</span>
+                                        <span class="text-lg lg:text-xl font-bold text-slate-900 dark:text-slate-100">{{ normal_meals or 0 }}</span>
                                     </div>
-                                    <div class="ml-5 w-0 flex-1">
-                                        <dl>
-                                            <dt class="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">{{ t.total_meals }}</dt>
-                                            <dd class="text-2xl font-bold text-slate-900 dark:text-slate-100">856</dd>
-                                        </dl>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-slate-500 dark:text-slate-400">Cải thiện:</span>
+                                        <span class="text-lg lg:text-xl font-bold text-purple-600 dark:text-purple-400">{{ special_meals or 0 }}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Pending Requests Table -->
-                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
-                        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">{{ t.pending_requests }}</h3>
-                            <a href="#" class="text-sm font-semibold text-primary hover:underline">{{ t.view_all }}</a>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
-                                <thead class="bg-slate-50 dark:bg-slate-800/50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ t.employee_id }}</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ t.full_name }}</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Loại</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ngày</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Trạng thái</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Thao tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800">
-                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">EMP001</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">Nguyễn Văn A</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t.overtime }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">25/02/2026</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
-                                                {{ t.pending }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button class="text-green-600 hover:text-green-900 dark:hover:text-green-400 mr-3">{{ t.approve }}</button>
-                                            <button class="text-red-600 hover:text-red-900 dark:hover:text-red-400">{{ t.reject }}</button>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">EMP002</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">Trần Thị B</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t.meals }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">25/02/2026</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
-                                                {{ t.pending }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button class="text-green-600 hover:text-green-900 dark:hover:text-green-400 mr-3">{{ t.approve }}</button>
-                                            <button class="text-red-600 hover:text-red-900 dark:hover:text-red-400">{{ t.reject }}</button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Thao tác nhanh</h3>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        <a href="{{ url_for('register') }}" class="group relative bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all">
-                                    <span class="material-symbols-outlined text-primary group-hover:text-white text-3xl" style="font-variation-settings: 'FILL' 1;">person_add</span>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-lg text-slate-900 dark:text-slate-100">{{ t.add_user }}</h3>
-                                    <p class="text-sm text-slate-600 dark:text-slate-400">Thêm nhân viên mới</p>
-                                </div>
+                    <!-- Menu Cards -->
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Menu chính</h3>
+                    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
+                        <a href="{{ url_for('admin_dashboard') }}" class="group relative bg-gradient-to-br from-blue-500 to-blue-600 p-4 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                            <div class="flex flex-col items-center text-center text-white">
+                                <span class="material-symbols-outlined text-4xl lg:text-5xl mb-2 lg:mb-3" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                                <h3 class="font-bold text-sm lg:text-lg mb-1">Bảng Điều Khiển</h3>
+                                <p class="text-xs lg:text-sm text-blue-100">Tổng quan hệ thống</p>
                             </div>
                         </a>
-
-                        <a href="#" class="group relative bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all">
-                                    <span class="material-symbols-outlined text-primary group-hover:text-white text-3xl" style="font-variation-settings: 'FILL' 1;">bar_chart</span>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-lg text-slate-900 dark:text-slate-100">{{ t.reports }}</h3>
-                                    <p class="text-sm text-slate-600 dark:text-slate-400">Xem báo cáo chi tiết</p>
-                                </div>
+                        <a href="{{ url_for('admin_users') }}" class="group relative bg-gradient-to-br from-green-500 to-green-600 p-4 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                            <div class="flex flex-col items-center text-center text-white">
+                                <span class="material-symbols-outlined text-4xl lg:text-5xl mb-2 lg:mb-3" style="font-variation-settings: 'FILL' 1;">group</span>
+                                <h3 class="font-bold text-sm lg:text-lg mb-1">Quản Lý Người Dùng</h3>
+                                <p class="text-xs lg:text-sm text-green-100">Thêm, sửa, xóa nhân viên</p>
                             </div>
                         </a>
-
-                        <a href="#" class="group relative bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all">
-                                    <span class="material-symbols-outlined text-primary group-hover:text-white text-3xl" style="font-variation-settings: 'FILL' 1;">settings</span>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-lg text-slate-900 dark:text-slate-100">{{ t.settings }}</h3>
-                                    <p class="text-sm text-slate-600 dark:text-slate-400">Cấu hình hệ thống</p>
-                                </div>
+                        <a href="{{ url_for('admin_meals') }}" class="group relative bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                            <div class="flex flex-col items-center text-center text-white">
+                                <span class="material-symbols-outlined text-4xl lg:text-5xl mb-2 lg:mb-3" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+                                <h3 class="font-bold text-sm lg:text-lg mb-1">Thực Đơn</h3>
+                                <p class="text-xs lg:text-sm text-emerald-100">Quản lý suất ăn</p>
+                            </div>
+                        </a>
+                        <a href="{{ url_for('admin_stats') }}" class="group relative bg-gradient-to-br from-blue-500 to-blue-600 p-4 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                            <div class="flex flex-col items-center text-center text-white">
+                                <span class="material-symbols-outlined text-4xl lg:text-5xl mb-2 lg:mb-3" style="font-variation-settings: 'FILL' 1;">bar_chart</span>
+                                <h3 class="font-bold text-sm lg:text-lg mb-1">Thống Kê Suất Ăn</h3>
+                                <p class="text-xs lg:text-sm text-blue-100">Báo cáo và phân tích</p>
                             </div>
                         </a>
                     </div>
                 </div>
             </main>
         </div>
+
+        <!-- Bottom Nav Mobile -->
+        <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe shadow-2xl z-50">
+            <div class="flex justify-around items-center h-20 px-4">
+                <a class="flex flex-col items-center gap-1 text-primary" href="{{ url_for('admin_dashboard') }}">
+                    <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">dashboard</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">Bảng Điều Khiển</span>
+                </a>
+                <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_users') }}">
+                    <span class="material-symbols-outlined text-2xl">group</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">Người Dùng</span>
+                </a>
+                <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_overtime_approvals') }}">
+                    <span class="material-symbols-outlined text-2xl">schedule</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">Làm Thêm</span>
+                </a>
+                <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_meals') }}">
+                    <span class="material-symbols-outlined text-2xl">restaurant</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">Thực Đơn</span>
+                </a>
+                <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('profile') }}">
+                    <span class="material-symbols-outlined text-2xl">person</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">Cá Nhân</span>
+                </a>
+            </div>
+        </nav>
     </div>
 </body>
 </html>

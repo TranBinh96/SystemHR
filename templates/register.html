@@ -192,13 +192,14 @@
 
             <!-- Registration Form -->
             <form method="POST" action="{{ url_for('register') }}" class="flex flex-col gap-4 px-4 py-4">
+                {{ form.csrf_token }}
                 
                 <!-- Full Name -->
                 <label class="flex flex-col w-full">
                     <p class="text-slate-900 dark:text-slate-100 text-sm font-semibold leading-normal pb-1.5 ml-1">{{ t.full_name }}</p>
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">person</span>
-                        <input name="full_name" class="form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-0 focus:ring-2 focus:ring-primary/50 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 h-14 pl-12 pr-4 placeholder:text-slate-400 text-base font-normal" placeholder="{{ t.enter_full_name }}" type="text" required/>
+                        <input name="name" class="form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-0 focus:ring-2 focus:ring-primary/50 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 h-14 pl-12 pr-4 placeholder:text-slate-400 text-base font-normal" placeholder="{{ t.enter_full_name }}" type="text" required/>
                     </div>
                 </label>
 
@@ -241,6 +242,16 @@
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">lock</span>
                         <input name="password" class="form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-0 focus:ring-2 focus:ring-primary/50 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 h-14 pl-12 pr-12 placeholder:text-slate-400 text-base font-normal" placeholder="{{ t.password_hint }}" type="password" required/>
+                        <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer">visibility</span>
+                    </div>
+                </label>
+
+                <!-- Confirm Password -->
+                <label class="flex flex-col w-full">
+                    <p class="text-slate-900 dark:text-slate-100 text-sm font-semibold leading-normal pb-1.5 ml-1">{{ t.confirm_password }}</p>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">lock</span>
+                        <input name="confirm_password" class="form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-0 focus:ring-2 focus:ring-primary/50 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 h-14 pl-12 pr-12 placeholder:text-slate-400 text-base font-normal" placeholder="{{ t.password_hint }}" type="password" required/>
                         <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer">visibility</span>
                     </div>
                 </label>

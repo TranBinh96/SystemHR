@@ -1,9 +1,82 @@
+# Python
 .venv/
+venv/
+env/
+ENV/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment
 .env
-.DS_Store
+.env.local
+.env.*.local
+
+# IDE
 .idea/
 .vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Database
 *.db
 *.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Uploads
+uploads/
+static/uploads/*
+!static/uploads/.gitkeep
+!static/uploads/meals/.gitkeep
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Flask
+instance/
+.webassets-cache
+
+# Migrations
+migrations/versions/*.pyc
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/

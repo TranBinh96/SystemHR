@@ -83,6 +83,8 @@
             <nav class="flex flex-1 flex-col">
                 <ul role="list" class="flex flex-1 flex-col gap-y-7">
                     <li>
+                        <!-- Bảng điều khiển -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Bảng điều khiển</div>
                         <ul role="list" class="-mx-2 space-y-1">
                             <li>
                                 <a href="{{ url_for('dashboard') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
@@ -90,10 +92,32 @@
                                     {{ t.dashboard }}
                                 </a>
                             </li>
+                        </ul>
+                    </li>
+                    
+                    <li>
+                        <!-- Phê duyệt -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Phê duyệt</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            {% if is_manager %}
+                            <li>
+                                <a href="{{ url_for('manager_overtime_approvals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">task_alt</span>
+                                    Phê Duyệt
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    
+                    <li>
+                        <!-- Đăng ký -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Đăng ký</div>
+                        <ul role="list" class="-mx-2 space-y-1">
                             <li>
                                 <a href="{{ url_for('overtime') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
                                     <span class="material-symbols-outlined">schedule</span>
-                                    {{ t.overtime }}
+                                    Làm thêm
                                 </a>
                             </li>
                             <li>
@@ -102,6 +126,13 @@
                                     {{ t.meals }}
                                 </a>
                             </li>
+                        </ul>
+                    </li>
+                    
+                    <li>
+                        <!-- Khác -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Khác</div>
+                        <ul role="list" class="-mx-2 space-y-1">
                             <li>
                                 <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
                                     <span class="material-symbols-outlined">history</span>
@@ -109,18 +140,19 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ url_for('profile') }}" class="bg-primary/10 text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
-                                    {{ t.profile }}
+                                <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">support_agent</span>
+                                    Hỗ trợ
                                 </a>
                             </li>
                         </ul>
                     </li>
+                    
                     <li class="mt-auto">
-                        <a href="{{ url_for('profile') }}" class="block p-3 bg-slate-50 dark:bg-slate-800 rounded-lg mb-3 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                            <p class="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">{{ t.hello }}</p>
-                            <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ session.get('user_name', 'User') }}</p>
-                            <p class="text-xs text-slate-500">{{ session.get('user_id') }}</p>
+                        <a href="{{ url_for('profile') }}" class="block p-3 bg-primary/10 rounded-lg mb-3 border-2 border-primary/20">
+                            <p class="text-xs font-semibold text-primary mb-1">{{ t.hello }}</p>
+                            <p class="text-sm font-bold text-primary">{{ session.get('user_name', 'User') }}</p>
+                            <p class="text-xs text-primary/70">{{ session.get('user_id') }}</p>
                         </a>
                         <a href="{{ url_for('logout') }}" class="group -mx-2 flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
                             <span class="material-symbols-outlined">logout</span>
@@ -170,8 +202,12 @@
                     <!-- Profile Card -->
                     <div class="bg-gradient-to-br from-primary to-blue-600 rounded-2xl p-6 text-white mb-6">
                         <div class="flex items-center gap-4">
-                            <div class="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30">
+                            <div class="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30 overflow-hidden">
+                                {% if user.avatar_url %}
+                                <img src="{{ user.avatar_url }}" alt="{{ user.name }}" class="w-full h-full object-cover">
+                                {% else %}
                                 <span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">person</span>
+                                {% endif %}
                             </div>
                             <div class="flex-1">
                                 <h2 class="text-2xl font-bold mb-1">{{ session.get('user_name', 'User') }}</h2>
@@ -190,21 +226,29 @@
                                 </div>
                                 <div>
                                     <p class="text-xs text-slate-500 dark:text-slate-400">{{ t.overtime }}</p>
-                                    <p class="text-lg font-bold text-slate-900 dark:text-slate-100">12.5h</p>
+                                    <p class="text-lg font-bold text-slate-900 dark:text-slate-100">{{ total_overtime_hours }}h</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                        <a href="{{ url_for('meals') }}?show_qr=1" class="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
                                     <span class="material-symbols-outlined text-green-600 text-xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
                                 </div>
                                 <div>
+                                    {% if has_special_meal_today %}
+                                    <p class="text-xs text-green-600 dark:text-green-400">Phiếu Ăn Cải Thiện</p>
+                                    <p class="text-xs font-bold text-green-600 dark:text-green-400 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">confirmation_number</span>
+                                        Lấy mã
+                                    </p>
+                                    {% else %}
                                     <p class="text-xs text-slate-500 dark:text-slate-400">{{ t.meals }}</p>
-                                    <p class="text-lg font-bold text-slate-900 dark:text-slate-100">18</p>
+                                    <p class="text-lg font-bold text-slate-900 dark:text-slate-100">{{ total_meals }}</p>
+                                    {% endif %}
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
 
                     <!-- Account Section -->
@@ -216,7 +260,7 @@
                                     <span class="material-symbols-outlined text-slate-600 dark:text-slate-400">badge</span>
                                     <div>
                                         <p class="font-semibold text-slate-900 dark:text-slate-100">{{ t.employee_id }}</p>
-                                        <p class="text-sm text-slate-500">{{ session.get('user_id') }}</p>
+                                        <p class="text-sm text-slate-500">{{ user.employee_id }}</p>
                                     </div>
                                 </div>
                                 <span class="material-symbols-outlined text-slate-400">chevron_right</span>
@@ -226,7 +270,7 @@
                                     <span class="material-symbols-outlined text-slate-600 dark:text-slate-400">mail</span>
                                     <div>
                                         <p class="font-semibold text-slate-900 dark:text-slate-100">{{ t.company_email }}</p>
-                                        <p class="text-sm text-slate-500">{{ session.get('user_id')|lower }}@oki.com</p>
+                                        <p class="text-sm text-slate-500">{{ user.email }}</p>
                                     </div>
                                 </div>
                                 <span class="material-symbols-outlined text-slate-400">chevron_right</span>

@@ -1,4 +1,4 @@
-﻿import configparser
+import configparser
 import os
 
 def get_translation(lang='vi'):

@@ -76,6 +76,8 @@
                 <nav class="flex flex-1 flex-col">
                     <ul role="list" class="flex flex-1 flex-col gap-y-7">
                         <li>
+                            <!-- Bảng điều khiển -->
+                            <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Bảng điều khiển</div>
                             <ul role="list" class="-mx-2 space-y-1">
                                 <li>
                                     <a href="{{ url_for('dashboard') }}" class="bg-primary/10 text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
@@ -83,10 +85,32 @@
                                         {{ t.dashboard }}
                                     </a>
                                 </li>
+                            </ul>
+                        </li>
+                        
+                        <li>
+                            <!-- Phê duyệt -->
+                            <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Phê duyệt</div>
+                            <ul role="list" class="-mx-2 space-y-1">
+                                {% if is_manager %}
+                                <li>
+                                    <a href="{{ url_for('manager_overtime_approvals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">task_alt</span>
+                                        Phê Duyệt
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                        
+                        <li>
+                            <!-- Đăng ký -->
+                            <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Đăng ký</div>
+                            <ul role="list" class="-mx-2 space-y-1">
                                 <li>
                                     <a href="{{ url_for('overtime') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
                                         <span class="material-symbols-outlined">schedule</span>
-                                        {{ t.overtime }}
+                                        Làm thêm
                                     </a>
                                 </li>
                                 <li>
@@ -95,6 +119,13 @@
                                         {{ t.meals }}
                                     </a>
                                 </li>
+                            </ul>
+                        </li>
+                        
+                        <li>
+                            <!-- Khác -->
+                            <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Khác</div>
+                            <ul role="list" class="-mx-2 space-y-1">
                                 <li>
                                     <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
                                         <span class="material-symbols-outlined">history</span>
@@ -109,6 +140,7 @@
                                 </li>
                             </ul>
                         </li>
+                        
                         <li class="mt-auto">
                             <a href="{{ url_for('profile') }}" class="block p-3 bg-slate-50 dark:bg-slate-800 rounded-lg mb-3 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                                 <p class="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">{{ t.hello }}</p>
@@ -148,44 +180,135 @@
             <!-- Main Content Area -->
             <main class="pt-6 pb-24 lg:pt-10 lg:pb-10">
                 <div class="px-4 sm:px-6 lg:px-8">
-                    <!-- Quick Actions -->
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Thao tác nhanh</h3>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        <a href="{{ url_for('overtime') }}" class="group relative bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all">
-                                    <span class="material-symbols-outlined text-primary group-hover:text-white text-3xl" style="font-variation-settings: 'FILL' 1;">schedule</span>
+                    {% if is_manager %}
+                    <!-- Phê Duyệt Section (Manager Only) -->
+                    <div class="mb-6">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-3">Phê Duyệt</h3>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <a href="{{ url_for('manager_overtime_approvals') }}" class="group relative bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-4 rounded-xl border-2 border-amber-200 dark:border-amber-800 shadow-sm hover:shadow-lg hover:border-amber-400 transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center group-hover:scale-110 transition-all shadow-lg flex-shrink-0">
+                                        <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings: 'FILL' 1;">schedule</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Tăng Ca</h3>
+                                            <span id="pending-overtime-badge" class="hidden px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] text-center">0</span>
+                                        </div>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Duyệt yêu cầu làm thêm</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 class="font-bold text-lg text-slate-900 dark:text-slate-100">{{ t.overtime }}</h3>
-                                    <p class="text-sm text-slate-600 dark:text-slate-400">{{ t.overtime_manage }}</p>
-                                </div>
-                            </div>
-                        </a>
+                            </a>
 
-                        <a href="{{ url_for('meals') }}" class="group relative bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all">
-                                    <span class="material-symbols-outlined text-primary group-hover:text-white text-3xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+                            <a href="#" class="group relative bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-xl border-2 border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-lg hover:border-blue-400 transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center group-hover:scale-110 transition-all shadow-lg flex-shrink-0">
+                                        <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings: 'FILL' 1;">event_busy</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Đăng Ký Nghỉ</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Duyệt yêu cầu nghỉ phép</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 class="font-bold text-lg text-slate-900 dark:text-slate-100">{{ t.meals }}</h3>
-                                    <p class="text-sm text-slate-600 dark:text-slate-400">{{ t.meals_register }}</p>
-                                </div>
-                            </div>
-                        </a>
+                            </a>
 
-                        <a href="#" class="group relative bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all">
-                                    <span class="material-symbols-outlined text-primary group-hover:text-white text-3xl" style="font-variation-settings: 'FILL' 1;">support_agent</span>
+                            <a href="#" class="group relative bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl border-2 border-purple-200 dark:border-purple-800 shadow-sm hover:shadow-lg hover:border-purple-400 transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-purple-500 flex items-center justify-center group-hover:scale-110 transition-all shadow-lg flex-shrink-0">
+                                        <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings: 'FILL' 1;">flight_takeoff</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Công Tác</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Duyệt yêu cầu công tác</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 class="font-bold text-lg text-slate-900 dark:text-slate-100">{{ t.support }}</h3>
-                                    <p class="text-sm text-slate-600 dark:text-slate-400">{{ t.support_employee }}</p>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Đăng Ký Section -->
+                    <div class="mb-6">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-3">Đăng Ký</h3>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <a href="{{ url_for('overtime') }}" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all flex-shrink-0">
+                                        <span class="material-symbols-outlined text-primary group-hover:text-white text-xl" style="font-variation-settings: 'FILL' 1;">schedule</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Làm Thêm</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Đăng ký tăng ca</p>
+                                    </div>
                                 </div>
-                            </div>
-                        </a>
+                            </a>
+
+                            <a href="{{ url_for('meals') }}" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all flex-shrink-0">
+                                        <span class="material-symbols-outlined text-primary group-hover:text-white text-xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Suất Ăn</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Đăng ký suất ăn</p>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="#" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all flex-shrink-0">
+                                        <span class="material-symbols-outlined text-primary group-hover:text-white text-xl" style="font-variation-settings: 'FILL' 1;">event_busy</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Nghỉ</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Đăng ký nghỉ phép</p>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="#" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all flex-shrink-0">
+                                        <span class="material-symbols-outlined text-primary group-hover:text-white text-xl" style="font-variation-settings: 'FILL' 1;">flight_takeoff</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Công Tác</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Đăng ký công tác</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Khác Section -->
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-3">Khác</h3>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <a href="#" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all flex-shrink-0">
+                                        <span class="material-symbols-outlined text-primary group-hover:text-white text-xl" style="font-variation-settings: 'FILL' 1;">history</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Lịch Sử</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Xem lịch sử hoạt động</p>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="#" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all flex-shrink-0">
+                                        <span class="material-symbols-outlined text-primary group-hover:text-white text-xl" style="font-variation-settings: 'FILL' 1;">support_agent</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Hỗ Trợ</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Liên hệ hỗ trợ</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </main>
@@ -213,5 +336,26 @@
             </div>
         </nav>
     </div>
+
+    <script>
+        // Load pending overtime requests count for managers
+        {% if is_manager %}
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/manager/overtime-requests')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const pendingCount = data.requests.filter(r => r.status === 'pending').length;
+                        const badge = document.getElementById('pending-overtime-badge');
+                        if (badge && pendingCount > 0) {
+                            badge.textContent = pendingCount;
+                            badge.classList.remove('hidden');
+                        }
+                    }
+                })
+                .catch(err => console.error('Error loading pending requests:', err));
+        });
+        {% endif %}
+    </script>
 </body>
 </html>

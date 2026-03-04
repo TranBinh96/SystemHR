@@ -1,0 +1,20 @@
+{
+  "name": "OKI VIETNAM HR System",
+  "short_name": "OKI HR",
+  "description": "Hệ thống quản lý nhân sự, tăng ca và suất ăn",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#136dec",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

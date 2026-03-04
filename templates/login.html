@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+    <title>{{ t.app_name }} - {{ t.sign_in }}</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#136dec"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-title" content="OKI HR"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <link rel="manifest" href="/static/manifest.json"/>
+    <link rel="apple-touch-icon" href="/static/icon.svg"/>
+    <link rel="icon" type="image/svg+xml" href="/static/icon.svg"/>
+    
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#136dec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101822",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { min-height: max(884px, 100dvh); }
+        /* Hide scrollbar */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        * {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+            max-width: 400px;
+        }
+        .notification.success {
+            border-left: 4px solid #10b981;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+        .notification.hide {
+            animation: slideOut 0.3s ease-out forwards;
+        }
+    </style>
+    <script>
+        function showNotification(message, type = 'success') {
+            // Request notification permission
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            // Show browser notification if permitted
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('{{ t.notification_title }}', {
+                    body: message,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2310b981"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>'
+                });
+            }
+
+            // Show in-page notification
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <span class="material-symbols-outlined text-green-500 text-2xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                <div class="flex-1">
+                    <p class="font-bold text-slate-900">Thành công</p>
+                    <p class="text-sm text-slate-600">${message}</p>
+                </div>
+                <button onclick="this.parentElement.classList.add('hide'); setTimeout(() => this.parentElement.remove(), 300)" class="text-slate-400 hover:text-slate-600">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            `;
+            document.body.appendChild(notification);
+
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                notification.classList.add('hide');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        // Check for success message from server
+        window.addEventListener('DOMContentLoaded', () => {
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        {% if category == 'success' %}
+                            showNotification('{{ message }}', 'success');
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        });
+    </script>
+    <script>
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed'));
+            });
+        }
+
+        // Prompt to install PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            setTimeout(() => {
+                if (deferredPrompt && !window.matchMedia('(display-mode: standalone)').matches) {
+                    if (confirm('Cài đặt OKI HR như một ứng dụng để có trải nghiệm tốt nhất?')) {
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            deferredPrompt = null;
+                        });
+                    }
+                }
+            }, 3000);
+        });
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+    <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+        <!-- Container wrapper for desktop centering -->
+        <div class="w-full max-w-md mx-auto flex flex-col min-h-screen">
+            <!-- Top App Bar -->
+            <div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between">
+                <div class="text-slate-900 dark:text-slate-100 flex size-12 shrink-0 items-center justify-center cursor-pointer md:invisible">
+                    <span class="material-symbols-outlined text-2xl">arrow_back</span>
+                </div>
+                <h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">{{ t.app_name }}</h2>
+                
+                <!-- Language Selector -->
+                <div class="relative group">
+                    <button class="flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <span class="material-symbols-outlined text-xl text-slate-600 dark:text-slate-400">language</span>
+                        <span class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase">{{ current_lang }}</span>
+                    </button>
+                    <div class="absolute right-0 mt-2 w-40 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                        <a href="{{ url_for('set_language_route', lang='vi') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors {% if current_lang == 'vi' %}bg-primary/10{% endif %}">
+                            <span class="text-2xl">🇻🇳</span>
+                            <span class="text-sm font-medium">Tiếng Việt</span>
+                        </a>
+                        <a href="{{ url_for('set_language_route', lang='en') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors {% if current_lang == 'en' %}bg-primary/10{% endif %}">
+                            <span class="text-2xl">🇬🇧</span>
+                            <span class="text-sm font-medium">English</span>
+                        </a>
+                        <a href="{{ url_for('set_language_route', lang='ja') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors rounded-b-lg {% if current_lang == 'ja' %}bg-primary/10{% endif %}">
+                            <span class="text-2xl">🇯🇵</span>
+                            <span class="text-sm font-medium">日本語</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero / Branding Section -->
+            <div class="@container">
+                <div class="px-4 py-3 sm:px-6">
+                    <div class="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden bg-primary/10 rounded-lg min-h-[180px] sm:min-h-[200px] md:min-h-[220px] relative" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBTxIwm2mg-rFqIn_UyjzWJ9XlXFeYiAQ9XO0W2JuW2cLA6MEZzKj1dh-iTw0KCawQFwVom5g9CXEF3OmMavFHMeqtYqvrEVAWYwn9Oagw5L3_wRWZBySPQ1dPElxZ4-UHAo3PFRGPToZjn80zeEoVXTaV_lPUCwqA7I1aQuKcIXP1MYFiS9gj8RM6Pxvy6-l0gNykNOeevz_2pyEu2nJksaCiAQN9GEOs_2_eccO5JA8h03HlB50Vxaa5tlI4Unz65ovQE9N9gwavU");'>
+                        <div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
+                        <div class="relative p-6">
+                            <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-xs font-semibold mb-2 uppercase tracking-wider">{{ t.secure_access }}</span>
+                            <h1 class="text-white text-2xl font-bold leading-tight">{{ t.employee_portal }}</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="px-6 pt-4">
+                        {% for category, message in messages %}
+                            <div class="p-4 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Login Header -->
+            <div class="px-6 pt-8 pb-4">
+                <h2 class="text-slate-900 dark:text-slate-100 tracking-tight text-2xl sm:text-3xl font-bold leading-tight">{{ t.welcome_back }}</h2>
+                <p class="text-slate-500 dark:text-slate-400 text-sm sm:text-base font-normal mt-1">{{ t.sign_in_message }}</p>
+            </div>
+
+            <!-- Login Form -->
+            <form method="POST" action="{{ url_for('login') }}" class="flex flex-col gap-5 px-6 pb-6">
+                <div class="flex flex-col gap-2">
+                    <label class="text-slate-700 dark:text-slate-300 text-sm font-semibold leading-normal">{{ t.employee_id }}</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                            <span class="material-symbols-outlined text-slate-400 text-xl">badge</span>
+                        </div>
+                        <input name="employee_id" class="w-full rounded-xl text-slate-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 focus:border-primary focus:ring-0 h-14 pl-14 pr-4 placeholder:text-slate-400 text-base font-normal transition-colors" placeholder="{{ t.enter_id }}" type="text" required/>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <label class="text-slate-700 dark:text-slate-300 text-sm font-semibold leading-normal">{{ t.password }}</label>
+                        <a class="text-primary text-sm font-semibold hover:underline" href="{{ url_for('forgot_password') }}">{{ t.forgot }}</a>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                            <span class="material-symbols-outlined text-slate-400 text-xl">lock</span>
+                        </div>
+                        <input id="password-input" name="password" class="w-full rounded-xl text-slate-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 focus:border-primary focus:ring-0 h-14 pl-14 pr-14 placeholder:text-slate-400 text-base font-normal transition-colors" placeholder="{{ t.enter_password }}" type="password" required/>
+                        <div id="toggle-password" class="absolute inset-y-0 right-0 flex items-center pr-4 cursor-pointer" onclick="togglePassword()">
+                            <span id="password-icon" class="material-symbols-outlined text-slate-400 text-xl hover:text-slate-600">visibility</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 sm:h-14 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] mt-4">
+                    <span class="text-sm sm:text-base">{{ t.sign_in }}</span>
+                    <span class="material-symbols-outlined text-lg sm:text-xl">login</span>
+                </button>
+
+                <!-- Registration Link -->
+                <div class="text-center pt-4">
+                    <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">{{ t.no_account }} <a class="text-primary font-bold hover:underline" href="{{ url_for('register') }}">{{ t.register_now }}</a></p>
+                </div>
+            </form>
+
+            <script>
+                function togglePassword() {
+                    const passwordInput = document.getElementById('password-input');
+                    const passwordIcon = document.getElementById('password-icon');
+                    
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        passwordIcon.textContent = 'visibility_off';
+                    } else {
+                        passwordInput.type = 'password';
+                        passwordIcon.textContent = 'visibility';
+                    }
+                }
+            </script>
+
+            <!-- Footer / Services -->
+            <div class="mt-auto px-6 py-6 sm:py-8 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
+                <!-- PWA Install Instructions -->
+                <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-xl">info</span>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">Cài đặt như ứng dụng</p>
+                            <p class="text-xs text-blue-700 dark:text-blue-300">
+                                <strong>Android:</strong> Menu (⋮) → "Add to Home screen"<br>
+                                <strong>iOS:</strong> Share (↑) → "Add to Home Screen"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-4 sm:gap-6">
+                    <div class="flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity cursor-pointer">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary" style="font-size: 28px; font-variation-settings: 'FILL' 1, 'wght' 400;">schedule</span>
+                        </div>
+                        <span class="text-[10px] sm:text-xs font-bold uppercase tracking-tight text-slate-600 dark:text-slate-400">{{ t.overtime }}</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity cursor-pointer">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary" style="font-size: 28px; font-variation-settings: 'FILL' 1, 'wght' 400;">restaurant</span>
+                        </div>
+                        <span class="text-[10px] sm:text-xs font-bold uppercase tracking-tight text-slate-600 dark:text-slate-400">{{ t.meals }}</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity cursor-pointer">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary" style="font-size: 28px; font-variation-settings: 'FILL' 1, 'wght' 400;">support_agent</span>
+                        </div>
+                        <span class="text-[10px] sm:text-xs font-bold uppercase tracking-tight text-slate-600 dark:text-slate-400">{{ t.support }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

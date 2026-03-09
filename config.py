@@ -12,27 +12,39 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-change-in-production')
     DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
     
-    # Database Configuration - Read from .env
-    DB_HOST = os.getenv('DB_HOST', 'localhost')
-    DB_PORT = int(os.getenv('DB_PORT', '3306'))
-    DB_USER = os.getenv('DB_USER', 'root')
-    DB_PASSWORD = os.getenv('DB_PASSWORD', '')
-    DB_NAME = os.getenv('DB_NAME', 'railway')
+    # Database Configuration
+    # Check if DATABASE_URL is provided (Railway/Heroku style)
+    DATABASE_URL = os.getenv('DATABASE_URL')
     
-    # SQLAlchemy Configuration - URL encode password to handle special characters
-    SQLALCHEMY_DATABASE_URI = f"mysql+mysqlconnector://{DB_USER}:{quote_plus(DB_PASSWORD)}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    if DATABASE_URL:
+        # Use DATABASE_URL if provided
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL
+        # Fix mysql:// to mysql+mysqlconnector://
+        if SQLALCHEMY_DATABASE_URI.startswith('mysql://'):
+            SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('mysql://', 'mysql+mysqlconnector://', 1)
+    else:
+        # Fallback to individual env vars
+        DB_HOST = os.getenv('DB_HOST', 'localhost')
+        DB_PORT = int(os.getenv('DB_PORT', '3306'))
+        DB_USER = os.getenv('DB_USER', 'root')
+        DB_PASSWORD = os.getenv('DB_PASSWORD', '')
+        DB_NAME = os.getenv('DB_NAME', 'railway')
+        
+        # SQLAlchemy Configuration - URL encode password to handle special characters
+        SQLALCHEMY_DATABASE_URI = f"mysql+mysqlconnector://{DB_USER}:{quote_plus(DB_PASSWORD)}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = DEBUG
     
     # Connection Pool Settings for better performance
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_size': 10,              # Number of connections to keep open
-        'pool_recycle': 3600,         # Recycle connections after 1 hour
-        'pool_pre_ping': True,        # Test connections before using
-        'max_overflow': 20,           # Allow up to 20 extra connections
-        'pool_timeout': 30,           # Timeout for getting connection from pool
+        'pool_size': 20,              # Tăng số connections
+        'pool_recycle': 1800,         # Recycle sau 30 phút
+        'pool_pre_ping': True,        # Test connections trước khi dùng
+        'max_overflow': 40,           # Cho phép thêm 40 connections
+        'pool_timeout': 30,           # Timeout
         'connect_args': {
-            'connect_timeout': 10,    # Connection timeout in seconds
+            'connect_timeout': 10,
             'charset': 'utf8mb4'
         }
     }

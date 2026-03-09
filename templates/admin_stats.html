@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống kê suất ăn - {{ t.app_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="hidden lg:flex lg:flex-shrink-0">
+            <div class="flex w-72 flex-col">
+                <div class="flex min-h-0 flex-1 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                    <div class="flex flex-col h-full pt-5 pb-4">
+                        <div class="flex flex-shrink-0 items-center px-6 mb-8">
+                            <h1 class="text-2xl font-bold text-primary">{{ t.app_name }}</h1>
+                        </div>
+                        <nav class="flex-1 px-4 overflow-y-auto">
+                            <ul role="list" class="flex flex-col gap-y-5">
+                                <!-- BẢNG ĐIỀU KHIỂN -->
+                                <li>
+                                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Bảng điều khiển</div>
+                                    <ul role="list" class="-mx-2 space-y-1">
+                                        <li>
+                                            <a href="{{ url_for('admin_dashboard') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">dashboard</span>
+                                                Bảng điều khiển
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <!-- NGƯỜI DÙNG -->
+                                <li>
+                                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Người dùng</div>
+                                    <ul role="list" class="-mx-2 space-y-1">
+                                        <li>
+                                            <a href="{{ url_for('admin_users') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">group</span>
+                                                Người dùng
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ url_for('admin_positions') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">badge</span>
+                                                Chức vụ
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <!-- ĐĂNG KÝ -->
+                                <li>
+                                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Đăng ký</div>
+                                    <ul role="list" class="-mx-2 space-y-1">
+                                        <li>
+                                            <a href="{{ url_for('admin_meals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">restaurant</span>
+                                                Quản lý Thực đơn
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <!-- THỐNG KÊ -->
+                                <li>
+                                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Thống kê</div>
+                                    <ul role="list" class="-mx-2 space-y-1">
+                                        <li>
+                                            <a href="{{ url_for('admin_overtime_approvals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">schedule</span>
+                                                Thống kê Làm thêm
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ url_for('admin_stats') }}" class="bg-slate-100 dark:bg-slate-800 text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">bar_chart</span>
+                                                Thống kê Suất ăn
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ url_for('profile') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">help</span>
+                                                Hỗ trợ
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </nav>
+                        <div class="px-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                            <ul role="list" class="-mx-2 space-y-1">
+                                <li>
+                                    <a href="{{ url_for('logout') }}" class="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">logout</span>
+                                        Đăng Xuất
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Top Header -->
+            <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+                <div class="flex h-16 items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
+                    <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+                        <div class="flex flex-1 items-center">
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Thống kê & Báo cáo</h2>
+                        </div>
+                        <div class="flex items-center gap-x-4 lg:gap-x-6">
+                            <select onchange="window.location.href='/set-language/' + this.value" class="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm font-medium">
+                                <option value="vi" {% if current_lang == 'vi' %}selected{% endif %}>🇻🇳 Tiếng Việt</option>
+                                <option value="en" {% if current_lang == 'en' %}selected{% endif %}>🇬🇧 English</option>
+                                <option value="ja" {% if current_lang == 'ja' %}selected{% endif %}>🇯🇵 日本語</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="p-6 pb-24 lg:pb-6">
+                <!-- Period Selector -->
+                <div class="mb-6 flex items-center justify-between">
+                    <p class="text-slate-600 dark:text-slate-400 text-sm">Tổng quan thời gian thực về tiêu thụ suất ăn</p>
+                    <div class="flex bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <button onclick="changePeriod('tomorrow')" id="btn-tomorrow" class="px-4 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900">Ngày mai</button>
+                        <button onclick="changePeriod('week')" id="btn-week" class="px-4 py-1.5 text-xs font-bold rounded bg-green-600 text-white">Tuần</button>
+                        <button onclick="changePeriod('month')" id="btn-month" class="px-4 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900">Tháng</button>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="material-symbols-outlined text-green-600 bg-green-100 dark:bg-green-900/30 p-2 rounded-lg">restaurant_menu</span>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Tổng suất ăn ngày mai</p>
+                        <p class="text-3xl font-black text-slate-900 dark:text-white mt-1" id="total-meals">0</p>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="material-symbols-outlined text-slate-600 bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">lunch_dining</span>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Suất ăn Bình Thường</p>
+                        <p class="text-3xl font-black text-slate-900 dark:text-white mt-1" id="normal-meals">0</p>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="material-symbols-outlined text-blue-600 bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">auto_awesome</span>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Suất ăn Cải Thiện</p>
+                        <p class="text-3xl font-black text-slate-900 dark:text-white mt-1" id="special-meals">0</p>
+                    </div>
+                </div>
+
+                <!-- Charts and Table Layout -->
+                <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
+                    <!-- Left: Bar Chart -->
+                    <div class="xl:col-span-2">
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm h-full">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Tiêu thụ theo tuần</h3>
+                                <div class="flex items-center gap-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="size-2 rounded-full bg-slate-400"></div> Bình Thường
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="size-2 rounded-full bg-blue-500"></div> Cải Thiện
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="weeklyChart" class="h-64"></div>
+                            <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tổng tuần</p>
+                                        <p class="text-2xl font-black text-slate-900 dark:text-white" id="weekly-total">0 suất</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Detailed List -->
+                    <div class="xl:col-span-3">
+                        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                            <div class="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Danh sách đăng ký chi tiết</h3>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">Cập nhật trực tiếp đăng ký suất ăn</p>
+                                    </div>
+                                    <button onclick="exportToExcel()" class="flex items-center gap-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-all">
+                                        <span class="material-symbols-outlined text-sm">download</span>
+                                        Xuất Excel
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead>
+                                        <tr class="bg-white dark:bg-slate-900">
+                                            <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800" colspan="2">Ngày</th>
+                                            <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">Số lượng</th>
+                                            <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="registrationsList" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                        <!-- Will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                <span class="text-xs text-slate-500 font-medium" id="pagination-info">Đang tải...</span>
+                                <div class="flex gap-2" id="pagination-controls">
+                                    <!-- Will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="closeDetailModal()"></div>
+        
+        <!-- Modal Content -->
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-3xl border border-slate-200 dark:border-slate-800">
+                <!-- Header -->
+                <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="size-12 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white">
+                            <span class="material-symbols-outlined text-2xl">calendar_today</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white">Chi tiết đăng ký</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400" id="modalDate"></p>
+                        </div>
+                    </div>
+                    <button onclick="closeDetailModal()" class="size-10 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors">
+                        <span class="material-symbols-outlined text-slate-400">close</span>
+                    </button>
+                </div>
+                
+                <!-- Body -->
+                <div class="p-6" id="modalBody">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                
+                <!-- Footer -->
+                <div class="flex items-center justify-end gap-3 p-6 border-t border-slate-200 dark:border-slate-800">
+                    <button onclick="closeDetailModal()" class="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar (Mobile Only) -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe shadow-2xl z-50">
+        <div class="flex justify-around items-center h-20 px-4">
+            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_dashboard') }}">
+                <span class="material-symbols-outlined text-2xl">dashboard</span>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Dashboard</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_meals') }}">
+                <span class="material-symbols-outlined text-2xl">restaurant</span>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Thực đơn</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-green-600" href="{{ url_for('admin_stats') }}">
+                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">bar_chart</span>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Thống kê</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-red-500 dark:text-red-400" href="{{ url_for('logout') }}">
+                <span class="material-symbols-outlined text-2xl">logout</span>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Logout</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        let currentPeriod = 'week';
+        let currentPage = 1;
+        let itemsPerPage = 20;
+        let allRegistrations = [];
+        let filteredRegistrations = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatistics();
+        });
+
+        function changePeriod(period) {
+            currentPeriod = period;
+            
+            // Update button states
+            document.querySelectorAll('[id^="btn-"]').forEach(btn => {
+                btn.classList.remove('bg-green-600', 'text-white');
+                btn.classList.add('text-slate-500', 'dark:text-slate-400');
+            });
+            
+            document.getElementById(`btn-${period}`).classList.remove('text-slate-500', 'dark:text-slate-400');
+            document.getElementById(`btn-${period}`).classList.add('bg-green-600', 'text-white');
+            
+            currentPage = 1;
+            loadStatistics();
+        }
+
+        function loadStatistics() {
+            fetch(`/admin/stats/data?period=${currentPeriod}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateSummaryCards(data.summary);
+                        updateWeeklyChart(data.daily_data);
+                        allRegistrations = data.registrations;
+                        filteredRegistrations = allRegistrations;
+                        loadRegistrations();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading statistics:', error);
+                });
+        }
+
+        function updateSummaryCards(summary) {
+            document.getElementById('total-meals').textContent = summary.total;
+            document.getElementById('normal-meals').textContent = summary.normal;
+            document.getElementById('special-meals').textContent = summary.special;
+        }
+
+        function updateWeeklyChart(dailyData) {
+            if (!dailyData || dailyData.length === 0) {
+                document.getElementById('weeklyChart').innerHTML = '<p class="text-center text-slate-400">Không có dữ liệu</p>';
+                document.getElementById('weekly-total').textContent = '0 suất';
+                return;
+            }
+            
+            const maxValue = Math.max(...dailyData.map(d => d.normal + d.special));
+            const totalWeek = dailyData.reduce((sum, d) => sum + d.normal + d.special, 0);
+            
+            const chartHTML = `
+                <div class="flex flex-col h-64 justify-between">
+                    <div class="flex items-end justify-between h-48 gap-4 px-2">
+                        ${dailyData.map(day => {
+                            const normalHeight = maxValue > 0 ? (day.normal / maxValue * 100) : 0;
+                            const specialHeight = maxValue > 0 ? (day.special / maxValue * 100) : 0;
+                            return `
+                                <div class="flex-1 flex flex-col justify-end items-center gap-1 h-full">
+                                    <div class="w-full flex flex-col justify-end gap-0.5 h-full">
+                                        ${day.special > 0 ? `<div class="w-full bg-blue-500 rounded-t-sm" style="height: ${specialHeight}%"></div>` : ''}
+                                        ${day.normal > 0 ? `<div class="w-full bg-slate-400 dark:bg-slate-600 rounded-t-sm" style="height: ${normalHeight}%"></div>` : ''}
+                                    </div>
+                                    <span class="text-[11px] font-bold text-slate-400 mt-2">${day.day}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('weeklyChart').innerHTML = chartHTML;
+            document.getElementById('weekly-total').textContent = `${totalWeek} suất`;
+        }
+
+        function loadRegistrations() {
+            // Group registrations by date
+            const groupedByDate = {};
+            filteredRegistrations.forEach(reg => {
+                if (!groupedByDate[reg.date]) {
+                    groupedByDate[reg.date] = {
+                        date: reg.date,
+                        normal: 0,
+                        special: 0,
+                        registrations: []
+                    };
+                }
+                if (reg.is_special) {
+                    groupedByDate[reg.date].special++;
+                } else {
+                    groupedByDate[reg.date].normal++;
+                }
+                groupedByDate[reg.date].registrations.push(reg);
+            });
+            
+            // Convert to array and sort by date
+            const dateGroups = Object.values(groupedByDate).sort((a, b) => 
+                new Date(b.date) - new Date(a.date)
+            );
+            
+            // Store for modal access
+            window.dateGroupsData = dateGroups;
+            
+            // Pagination
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageData = dateGroups.slice(start, end);
+            
+            const tbody = document.getElementById('registrationsList');
+            
+            if (pageData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center text-slate-400">
+                            <span class="material-symbols-outlined text-4xl mb-2 block">inbox</span>
+                            Không có dữ liệu
+                        </td>
+                    </tr>
+                `;
+            } else {
+                tbody.innerHTML = pageData.map((group, index) => {
+                    const total = group.normal + group.special;
+                    const groupIndex = start + index;
+                    
+                    return `
+                        <!-- Date Summary Row -->
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onclick="showDateDetailByIndex(${groupIndex})">
+                            <td class="px-6 py-4" colspan="2">
+                                <div class="flex items-center gap-3">
+                                    <div class="size-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white">
+                                        <span class="material-symbols-outlined text-xl">calendar_today</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-900 dark:text-white text-sm">${group.date}</p>
+                                        <p class="text-xs text-slate-400">Tổng: ${total} suất</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
+                                        <span class="size-1.5 rounded-full bg-slate-500"></span>
+                                        Cơm Thường: ${group.normal}
+                                    </span>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
+                                        <span class="size-1.5 rounded-full bg-blue-500"></span>
+                                        Cải thiện: ${group.special}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <span class="material-symbols-outlined text-slate-400">visibility</span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+            
+            updatePagination(dateGroups.length);
+        }
+        
+        function showDateDetailByIndex(index) {
+            if (!window.dateGroupsData || !window.dateGroupsData[index]) {
+                console.error('No data found for index:', index);
+                return;
+            }
+            
+            const group = window.dateGroupsData[index];
+            showDateDetail(group.date, group.registrations);
+        }
+        
+        function showDateDetail(date, registrations) {
+            const modal = document.getElementById('detailModal');
+            const modalDate = document.getElementById('modalDate');
+            const modalBody = document.getElementById('modalBody');
+            
+            // Set date
+            modalDate.textContent = date;
+            
+            // Store original data for filtering
+            window.currentModalData = registrations;
+            window.currentModalFilters = {
+                name: '',
+                department: '',
+                mealType: ''
+            };
+            
+            // Render modal content
+            renderModalContent();
+            
+            // Show modal
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function renderModalContent() {
+            const modalBody = document.getElementById('modalBody');
+            const registrations = window.currentModalData;
+            const filters = window.currentModalFilters;
+            
+            // Apply filters
+            const filtered = registrations.filter(reg => {
+                if (filters.name && !reg.user_name.toLowerCase().includes(filters.name) && 
+                    !reg.employee_id.toLowerCase().includes(filters.name)) {
+                    return false;
+                }
+                if (filters.department && reg.department !== filters.department) {
+                    return false;
+                }
+                if (filters.mealType) {
+                    if (filters.mealType === 'special' && !reg.is_special) return false;
+                    if (filters.mealType === 'normal' && reg.is_special) return false;
+                }
+                return true;
+            });
+            
+            // Count totals
+            const normal = filtered.filter(r => !r.is_special).length;
+            const special = filtered.filter(r => r.is_special).length;
+            
+            // Get unique departments
+            const departments = [...new Set(registrations.map(r => r.department))].sort();
+            
+            // Build content
+            modalBody.innerHTML = `
+                <div class="mb-4 flex items-center gap-3">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-slate-100 text-slate-700">
+                        <span class="size-2 rounded-full bg-slate-500"></span>
+                        Cơm Thường: ${normal}
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-blue-100 text-blue-700">
+                        <span class="size-2 rounded-full bg-blue-500"></span>
+                        Cải thiện: ${special}
+                    </span>
+                </div>
+                
+                <!-- Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                    <input type="text" id="modalNameFilter" placeholder="Tìm theo tên..." class="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    <select id="modalDepartmentFilter" class="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">Tất cả phòng ban</option>
+                        ${departments.map(dept => `<option value="${dept}">${dept}</option>`).join('')}
+                    </select>
+                    <select id="modalMealTypeFilter" class="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">Tất cả loại</option>
+                        <option value="normal">Cơm Thường</option>
+                        <option value="special">Cải thiện</option>
+                    </select>
+                </div>
+                
+                <div class="overflow-x-auto max-h-96 border border-slate-200 dark:border-slate-700 rounded-lg">
+                    <table class="w-full">
+                        <thead class="sticky top-0 bg-slate-50 dark:bg-slate-800">
+                            <tr class="border-b border-slate-200 dark:border-slate-700">
+                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Tên</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Phòng ban</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Ngày</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Loại</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-slate-900">
+                            ${filtered.length === 0 ? `
+                                <tr>
+                                    <td colspan="4" class="px-4 py-8 text-center text-slate-400">
+                                        <span class="material-symbols-outlined text-3xl mb-2 block">inbox</span>
+                                        Không có dữ liệu
+                                    </td>
+                                </tr>
+                            ` : filtered.map(reg => `
+                                <tr class="border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="size-9 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
+                                                ${reg.user_name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-slate-900 dark:text-white text-sm">${reg.user_name}</p>
+                                                <p class="text-xs text-slate-400">${reg.employee_id}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="text-sm text-slate-600 dark:text-slate-300">${reg.department}</span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">${reg.date}</span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${reg.is_special ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'}">
+                                            <span class="size-1.5 rounded-full ${reg.is_special ? 'bg-blue-500' : 'bg-slate-500'}"></span>
+                                            ${reg.meal_type}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            // Attach event listeners
+            document.getElementById('modalNameFilter').addEventListener('keyup', applyModalFilters);
+            document.getElementById('modalDepartmentFilter').addEventListener('change', applyModalFilters);
+            document.getElementById('modalMealTypeFilter').addEventListener('change', applyModalFilters);
+        }
+        
+        function applyModalFilters() {
+            window.currentModalFilters.name = document.getElementById('modalNameFilter').value.toLowerCase().trim();
+            window.currentModalFilters.department = document.getElementById('modalDepartmentFilter').value;
+            window.currentModalFilters.mealType = document.getElementById('modalMealTypeFilter').value;
+            
+            renderModalContent();
+        }
+        
+        function closeDetailModal() {
+            const modal = document.getElementById('detailModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        
+        function toggleDateDetail(detailId, rowId) {
+            const detailRow = document.getElementById(detailId);
+            const icon = document.getElementById(rowId + '-icon');
+            
+            if (detailRow.classList.contains('hidden')) {
+                detailRow.classList.remove('hidden');
+                icon.textContent = 'expand_less';
+            } else {
+                detailRow.classList.add('hidden');
+                icon.textContent = 'expand_more';
+            }
+        }
+
+        function updatePagination(totalItems) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const start = totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+            const end = Math.min(currentPage * itemsPerPage, totalItems);
+            
+            document.getElementById('pagination-info').textContent = 
+                `Hiển thị ${start}-${end} trong tổng ${totalItems} ngày`;
+            
+            const controls = document.getElementById('pagination-controls');
+            controls.innerHTML = `
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} 
+                        class="px-3 py-1.5 text-xs font-bold rounded border ${currentPage === 1 ? 'text-slate-300 border-slate-200 cursor-not-allowed' : 'text-slate-700 border-slate-300 hover:bg-slate-50'}">
+                    Trước
+                </button>
+                <span class="px-3 py-1.5 text-xs font-bold text-slate-700">
+                    ${currentPage} / ${totalPages || 1}
+                </span>
+                <button onclick="changePage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''} 
+                        class="px-3 py-1.5 text-xs font-bold rounded border ${currentPage >= totalPages ? 'text-slate-300 border-slate-200 cursor-not-allowed' : 'text-slate-700 border-slate-300 hover:bg-slate-50'}">
+                    Sau
+                </button>
+            `;
+        }
+
+        function changePage(page) {
+            const totalItems = Math.ceil(Object.keys(filteredRegistrations.reduce((acc, reg) => {
+                acc[reg.date] = true;
+                return acc;
+            }, {})).length);
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            loadRegistrations();
+        }
+
+        function exportToExcel() {
+            // Prepare data for export
+            const exportData = filteredRegistrations.map((reg, index) => ({
+                'STT': index + 1,
+                'Mã NV': reg.employee_id,
+                'Họ và tên': reg.user_name,
+                'Phòng ban': reg.department,
+                'Ngày': reg.date,
+                'Loại suất ăn': reg.meal_type,
+                'Tên món': reg.meal_name
+            }));
+            
+            // Create workbook and worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            
+            // Set column widths
+            ws['!cols'] = [
+                { wch: 5 },   // STT
+                { wch: 12 },  // Mã NV
+                { wch: 25 },  // Họ và tên
+                { wch: 20 },  // Phòng ban
+                { wch: 12 },  // Ngày
+                { wch: 15 },  // Loại suất ăn
+                { wch: 30 }   // Tên món
+            ];
+            
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Danh sách đăng ký');
+            
+            // Generate filename with date
+            const now = new Date();
+            const dateStr = `${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()}`;
+            const filename = `Thong_ke_suat_an_${currentPeriod}_${dateStr}.xlsx`;
+            
+            // Save file
+            XLSX.writeFile(wb, filename);
+            
+            // Show notification
+            showNotification('Đã xuất file Excel thành công!', 'success');
+        }
+        
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white max-w-sm`;
+            notification.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined">${type === 'success' ? 'check_circle' : 'error'}</span>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

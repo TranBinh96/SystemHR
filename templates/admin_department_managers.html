@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Trưởng phòng - {{ t.app_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="hidden lg:flex lg:flex-shrink-0">
+            <div class="flex w-72 flex-col">
+                <div class="flex min-h-0 flex-1 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                    <div class="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
+                        <div class="flex flex-shrink-0 items-center px-6 mb-8">
+                            <h1 class="text-2xl font-bold text-primary">{{ t.app_name }}</h1>
+                        </div>
+                        <nav class="mt-5 flex-1 flex flex-col px-4">
+                            <ul role="list" class="flex flex-1 flex-col gap-y-7">
+                                <li>
+                                    <ul role="list" class="-mx-2 space-y-1">
+                                        <li>
+                                            <a href="{{ url_for('admin_dashboard') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">dashboard</span>
+                                                Bảng Điều Khiển
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ url_for('admin_users') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">group</span>
+                                                Người Dùng
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ url_for('admin_department_managers') }}" class="bg-slate-100 dark:bg-slate-800 text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">supervisor_account</span>
+                                                Trưởng Phòng
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ url_for('admin_overtime_approvals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">schedule</span>
+                                                Duyệt Tăng Ca
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="mt-auto">
+                                    <ul role="list" class="-mx-2 space-y-1">
+                                        <li>
+                                            <a href="{{ url_for('profile') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">settings</span>
+                                                Cài Đặt
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ url_for('logout') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                                <span class="material-symbols-outlined">logout</span>
+                                                Đăng Xuất
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Top Header -->
+            <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+                <div class="flex h-16 items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
+                    <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+                        <div class="flex flex-1 items-center">
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Quản lý Trưởng phòng</h2>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="p-6">
+                <!-- Flash Messages -->
+                <div id="flash-messages"></div>
+
+                <!-- Department Managers Table -->
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold">Danh sách Trưởng phòng</h3>
+                            <p class="text-xs text-slate-500 mt-1">Quản lý trưởng phòng cho từng phòng ban</p>
+                        </div>
+                        <button onclick="showAddForm()" 
+                                style="background-color: #2563eb;"
+                                class="inline-flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-all shadow-sm">
+                            <span class="material-symbols-outlined">add</span>
+                            <span>Thêm Trưởng phòng</span>
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full divide-y divide-slate-200 dark:divide-slate-700">
+                            <thead class="bg-slate-50 dark:bg-slate-900">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        Phòng ban
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        Trưởng phòng
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        Mã NV
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        Email
+                                    </th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        Thao tác
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="managers-table-body" class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-700">
+                <h3 id="modal-title" class="text-lg font-bold text-slate-900 dark:text-slate-100">Thêm Trưởng phòng</h3>
+            </div>
+            <div class="p-6">
+                <form id="manager-form" class="space-y-4">
+                    <input type="hidden" id="manager-id">
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Phòng ban *</label>
+                        <select id="department" required
+                                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Chọn phòng ban</option>
+                            <option value="production">Production</option>
+                            <option value="hr">HR</option>
+                            <option value="it">IT</option>
+                            <option value="quality">Quality</option>
+                            <option value="finance">Finance</option>
+                            <option value="sales">Sales</option>
+                            <option value="marketing">Marketing</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Trưởng phòng *</label>
+                        <select id="manager-user-id" required
+                                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Chọn người dùng</option>
+                            <!-- Will be populated by JavaScript -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t border-slate-200 dark:border-slate-700 flex gap-3 justify-end">
+                <button onclick="closeModal()" 
+                        class="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    Hủy
+                </button>
+                <button onclick="saveManager()" 
+                        style="background-color: #2563eb;"
+                        class="px-4 py-2 text-white rounded-lg hover:opacity-90 transition-all">
+                    Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let managers = [];
+        let users = [];
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadManagers();
+            loadUsers();
+        });
+
+        function loadManagers() {
+            fetch('/admin/department-managers/list')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        managers = data.managers;
+                        renderManagers();
+                    }
+                })
+                .catch(err => console.error('Error loading managers:', err));
+        }
+
+        function loadUsers() {
+            fetch('/admin/users/list')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        users = data.users;
+                        populateUserSelect();
+                    }
+                })
+                .catch(err => console.error('Error loading users:', err));
+        }
+
+        function populateUserSelect() {
+            const select = document.getElementById('manager-user-id');
+            select.innerHTML = '<option value="">Chọn người dùng</option>';
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.name} (${user.employee_id})`;
+                select.appendChild(option);
+            });
+        }
+
+        function renderManagers() {
+            const tbody = document.getElementById('managers-table-body');
+            
+            if (managers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-slate-500">
+                            Chưa có trưởng phòng nào được thiết lập
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = managers.map(m => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100 capitalize">
+                        ${m.department}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100">
+                        ${m.manager_name}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                        ${m.manager_employee_id}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                        ${m.manager_email}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="editManager(${m.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <span class="material-symbols-outlined text-lg">edit</span>
+                        </button>
+                        <button onclick="deleteManager(${m.id}, '${m.department}')" class="text-red-600 hover:text-red-900">
+                            <span class="material-symbols-outlined text-lg">delete</span>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showAddForm() {
+            document.getElementById('modal-title').textContent = 'Thêm Trưởng phòng';
+            document.getElementById('manager-id').value = '';
+            document.getElementById('department').value = '';
+            document.getElementById('manager-user-id').value = '';
+            document.getElementById('department').disabled = false;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function editManager(id) {
+            const manager = managers.find(m => m.id === id);
+            if (!manager) return;
+
+            document.getElementById('modal-title').textContent = 'Chỉnh sửa Trưởng phòng';
+            document.getElementById('manager-id').value = manager.id;
+            document.getElementById('department').value = manager.department;
+            document.getElementById('manager-user-id').value = manager.manager_id;
+            document.getElementById('department').disabled = true;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        function saveManager() {
+            const id = document.getElementById('manager-id').value;
+            const department = document.getElementById('department').value;
+            const managerId = document.getElementById('manager-user-id').value;
+
+            if (!department || !managerId) {
+                showFlash('Vui lòng điền đầy đủ thông tin', 'error');
+                return;
+            }
+
+            const url = id ? `/admin/department-managers/${id}/edit` : '/admin/department-managers/add';
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({department, manager_id: managerId})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showFlash(data.message, 'success');
+                    closeModal();
+                    loadManagers();
+                } else {
+                    showFlash(data.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showFlash('Có lỗi xảy ra', 'error');
+            });
+        }
+
+        function deleteManager(id, department) {
+            if (!confirm(`Xác nhận xóa trưởng phòng của phòng ${department}?`)) return;
+
+            fetch(`/admin/department-managers/${id}/delete`, {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showFlash(data.message, 'success');
+                    loadManagers();
+                } else {
+                    showFlash(data.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showFlash('Có lỗi xảy ra', 'error');
+            });
+        }
+
+        function showFlash(message, type) {
+            const container = document.getElementById('flash-messages');
+            const bgColor = type === 'error' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200';
+            container.innerHTML = `
+                <div class="mb-4 p-4 rounded-lg border ${bgColor}">
+                    ${message}
+                </div>
+            `;
+            setTimeout(() => container.innerHTML = '', 3000);
+        }
+    </script>
+</body>
+</html>

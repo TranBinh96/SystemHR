@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý thực đơn - {{ t.app_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="hidden lg:flex lg:flex-shrink-0">
+            <div class="flex w-72 flex-col">
+                <div class="flex min-h-0 flex-1 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                    <div class="flex flex-col h-full pt-5 pb-4">
+                        <div class="flex flex-shrink-0 items-center px-6 mb-8">
+                            <h1 class="text-2xl font-bold text-primary">{{ t.app_name }}</h1>
+                        </div>
+                        <nav class="flex-1 px-4 overflow-y-auto">
+                            <ul role="list" class="flex flex-col gap-y-5">
+                                <!-- BẢNG ĐIỀU KHIỂN -->
+                                <li>
+                                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Bảng điều khiển</div>
+                                    <ul role="list" class="-mx-2 space-y-1">
+                                        <li>
+                                            <a href="{{ url_for('admin_dashboard') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">dashboard</span>
+                                                Bảng điều khiển
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <!-- NGƯỜI DÙNG -->
+                                <li>
+                                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Người dùng</div>
+                                    <ul role="list" class="-mx-2 space-y-1">
+                                        <li>
+                                            <a href="{{ url_for('admin_users') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">group</span>
+                                                Người dùng
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ url_for('admin_positions') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">badge</span>
+                                                Chức vụ
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <!-- ĐĂNG KÝ -->
+                                <li>
+                                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Đăng ký</div>
+                                    <ul role="list" class="-mx-2 space-y-1">
+                                        <li>
+                                            <a href="{{ url_for('admin_meals') }}" class="bg-slate-100 dark:bg-slate-800 text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">restaurant</span>
+                                                Quản lý Thực đơn
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <!-- THỐNG KÊ -->
+                                <li>
+                                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Thống kê</div>
+                                    <ul role="list" class="-mx-2 space-y-1">
+                                        <li>
+                                            <a href="{{ url_for('admin_overtime_approvals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">schedule</span>
+                                                Thống kê Làm thêm
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ url_for('admin_stats') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">bar_chart</span>
+                                                Thống kê Suất ăn
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ url_for('profile') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                                <span class="material-symbols-outlined">help</span>
+                                                Hỗ trợ
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </nav>
+                        <div class="px-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                            <ul role="list" class="-mx-2 space-y-1">
+                                <li>
+                                    <a href="{{ url_for('logout') }}" class="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">logout</span>
+                                        Đăng Xuất
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Top Header -->
+            <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+                <div class="flex h-16 items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
+                    <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+                        <div class="flex flex-1 items-center">
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Quản lý thực đơn</h2>
+                        </div>
+                        <div class="flex items-center gap-x-4 lg:gap-x-6">
+                            <select onchange="window.location.href='/set-language/' + this.value" class="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm font-medium">
+                                <option value="vi" {% if current_lang == 'vi' %}selected{% endif %}>🇻🇳 Tiếng Việt</option>
+                                <option value="en" {% if current_lang == 'en' %}selected{% endif %}>🇬🇧 English</option>
+                                <option value="ja" {% if current_lang == 'ja' %}selected{% endif %}>🇯🇵 日本語</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="p-6 pb-24 lg:pb-6">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="mb-4 p-4 rounded-lg {% if category == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-green-50 text-green-800 border border-green-200{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Week Navigator -->
+                <div class="mb-6 flex items-center justify-between">
+                    <div class="flex items-center bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-800 p-1">
+                        <button onclick="changeWeek(-1)" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors">
+                            <span class="material-symbols-outlined text-lg">chevron_left</span>
+                        </button>
+                        <div class="px-4 text-sm font-bold" id="weekDisplay">Tuần này</div>
+                        <button onclick="changeWeek(1)" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors">
+                            <span class="material-symbols-outlined text-lg">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Day Picker -->
+                <div class="mb-6 grid grid-cols-7 gap-2">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+
+                <!-- 2 Column Layout: Form + Table -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left Column: Add/Edit Form -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 sticky top-24">
+                            <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-green-600">restaurant</span>
+                                <span id="formTitle">Thêm món ăn</span>
+                            </h3>
+                            
+                            <form id="mealFormInline" class="space-y-4">
+                                <input type="hidden" id="mealIdInline">
+                                
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Ngày *</label>
+                                        <input type="date" id="mealDateInline" required
+                                               class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Bữa ăn *</label>
+                                        <select id="mealTypeInline" required
+                                                class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                            <option value="breakfast">Sáng</option>
+                                            <option value="lunch" selected>Trưa</option>
+                                            <option value="dinner">Tối</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Tên món ăn *</label>
+                                    <input type="text" id="dishNameInline" required
+                                           class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                           placeholder="VD: Cơm gà xối mỡ"
+                                           maxlength="200">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Mô tả</label>
+                                    <textarea id="descriptionInline" rows="4"
+                                              class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                              placeholder="Mô tả ngắn gọn..."></textarea>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-slate-500 mb-3">Loại món ăn</label>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <label class="flex items-center gap-3 p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 has-[:disabled]:cursor-not-allowed has-[:disabled]:hover:border-slate-200 has-[:disabled]:hover:bg-transparent">
+                                            <input type="radio" name="mealType" id="isSpecialInline" value="special" class="w-5 h-5 text-blue-600 border-slate-300 focus:ring-blue-500 disabled:opacity-50">
+                                            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Cải Thiện</span>
+                                        </label>
+                                        <label class="flex items-center gap-3 p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all has-[:checked]:border-slate-500 has-[:checked]:bg-slate-100 dark:has-[:checked]:bg-slate-700 has-[:disabled]:cursor-not-allowed has-[:disabled]:hover:border-slate-200 has-[:disabled]:hover:bg-transparent">
+                                            <input type="radio" name="mealType" id="isVegetarianInline" value="normal" checked class="w-5 h-5 text-slate-600 border-slate-300 focus:ring-slate-500 disabled:opacity-50">
+                                            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Bình Thường</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Hình ảnh món ăn</label>
+                                    <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-center hover:border-green-500 transition-colors cursor-pointer" onclick="document.getElementById('imageFileInline').click()">
+                                        <div id="imagePreviewInline" class="hidden mb-3">
+                                            <img id="previewImgInline" src="" alt="Preview" class="w-full h-32 object-cover rounded-lg">
+                                        </div>
+                                        <div id="uploadPlaceholder" class="text-slate-400">
+                                            <span class="material-symbols-outlined text-4xl mb-2">image</span>
+                                            <p class="text-xs font-semibold text-green-600">Tải ảnh lên</p>
+                                            <p class="text-[10px] text-slate-500 mt-1">PNG, JPG tối đa 5MB</p>
+                                        </div>
+                                        <input type="file" id="imageFileInline" accept="image/*" class="hidden" onchange="previewImageInline(event)">
+                                    </div>
+                                    <input type="hidden" id="imageUrlInline">
+                                </div>
+                                
+                                <div class="flex gap-2 pt-4">
+                                    <button type="button" onclick="saveMealInline()" 
+                                            class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                                        <span class="material-symbols-outlined text-lg" id="saveBtnIconInline">save</span>
+                                        <span id="saveBtnTextInline">Lưu món</span>
+                                    </button>
+                                    <button type="button" onclick="clearFormInline()" 
+                                            class="px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                                        Xóa
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: Scheduled Meals Table -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-bold">Thực đơn đã lên lịch</h3>
+                                    <p class="text-xs text-slate-500 mt-1">
+                                        <span class="inline-flex items-center gap-1">
+                                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                            <span id="selectedDateDisplay" class="font-semibold">Tuần hiện tại</span>
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead>
+                                        <tr class="bg-slate-50 dark:bg-slate-800/50">
+                                            <th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500 tracking-wider">Ngày</th>
+                                            <th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500 tracking-wider">Bữa</th>
+                                            <th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500 tracking-wider">Tên món</th>
+                                            <th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500 tracking-wider">Hình ảnh</th>
+                                            <th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500 tracking-wider text-right">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="mealsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                        <!-- Will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="p-8 text-center text-sm text-slate-500" id="emptyState">
+                                <span class="material-symbols-outlined text-5xl text-slate-300 mb-3">restaurant_menu</span>
+                                <p class="font-semibold">Chưa có món ăn nào</p>
+                                <p class="text-xs mt-1">Thêm món ăn mới từ form bên trái</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar (Mobile Only) -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe shadow-2xl z-50">
+        <div class="flex justify-around items-center h-20 px-4">
+            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_dashboard') }}">
+                <span class="material-symbols-outlined text-2xl">dashboard</span>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Dashboard</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_users') }}">
+                <span class="material-symbols-outlined text-2xl">group</span>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Users</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-primary" href="{{ url_for('admin_meals') }}">
+                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">restaurant</span>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Suất ăn</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-red-500 dark:text-red-400" href="{{ url_for('logout') }}">
+                <span class="material-symbols-outlined text-2xl">logout</span>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Logout</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        let currentWeekOffset = 0;
+        let selectedDate = null;
+        let allMenus = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateWeekDisplay();
+            updateDayPicker(); // Initialize day picker
+            loadMenus();
+        });
+
+        function updateWeekDisplay() {
+            const today = new Date();
+            today.setDate(today.getDate() + (currentWeekOffset * 7));
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay() + 1); // Monday
+            
+            const monthNames = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+                              'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+            
+            document.getElementById('weekDisplay').textContent = 
+                `Tuần ${getWeekNumber(weekStart)}, ${monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
+        }
+
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+        }
+
+        function changeWeek(offset) {
+            currentWeekOffset += offset;
+            updateWeekDisplay();
+            updateDayPicker(); // Update day buttons for new week
+            clearFormInline(); // Clear form when changing week
+            selectedDate = null; // Reset selected date
+            
+            // Clear table
+            document.getElementById('mealsTableBody').innerHTML = '';
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('selectedDateDisplay').textContent = 'Tuần hiện tại';
+            
+            loadMenus();
+        }
+
+        function updateDayPicker() {
+            const today = new Date();
+            today.setDate(today.getDate() + (currentWeekOffset * 7));
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay() + 1); // Monday
+            
+            const dayNames = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+            const dayPickerContainer = document.querySelector('.grid.grid-cols-7.gap-2');
+            
+            let html = '';
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(weekStart);
+                day.setDate(weekStart.getDate() + i);
+                const dateStr = day.toISOString().split('T')[0];
+                const dayNum = day.getDate();
+                
+                html += `
+                    <button onclick="selectDay('${dateStr}')" 
+                            id="day-${dateStr}"
+                            class="day-btn flex flex-col items-center p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-green-500 transition-colors">
+                        <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">${dayNames[i]}</span>
+                        <span class="text-xl font-black">${dayNum}</span>
+                    </button>
+                `;
+            }
+            
+            dayPickerContainer.innerHTML = html;
+            
+            // Update colors after rendering new days
+            setTimeout(() => {
+                updateAllDayColors();
+            }, 100);
+        }
+
+        function selectDay(date) {
+            selectedDate = date;
+            
+            // Clear form when switching days
+            clearFormInline();
+            
+            // Update day buttons
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                const btnDate = btn.id.replace('day-', '');
+                const status = getDayStatus(btnDate);
+                
+                // Remove all status classes
+                btn.classList.remove('bg-green-600', 'text-white', 'shadow-lg', 'border-green-600');
+                btn.classList.remove('bg-red-50', 'border-red-200', 'text-red-700');
+                btn.classList.remove('bg-orange-50', 'border-orange-200', 'text-orange-700');
+                btn.classList.remove('bg-green-50', 'border-green-200', 'text-green-700');
+                
+                // Apply status color if not selected
+                if (btnDate !== date) {
+                    if (status === 'empty') {
+                        btn.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
+                    } else if (status === 'partial') {
+                        btn.classList.add('bg-orange-50', 'border-orange-200', 'text-orange-700');
+                    } else if (status === 'complete') {
+                        btn.classList.add('bg-green-50', 'border-green-200', 'text-green-700');
+                    } else {
+                        btn.classList.add('bg-white', 'dark:bg-slate-900', 'border-slate-200', 'dark:border-slate-800');
+                    }
+                }
+            });
+            
+            const selectedBtn = document.getElementById(`day-${date}`);
+            if (selectedBtn) {
+                selectedBtn.classList.remove('bg-white', 'dark:bg-slate-900', 'border-slate-200', 'dark:border-slate-800');
+                selectedBtn.classList.remove('bg-red-50', 'border-red-200', 'text-red-700');
+                selectedBtn.classList.remove('bg-orange-50', 'border-orange-200', 'text-orange-700');
+                selectedBtn.classList.remove('bg-green-50', 'border-green-200', 'text-green-700');
+                selectedBtn.classList.add('bg-green-600', 'text-white', 'shadow-lg', 'border-green-600');
+            }
+            
+            // Update display
+            const dateObj = new Date(date);
+            const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+            document.getElementById('selectedDateDisplay').textContent = 
+                `${dayNames[dateObj.getDay()]}, ${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
+            
+            // Set form date
+            document.getElementById('mealDateInline').value = date;
+            
+            // Auto-select meal type based on existing meals for this date
+            autoSelectMealType(date);
+            
+            // Load meals for selected date
+            displayMealsForDate(date);
+        }
+
+        function getDayStatus(date) {
+            // Get meals for this date
+            const mealsForDate = allMenus.filter(m => m.date === date);
+            
+            if (mealsForDate.length === 0) {
+                return 'empty'; // No meals - red
+            }
+            
+            // Check if has both types
+            const hasNormal = mealsForDate.some(m => m.is_vegetarian && !m.is_special);
+            const hasSpecial = mealsForDate.some(m => m.is_special);
+            
+            if (hasNormal && hasSpecial) {
+                return 'complete'; // Has both - green
+            } else {
+                return 'partial'; // Has only one type - orange
+            }
+        }
+
+        function updateAllDayColors() {
+            // Update colors for all day buttons based on their status
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                const date = btn.id.replace('day-', '');
+                if (date !== selectedDate) {
+                    const status = getDayStatus(date);
+                    
+                    // Remove all color classes
+                    btn.classList.remove('bg-red-50', 'border-red-200', 'text-red-700');
+                    btn.classList.remove('bg-orange-50', 'border-orange-200', 'text-orange-700');
+                    btn.classList.remove('bg-green-50', 'border-green-200', 'text-green-700');
+                    btn.classList.remove('bg-white', 'dark:bg-slate-900', 'border-slate-200', 'dark:border-slate-800');
+                    
+                    // Apply status color
+                    if (status === 'empty') {
+                        btn.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
+                    } else if (status === 'partial') {
+                        btn.classList.add('bg-orange-50', 'border-orange-200', 'text-orange-700');
+                    } else if (status === 'complete') {
+                        btn.classList.add('bg-green-50', 'border-green-200', 'text-green-700');
+                    } else {
+                        btn.classList.add('bg-white', 'dark:bg-slate-900', 'border-slate-200', 'dark:border-slate-800');
+                    }
+                }
+            });
+        }
+
+        function autoSelectMealType(date) {
+            // Get meals for selected date
+            const mealsForDate = allMenus.filter(m => m.date === date);
+            
+            // Check if there are any "Bình Thường" (normal) meals
+            const hasNormal = mealsForDate.some(m => m.is_vegetarian && !m.is_special);
+            
+            // Check if there are any "Cải Thiện" (special) meals
+            const hasSpecial = mealsForDate.some(m => m.is_special);
+            
+            const specialRadio = document.getElementById('isSpecialInline');
+            const normalRadio = document.getElementById('isVegetarianInline');
+            const specialLabel = specialRadio.closest('label');
+            const normalLabel = normalRadio.closest('label');
+            
+            // Reset disabled states
+            specialRadio.disabled = false;
+            normalRadio.disabled = false;
+            specialLabel.classList.remove('opacity-50', 'cursor-not-allowed');
+            normalLabel.classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            // Logic: If has normal but no special, force special and disable normal
+            if (hasNormal && !hasSpecial) {
+                specialRadio.checked = true;
+                normalRadio.disabled = true;
+                normalLabel.classList.add('opacity-50', 'cursor-not-allowed');
+            } 
+            // If has special but no normal, force normal and disable special
+            else if (hasSpecial && !hasNormal) {
+                normalRadio.checked = true;
+                specialRadio.disabled = true;
+                specialLabel.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+            // If has both or neither, default to normal
+            else {
+                normalRadio.checked = true;
+            }
+        }
+
+        function loadMenus() {
+            fetch('/admin/meals/list')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        allMenus = data.menus;
+                        updateAllDayColors(); // Update day colors after loading menus
+                        if (selectedDate) {
+                            displayMealsForDate(selectedDate);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading menus:', error);
+                });
+        }
+
+        function displayMealsForDate(date) {
+            const tbody = document.getElementById('mealsTableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            const mealsForDate = allMenus.filter(m => m.date === date);
+            
+            if (mealsForDate.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            const mealTypeNames = {
+                'breakfast': 'Sáng',
+                'lunch': 'Trưa',
+                'dinner': 'Tối'
+            };
+            
+            const mealTypeColors = {
+                'breakfast': 'bg-orange-100 text-orange-700',
+                'lunch': 'bg-blue-100 text-blue-700',
+                'dinner': 'bg-purple-100 text-purple-700'
+            };
+            
+            tbody.innerHTML = mealsForDate.map(meal => {
+                const dateObj = new Date(meal.date);
+                const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+                return `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td class="px-4 py-3">
+                        <div class="text-xs font-semibold text-slate-700 dark:text-slate-300">${dayNames[dateObj.getDay()]}</div>
+                        <div class="text-[10px] text-slate-500">${dateObj.getDate()}/${dateObj.getMonth() + 1}</div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-1 ${mealTypeColors[meal.meal_type]} text-[10px] font-black rounded-full uppercase">
+                            ${mealTypeNames[meal.meal_type] || meal.meal_type}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">${meal.dish_name}</div>
+                        ${meal.description ? `<div class="text-xs text-slate-500 mt-0.5 line-clamp-1">${meal.description}</div>` : ''}
+                        <div class="flex gap-1 mt-1">
+                            ${meal.is_special ? '<span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-bold rounded">Cải Thiện</span>' : ''}
+                            ${meal.is_vegetarian ? '<span class="px-1.5 py-0.5 bg-slate-100 text-slate-700 text-[9px] font-bold rounded">Bình Thường</span>' : ''}
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        ${meal.image_url ? 
+                            `<img src="${meal.image_url}" alt="${meal.dish_name}" class="w-16 h-16 rounded-lg object-cover border-2 border-slate-200 dark:border-slate-700">` : 
+                            `<div class="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center border-2 border-slate-200 dark:border-slate-700">
+                                <span class="material-symbols-outlined text-slate-400 text-2xl">restaurant</span>
+                            </div>`
+                        }
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <div class="flex justify-end gap-1">
+                            <button onclick='editMealInline(${JSON.stringify(meal)})' class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Sửa">
+                                <span class="material-symbols-outlined text-lg">edit</span>
+                            </button>
+                            <button onclick="deleteMeal(${meal.id}, '${meal.dish_name}')" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Xóa">
+                                <span class="material-symbols-outlined text-lg">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Thêm món ăn';
+            document.getElementById('mealId').value = '';
+            document.getElementById('mealDate').value = selectedDate || '';
+            document.getElementById('mealType').value = 'lunch';
+            document.getElementById('dishName').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('isSpecial').checked = false;
+            document.getElementById('isVegetarian').checked = false;
+            document.getElementById('imageFile').value = '';
+            document.getElementById('imageUrl').value = '';
+            document.getElementById('imagePreview').classList.add('hidden');
+            
+            document.getElementById('saveBtnText').textContent = 'Thêm';
+            document.getElementById('saveBtnIcon').textContent = 'add';
+            
+            document.getElementById('mealModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            setTimeout(() => document.getElementById('dishName').focus(), 100);
+        }
+
+        function editMeal(meal) {
+            document.getElementById('modalTitle').textContent = 'Sửa món ăn';
+            document.getElementById('mealId').value = meal.id;
+            document.getElementById('mealDate').value = meal.date;
+            document.getElementById('mealType').value = meal.meal_type;
+            document.getElementById('dishName').value = meal.dish_name;
+            document.getElementById('description').value = meal.description || '';
+            document.getElementById('isSpecial').checked = meal.is_special;
+            document.getElementById('isVegetarian').checked = meal.is_vegetarian;
+            document.getElementById('imageUrl').value = meal.image_url || '';
+            
+            // Show existing image preview
+            if (meal.image_url) {
+                document.getElementById('previewImg').src = meal.image_url;
+                document.getElementById('imagePreview').classList.remove('hidden');
+            } else {
+                document.getElementById('imagePreview').classList.add('hidden');
+            }
+            
+            document.getElementById('saveBtnText').textContent = 'Lưu';
+            document.getElementById('saveBtnIcon').textContent = 'save';
+            
+            document.getElementById('mealModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function previewImageInline(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Check file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    showNotification('Kích thước ảnh không được vượt quá 5MB', 'error');
+                    event.target.value = '';
+                    return;
+                }
+                
+                // Check file type
+                if (!file.type.startsWith('image/')) {
+                    showNotification('Vui lòng chọn file ảnh', 'error');
+                    event.target.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImgInline').src = e.target.result;
+                    document.getElementById('imagePreviewInline').classList.remove('hidden');
+                    document.getElementById('uploadPlaceholder').classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearFormInline() {
+            document.getElementById('formTitle').textContent = 'Thêm món ăn';
+            document.getElementById('mealIdInline').value = '';
+            document.getElementById('mealDateInline').value = selectedDate || '';
+            document.getElementById('mealTypeInline').value = 'lunch';
+            document.getElementById('dishNameInline').value = '';
+            document.getElementById('descriptionInline').value = '';
+            document.getElementById('isVegetarianInline').checked = true; // Default to Bình Thường
+            document.getElementById('imageFileInline').value = '';
+            document.getElementById('imageUrlInline').value = '';
+            document.getElementById('imagePreviewInline').classList.add('hidden');
+            document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            document.getElementById('saveBtnTextInline').textContent = 'Lưu món';
+            document.getElementById('saveBtnIconInline').textContent = 'save';
+        }
+
+        function editMealInline(meal) {
+            document.getElementById('formTitle').textContent = 'Sửa món ăn';
+            document.getElementById('mealIdInline').value = meal.id;
+            document.getElementById('mealDateInline').value = meal.date;
+            document.getElementById('mealTypeInline').value = meal.meal_type;
+            document.getElementById('dishNameInline').value = meal.dish_name;
+            document.getElementById('descriptionInline').value = meal.description || '';
+            
+            // Set radio button based on meal type
+            if (meal.is_special) {
+                document.getElementById('isSpecialInline').checked = true;
+            } else {
+                document.getElementById('isVegetarianInline').checked = true;
+            }
+            
+            document.getElementById('imageUrlInline').value = meal.image_url || '';
+            
+            // Show existing image preview
+            if (meal.image_url) {
+                document.getElementById('previewImgInline').src = meal.image_url;
+                document.getElementById('imagePreviewInline').classList.remove('hidden');
+                document.getElementById('uploadPlaceholder').classList.add('hidden');
+            } else {
+                document.getElementById('imagePreviewInline').classList.add('hidden');
+                document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            }
+            
+            document.getElementById('saveBtnTextInline').textContent = 'Cập nhật';
+            document.getElementById('saveBtnIconInline').textContent = 'save';
+            
+            // Scroll to form on mobile
+            document.getElementById('mealFormInline').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function saveMealInline() {
+            const id = document.getElementById('mealIdInline').value;
+            const imageFile = document.getElementById('imageFileInline').files[0];
+            
+            // Get selected meal type from radio buttons
+            const isSpecial = document.getElementById('isSpecialInline').checked;
+            
+            const data = {
+                date: document.getElementById('mealDateInline').value,
+                meal_type: document.getElementById('mealTypeInline').value,
+                dish_name: document.getElementById('dishNameInline').value.trim(),
+                description: document.getElementById('descriptionInline').value.trim(),
+                is_special: isSpecial,
+                is_vegetarian: !isSpecial, // If not special, then it's normal
+                image_url: document.getElementById('imageUrlInline').value
+            };
+
+            if (!data.date || !data.dish_name) {
+                showNotification('Vui lòng điền đầy đủ thông tin', 'error');
+                return;
+            }
+
+            // If there's a new image file, upload it first
+            if (imageFile) {
+                const formData = new FormData();
+                formData.append('image', imageFile);
+                
+                fetch('/admin/meals/upload-image', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(uploadData => {
+                    if (uploadData.success) {
+                        data.image_url = uploadData.image_url;
+                        saveMealData(id, data);
+                    } else {
+                        showNotification(uploadData.message || 'Lỗi khi tải ảnh lên', 'error');
+                    }
+                })
+                .catch(error => {
+                    showNotification('Lỗi khi tải ảnh lên', 'error');
+                });
+            } else {
+                saveMealData(id, data);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('mealModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function saveMeal() {
+            const id = document.getElementById('mealId').value;
+            const imageFile = document.getElementById('imageFile').files[0];
+            
+            const data = {
+                date: document.getElementById('mealDate').value,
+                meal_type: document.getElementById('mealType').value,
+                dish_name: document.getElementById('dishName').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                is_special: document.getElementById('isSpecial').checked,
+                is_vegetarian: document.getElementById('isVegetarian').checked,
+                image_url: document.getElementById('imageUrl').value
+            };
+
+            if (!data.date || !data.dish_name) {
+                showNotification('Vui lòng điền đầy đủ thông tin', 'error');
+                return;
+            }
+
+            // If there's a new image file, upload it first
+            if (imageFile) {
+                const formData = new FormData();
+                formData.append('image', imageFile);
+                
+                fetch('/admin/meals/upload-image', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(uploadData => {
+                    if (uploadData.success) {
+                        data.image_url = uploadData.image_url;
+                        saveMealData(id, data);
+                    } else {
+                        showNotification(uploadData.message || 'Lỗi khi tải ảnh lên', 'error');
+                    }
+                })
+                .catch(error => {
+                    showNotification('Lỗi khi tải ảnh lên', 'error');
+                });
+            } else {
+                saveMealData(id, data);
+            }
+        }
+
+        function saveMealData(id, data) {
+            const url = id ? `/admin/meals/${id}/edit` : '/admin/meals/add';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(responseData => {
+                if (responseData.success) {
+                    showNotification(responseData.message, 'success');
+                    clearFormInline();
+                    loadMenus();
+                    
+                    // After loading menus, auto-select meal type and update colors
+                    setTimeout(() => {
+                        if (selectedDate) {
+                            autoSelectMealType(selectedDate);
+                            updateAllDayColors();
+                        }
+                    }, 100);
+                } else {
+                    showNotification(responseData.message || 'Có lỗi xảy ra', 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Có lỗi xảy ra khi kết nối server', 'error');
+            });
+        }
+
+        function deleteMeal(id, name) {
+            if (!confirm(`Bạn có chắc chắn muốn xóa món "${name}"?`)) {
+                return;
+            }
+
+            fetch(`/admin/meals/${id}/delete`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    loadMenus();
+                    setTimeout(() => {
+                        updateAllDayColors();
+                    }, 100);
+                } else {
+                    showNotification(data.message || 'Có lỗi xảy ra', 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Có lỗi xảy ra khi kết nối server', 'error');
+            });
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white max-w-sm animate-slide-in`;
+            notification.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined">${type === 'success' ? 'check_circle' : 'error'}</span>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    </script>
+
+    <style>
+        @keyframes slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .animate-slide-in {
+            animation: slide-in 0.3s ease-out;
+            transition: all 0.3s ease-out;
+        }
+    </style>
+</body>
+</html>

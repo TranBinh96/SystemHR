@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duyệt Tăng ca - {{ t.app_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900">
+    <!-- Sidebar (Desktop) -->
+    <aside class="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
+        <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-slate-900 px-6 pb-4 border-r border-slate-200 dark:border-slate-800">
+            <div class="flex h-20 shrink-0 items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center" style="background-color: #136dec;">
+                    <span class="material-symbols-outlined text-white text-2xl" style="font-variation-settings: 'FILL' 1;">badge</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900 dark:text-slate-100">OKI VIETNAM</h1>
+                    <p class="text-xs text-slate-500">HR System</p>
+                </div>
+            </div>
+            <nav class="flex flex-1 flex-col">
+                <ul role="list" class="flex flex-1 flex-col gap-y-7">
+                    <li>
+                        <!-- Bảng điều khiển -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Bảng điều khiển</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            <li>
+                                <a href="{{ url_for('dashboard') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">home</span>
+                                    Bảng điều khiển
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li>
+                        <!-- Phê duyệt -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Phê duyệt</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            <li>
+                                <a href="{{ url_for('manager_overtime_approvals') }}" class="text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold" style="background-color: rgba(19, 109, 236, 0.1);">
+                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+                                    Phê Duyệt
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li>
+                        <!-- Đăng ký -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Đăng ký</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            <li>
+                                <a href="{{ url_for('overtime') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">schedule</span>
+                                    Làm thêm
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('meals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">restaurant</span>
+                                    Suất ăn
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li>
+                        <!-- Khác -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Khác</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            <li>
+                                <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">history</span>
+                                    Lịch sử
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">support_agent</span>
+                                    Hỗ trợ
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li class="mt-auto">
+                        <a href="{{ url_for('profile') }}" class="block p-3 bg-slate-50 dark:bg-slate-800 rounded-lg mb-3 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                            <p class="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">Xin chào</p>
+                            <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ session.get('user_name', 'User') }}</p>
+                            <p class="text-xs text-slate-500">{{ session.get('employee_id', 'None') }}</p>
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="group -mx-2 flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                            <span class="material-symbols-outlined">logout</span>
+                            Đăng xuất
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Main Content with left padding for sidebar on desktop -->
+    <div class="lg:pl-72">
+        <!-- Header -->
+        <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex h-16 items-center justify-between px-4">
+                <div class="flex items-center gap-3">
+                    <a href="{{ url_for('dashboard') }}" class="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </a>
+                    <h1 class="text-xl font-bold text-slate-900 dark:text-slate-100">Duyệt Tăng ca</h1>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="p-4 pb-24 lg:pb-6 min-h-screen max-w-6xl mx-auto">
+            <!-- Flash Messages -->
+            <div id="flash-messages"></div>
+
+            <!-- Summary Cards with Gradient -->
+            <div class="grid grid-cols-3 gap-2 md:gap-3 mb-6">
+                <div onclick="filterByStatus('pending')" class="relative overflow-hidden rounded-lg md:rounded-xl p-3 md:p-6 bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg cursor-pointer hover:scale-105 transition-transform">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-16 h-16 md:w-24 md:h-24 bg-white/10 rounded-full"></div>
+                    <div class="relative">
+                        <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-2 mb-1">
+                            <span class="material-symbols-outlined text-white text-lg md:text-3xl">pending_actions</span>
+                            <p class="text-[10px] md:text-sm text-amber-50 font-medium leading-tight">Đang chờ duyệt</p>
+                        </div>
+                        <p id="pending-count" class="text-2xl md:text-4xl font-bold text-white">0</p>
+                    </div>
+                </div>
+                <div onclick="filterByStatus('approved')" class="relative overflow-hidden rounded-lg md:rounded-xl p-3 md:p-6 bg-gradient-to-br from-green-400 to-green-600 shadow-lg cursor-pointer hover:scale-105 transition-transform">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-16 h-16 md:w-24 md:h-24 bg-white/10 rounded-full"></div>
+                    <div class="relative">
+                        <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-2 mb-1">
+                            <span class="material-symbols-outlined text-white text-lg md:text-3xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            <p class="text-[10px] md:text-sm text-green-50 font-medium leading-tight">Đã duyệt</p>
+                        </div>
+                        <p id="approved-count" class="text-2xl md:text-4xl font-bold text-white">0</p>
+                    </div>
+                </div>
+                <div onclick="filterByStatus('rejected')" class="relative overflow-hidden rounded-lg md:rounded-xl p-3 md:p-6 bg-gradient-to-br from-red-400 to-red-600 shadow-lg cursor-pointer hover:scale-105 transition-transform">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-16 h-16 md:w-24 md:h-24 bg-white/10 rounded-full"></div>
+                    <div class="relative">
+                        <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-2 mb-1">
+                            <span class="material-symbols-outlined text-white text-lg md:text-3xl" style="font-variation-settings: 'FILL' 1;">cancel</span>
+                            <p class="text-[10px] md:text-sm text-red-50 font-medium leading-tight">Từ chối</p>
+                        </div>
+                        <p id="rejected-count" class="text-2xl md:text-4xl font-bold text-white">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters and Actions Bar -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 mb-6">
+                <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div class="flex gap-3 items-center">
+                        <span class="material-symbols-outlined text-slate-400">filter_alt</span>
+                        <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Lọc theo:</label>
+                        <select id="status-filter" onchange="filterRequests()" 
+                                class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-medium">
+                            <option value="pending">Đang chờ duyệt</option>
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="approved">Đã duyệt</option>
+                            <option value="rejected">Đã từ chối</option>
+                        </select>
+                    </div>
+                    <button onclick="bulkApprove()" id="bulk-approve-btn" class="hidden px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg">done_all</span>
+                        Duyệt hàng loạt (<span id="selected-count">0</span>)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Requests Table -->
+            <div id="requests-container" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <div id="no-requests" class="hidden text-center py-16 bg-slate-50 dark:bg-slate-800 rounded-2xl">
+                <span class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-6xl mb-3">event_busy</span>
+                <p class="text-slate-500 dark:text-slate-400 text-lg font-medium">Không có yêu cầu nào</p>
+                <p class="text-slate-400 dark:text-slate-500 text-sm mt-1">Các yêu cầu tăng ca sẽ hiển thị tại đây</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Approval Modal -->
+    <div id="approval-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-700">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Duyệt yêu cầu tăng ca</h3>
+            </div>
+            <div class="p-6">
+                <input type="hidden" id="request-id">
+                <div class="mb-4">
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mb-2">Nhân viên:</p>
+                    <p id="modal-employee" class="font-semibold text-slate-900 dark:text-slate-100"></p>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mb-2">Thời gian:</p>
+                    <p id="modal-time" class="font-semibold text-slate-900 dark:text-slate-100"></p>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Ghi chú (tùy chọn)</label>
+                    <textarea id="manager-comment" rows="3"
+                              class="w-full p-3 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-sm text-slate-700 dark:text-slate-200 outline-none resize-none"
+                              placeholder="Nhập ghi chú nếu cần..."></textarea>
+                </div>
+            </div>
+            <div class="p-6 border-t border-slate-200 dark:border-slate-700 flex gap-3">
+                <button onclick="closeModal()" 
+                        class="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    Hủy
+                </button>
+                <button onclick="rejectRequest()" 
+                        class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    Từ chối
+                </button>
+                <button onclick="approveRequest()" 
+                        class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    Duyệt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allRequests = [];
+        let currentFilter = 'pending';
+        let selectedRequests = new Set();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRequests();
+        });
+
+        function loadRequests() {
+            fetch('/manager/overtime-requests')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        allRequests = data.requests;
+                        selectedRequests.clear();
+                        updateSummary();
+                        filterRequests();
+                    } else {
+                        showFlash(data.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    showFlash('Có lỗi xảy ra khi tải dữ liệu', 'error');
+                });
+        }
+
+        function updateSummary() {
+            const pending = allRequests.filter(r => r.status === 'pending').length;
+            const approved = allRequests.filter(r => r.status === 'approved').length;
+            const rejected = allRequests.filter(r => r.status === 'rejected').length;
+
+            document.getElementById('pending-count').textContent = pending;
+            document.getElementById('approved-count').textContent = approved;
+            document.getElementById('rejected-count').textContent = rejected;
+        }
+
+        function filterRequests() {
+            currentFilter = document.getElementById('status-filter').value;
+            
+            let filtered = allRequests;
+            if (currentFilter !== 'all') {
+                filtered = allRequests.filter(r => r.status === currentFilter);
+            }
+
+            renderRequests(filtered);
+        }
+
+        function filterByStatus(status) {
+            document.getElementById('status-filter').value = status;
+            filterRequests();
+        }
+
+        function toggleSelectAll(checkbox) {
+            const checkboxes = document.querySelectorAll('.request-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+                if (checkbox.checked) {
+                    selectedRequests.add(parseInt(cb.value));
+                } else {
+                    selectedRequests.delete(parseInt(cb.value));
+                }
+            });
+            updateBulkApproveButton();
+        }
+
+        function toggleRequestSelection(checkbox, id) {
+            if (checkbox.checked) {
+                selectedRequests.add(id);
+            } else {
+                selectedRequests.delete(id);
+                document.getElementById('select-all').checked = false;
+            }
+            updateBulkApproveButton();
+        }
+
+        function updateBulkApproveButton() {
+            const btn = document.getElementById('bulk-approve-btn');
+            const count = document.getElementById('selected-count');
+            
+            if (selectedRequests.size > 0) {
+                btn.classList.remove('hidden');
+                btn.classList.add('flex');
+                count.textContent = selectedRequests.size;
+            } else {
+                btn.classList.add('hidden');
+                btn.classList.remove('flex');
+            }
+        }
+
+        function bulkApprove() {
+            if (selectedRequests.size === 0) {
+                showFlash('Vui lòng chọn ít nhất một yêu cầu', 'error');
+                return;
+            }
+
+            if (!confirm(`Duyệt ${selectedRequests.size} yêu cầu đã chọn?`)) return;
+
+            const promises = Array.from(selectedRequests).map(id => 
+                fetch(`/manager/overtime-requests/${id}/approve`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({comment: ''})
+                }).then(res => res.json())
+            );
+
+            Promise.all(promises)
+                .then(results => {
+                    const successCount = results.filter(r => r.success).length;
+                    showFlash(`Đã duyệt thành công ${successCount}/${selectedRequests.size} yêu cầu`, 'success');
+                    selectedRequests.clear();
+                    loadRequests();
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    showFlash('Có lỗi xảy ra khi duyệt hàng loạt', 'error');
+                });
+        }
+
+        function renderRequests(requests) {
+            const container = document.getElementById('requests-container');
+            const noRequests = document.getElementById('no-requests');
+
+            if (requests.length === 0) {
+                container.innerHTML = '';
+                noRequests.classList.remove('hidden');
+                return;
+            }
+
+            noRequests.classList.add('hidden');
+            
+            // Mobile card view
+            const isMobile = window.innerWidth < 1024;
+            
+            if (isMobile) {
+                // Mobile: Card-based layout
+                let cardsHTML = '<div class="space-y-3 p-4">';
+                
+                requests.forEach(r => {
+                    const escapedName = r.employee_name.replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    const escapedReason = r.reason.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
+                    
+                    let statusBadge = '';
+                    let cardBorder = '';
+                    let actionButtons = '';
+                    let checkboxCell = '';
+                    
+                    if (r.status === 'pending') {
+                        statusBadge = '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700"><span class="material-symbols-outlined text-xs">schedule</span>Chờ duyệt</span>';
+                        cardBorder = 'border-amber-200 bg-amber-50/30';
+                        checkboxCell = currentFilter === 'pending' ? `<input type="checkbox" class="request-checkbox w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" value="${r.id}" onchange="toggleRequestSelection(this, ${r.id})">` : '';
+                        actionButtons = `
+                            <div class="flex gap-2 mt-3">
+                                <button onclick="quickApprove(${r.id}, '${escapedName}')" 
+                                        class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-sm flex items-center justify-center gap-1">
+                                    <span class="material-symbols-outlined text-base">check</span>
+                                    Duyệt
+                                </button>
+                                <button onclick="quickReject(${r.id}, '${escapedName}')" 
+                                        class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-sm flex items-center justify-center gap-1">
+                                    <span class="material-symbols-outlined text-base">close</span>
+                                    Từ chối
+                                </button>
+                            </div>
+                        `;
+                    } else if (r.status === 'approved') {
+                        statusBadge = '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700"><span class="material-symbols-outlined text-xs" style="font-variation-settings: \'FILL\' 1;">check_circle</span>Đã duyệt</span>';
+                        cardBorder = 'border-green-200 bg-green-50/30';
+                        actionButtons = '';
+                    } else {
+                        statusBadge = '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700"><span class="material-symbols-outlined text-xs" style="font-variation-settings: \'FILL\' 1;">cancel</span>Từ chối</span>';
+                        cardBorder = 'border-red-200 bg-red-50/30';
+                        actionButtons = '';
+                    }
+                    
+                    cardsHTML += `
+                        <div class="bg-white rounded-xl border-2 ${cardBorder} p-4 shadow-sm">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3 flex-1">
+                                    ${checkboxCell}
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                                        ${r.employee_name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-bold text-sm text-slate-900">${r.employee_name}</p>
+                                        <p class="text-xs text-slate-500">${r.employee_id}</p>
+                                    </div>
+                                </div>
+                                ${statusBadge}
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3 text-sm mb-3">
+                                <div>
+                                    <p class="text-xs text-slate-500 mb-1">Ngày</p>
+                                    <p class="font-semibold text-slate-900">${formatDate(r.overtime_date)}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-500 mb-1">Thời gian</p>
+                                    <p class="font-semibold text-slate-900">${r.start_time} - ${r.end_time}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-500 mb-1">Tổng giờ</p>
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-bold">
+                                        <span class="material-symbols-outlined text-xs">timer</span>
+                                        ${r.total_hours}h
+                                    </span>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-500 mb-1">Lý do</p>
+                                    <p class="text-sm text-slate-700 line-clamp-2">${r.reason}</p>
+                                </div>
+                            </div>
+                            
+                            ${actionButtons}
+                        </div>
+                    `;
+                });
+                
+                cardsHTML += '</div>';
+                container.innerHTML = cardsHTML;
+            } else {
+                // Desktop: Table layout (existing code)
+                let tableHTML = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+                                <tr>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                                        ${currentFilter === 'pending' ? '<input type="checkbox" id="select-all" onchange="toggleSelectAll(this)" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">' : ''}
+                                    </th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Nhân viên</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Ngày</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Thời gian</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Tổng giờ</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Lý do</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Trạng thái</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                `;
+                
+                requests.forEach(r => {
+                    let statusBadge = '';
+                    let rowBg = '';
+                    let actionButton = '';
+                    let checkboxCell = '';
+                    
+                    const escapedName = r.employee_name.replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    const escapedReason = r.reason.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
+
+                    if (r.status === 'pending') {
+                        statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"><span class="material-symbols-outlined text-xs">schedule</span>Đang chờ</span>';
+                        rowBg = 'bg-amber-50/30 dark:bg-amber-900/5';
+                        checkboxCell = `<input type="checkbox" class="request-checkbox w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" value="${r.id}" onchange="toggleRequestSelection(this, ${r.id})">`;
+                        actionButton = `
+                            <div class="flex items-center justify-center gap-1">
+                                <button onclick="quickApprove(${r.id}, '${escapedName}')" 
+                                        class="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors" 
+                                        title="Duyệt">
+                                    <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">check</span>
+                                </button>
+                                <button onclick="quickReject(${r.id}, '${escapedName}')" 
+                                        class="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors" 
+                                        title="Từ chối">
+                                    <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">close</span>
+                                </button>
+                            </div>
+                        `;
+                    } else if (r.status === 'approved') {
+                        statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"><span class="material-symbols-outlined text-xs" style="font-variation-settings: \'FILL\' 1;">check_circle</span>Đã duyệt</span>';
+                        rowBg = 'bg-green-50/30 dark:bg-green-900/5';
+                        checkboxCell = '';
+                        actionButton = '<span class="text-xs text-slate-400">—</span>';
+                    } else {
+                        statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"><span class="material-symbols-outlined text-xs" style="font-variation-settings: \'FILL\' 1;">cancel</span>Từ chối</span>';
+                        rowBg = 'bg-red-50/30 dark:bg-red-900/5';
+                        checkboxCell = '';
+                        actionButton = '<span class="text-xs text-slate-400">—</span>';
+                    }
+
+                    tableHTML += `
+                        <tr class="${rowBg} hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                            <td class="px-4 py-3 text-center">
+                                ${checkboxCell}
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs">
+                                        ${r.employee_name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-slate-900 dark:text-slate-100 text-sm">${r.employee_name}</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">${r.employee_id}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <p class="text-sm text-slate-700 dark:text-slate-300 font-medium">${formatDate(r.overtime_date)}</p>
+                            </td>
+                            <td class="px-4 py-3">
+                                <p class="text-sm text-slate-700 dark:text-slate-300">${r.start_time} - ${r.end_time}</p>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-sm font-bold">
+                                    <span class="material-symbols-outlined text-xs">timer</span>
+                                    ${r.total_hours}h
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <p class="text-sm text-slate-700 dark:text-slate-300 line-clamp-2" title="${escapedReason}">${r.reason}</p>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                ${statusBadge}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                ${actionButton}
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                container.innerHTML = tableHTML;
+            }
+            
+            updateBulkApproveButton();
+        }
+
+        function quickApprove(id, employeeName) {
+            fetch(`/manager/overtime-requests/${id}/approve`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({comment: ''})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showFlash(data.message, 'success');
+                    selectedRequests.delete(id);
+                    loadRequests();
+                } else {
+                    showFlash(data.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showFlash('Có lỗi xảy ra', 'error');
+            });
+        }
+
+        function quickReject(id, employeeName) {
+            fetch(`/manager/overtime-requests/${id}/reject`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({comment: 'Từ chối'})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showFlash(data.message, 'success');
+                    selectedRequests.delete(id);
+                    loadRequests();
+                } else {
+                    showFlash(data.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showFlash('Có lỗi xảy ra', 'error');
+            });
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function formatDateTime(dateStr) {
+            const date = new Date(dateStr);
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${day}/${month} ${hours}:${minutes}`;
+        }
+
+        function showFlash(message, type) {
+            const container = document.getElementById('flash-messages');
+            const bgColor = type === 'error' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200';
+            container.innerHTML = `
+                <div class="mb-4 p-4 rounded-lg border ${bgColor}">
+                    ${message}
+                </div>
+            `;
+            setTimeout(() => container.innerHTML = '', 3000);
+        }
+    </script>
+
+    <!-- Bottom Navigation (Mobile Only) -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 shadow-2xl z-50">
+        <div class="flex justify-around items-center h-20 px-4">
+            <a class="flex flex-col items-center gap-1 text-slate-400" href="{{ url_for('dashboard') }}">
+                <span class="material-symbols-outlined text-2xl">home</span>
+                <span class="text-[10px] font-bold uppercase">Trang chủ</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-slate-400" href="{{ url_for('meals') }}">
+                <span class="material-symbols-outlined text-2xl">restaurant</span>
+                <span class="text-[10px] font-bold uppercase">Suất ăn</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-green-600" href="{{ url_for('manager_overtime_approvals') }}">
+                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">task_alt</span>
+                <span class="text-[10px] font-bold uppercase">Duyệt</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-slate-400" href="{{ url_for('profile') }}">
+                <span class="material-symbols-outlined text-2xl">person</span>
+                <span class="text-[10px] font-bold uppercase">Cá nhân</span>
+            </a>
+        </div>
+    </nav>
+</body>
+</html>

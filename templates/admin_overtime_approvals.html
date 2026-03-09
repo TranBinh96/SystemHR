@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo Tăng ca - OKI VIETNAM HR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-icons { 
+            font-family: 'Material Icons';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900">
+    <!-- Sidebar -->
+    <aside class="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
+        <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-slate-900 px-6 pb-4 border-r border-slate-200 dark:border-slate-800">
+            <div class="flex h-20 shrink-0 items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center" style="background-color: #13ec5b;">
+                    <i class="material-icons text-white text-2xl">analytics</i>
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">ADMIN PANEL</h1>
+                    <p class="text-xs text-slate-500">OT Management</p>
+                </div>
+            </div>
+            <nav class="flex flex-1 flex-col">
+                <ul role="list" class="flex flex-1 flex-col gap-y-5">
+                    <!-- BẢNG ĐIỀU KHIỂN -->
+                    <li>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Bảng điều khiển</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            <li>
+                                <a href="{{ url_for('admin_dashboard') }}" class="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium transition-colors">
+                                    <i class="material-icons">dashboard</i>
+                                    Bảng điều khiển
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- NGƯỜI DÙNG -->
+                    <li>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Người dùng</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            <li>
+                                <a href="{{ url_for('admin_users') }}" class="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium transition-colors">
+                                    <i class="material-icons">group</i>
+                                    Người dùng
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('admin_positions') }}" class="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium transition-colors">
+                                    <i class="material-icons">badge</i>
+                                    Chức vụ
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- ĐĂNG KÝ -->
+                    <li>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Đăng ký</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            <li>
+                                <a href="{{ url_for('admin_meals') }}" class="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium transition-colors">
+                                    <i class="material-icons">restaurant</i>
+                                    Quản lý Thực đơn
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- THỐNG KÊ -->
+                    <li>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Thống kê</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            <li>
+                                <a href="{{ url_for('admin_overtime_approvals') }}" class="text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-bold transition-colors" style="background-color: rgba(19, 236, 91, 0.1);">
+                                    <i class="material-icons" style="color: #13ec5b;">schedule</i>
+                                    Thống kê Làm thêm
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('admin_stats') }}" class="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium transition-colors">
+                                    <i class="material-icons">bar_chart</i>
+                                    Thống kê Suất ăn
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('profile') }}" class="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium transition-colors">
+                                    <i class="material-icons">help</i>
+                                    Hỗ trợ
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class="mt-auto pt-4 border-t border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer mb-2">
+                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
+                            <span class="text-xs font-bold">{{ session.get('user_name', 'A')[0].upper() }}</span>
+                        </div>
+                        <div class="flex flex-col overflow-hidden flex-1">
+                            <span class="text-xs font-bold truncate">{{ session.get('user_name', 'Admin') }}</span>
+                            <span class="text-[10px] text-slate-500 truncate">{{ session.get('employee_id', 'ADMIN') }}</span>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                        <i class="material-icons">logout</i>
+                        Đăng Xuất
+                    </a>
+                </div>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="lg:pl-72">
+        <!-- Header -->
+        <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex h-16 items-center justify-between px-4 lg:px-8">
+                <div class="flex items-center gap-3">
+                    <a href="{{ url_for('admin_dashboard') }}" class="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                        <i class="material-icons">arrow_back</i>
+                    </a>
+                    <div>
+                        <h1 class="text-xl lg:text-3xl font-black text-slate-900 dark:text-slate-100">Báo cáo & Thống kê</h1>
+                        <p class="text-xs lg:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Theo dõi ngân sách tăng ca theo phòng ban và xuất dữ liệu lương</p>
+                    </div>
+                </div>
+                <div class="flex gap-2 lg:gap-3">
+                    <button onclick="toggleFilter()" class="flex items-center gap-2 px-3 lg:px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs lg:text-sm font-bold hover:bg-slate-50 transition-colors">
+                        <i class="material-icons text-sm">filter_list</i>
+                        <span class="hidden lg:inline">Lọc</span>
+                    </button>
+                    <button onclick="exportExcel()" class="flex items-center gap-2 px-3 lg:px-4 py-2 rounded-lg text-xs lg:text-sm font-bold hover:opacity-90 transition-opacity shadow-lg text-white" style="background-color: #13ec5b;">
+                        <i class="material-icons text-sm">download</i>
+                        <span class="hidden lg:inline">Xuất Excel</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="p-4 lg:p-8 pb-24 lg:pb-6 min-h-screen">
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 mb-6">
+                <div class="bg-white dark:bg-slate-900 p-3 lg:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="p-1.5 lg:p-2 rounded-lg" style="background-color: rgba(19, 236, 91, 0.1);">
+                            <i class="material-icons text-base lg:text-xl" style="color: #13ec5b;">schedule</i>
+                        </div>
+                        <span class="text-[9px] lg:text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">Tháng này</span>
+                    </div>
+                    <p class="text-[10px] lg:text-xs font-medium text-slate-500 mb-0.5">Tổng giờ tăng ca</p>
+                    <h3 class="text-lg lg:text-xl font-black" id="total-hours">0 <span class="text-[10px] font-normal text-slate-400">giờ</span></h3>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 p-3 lg:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="p-1.5 lg:p-2 rounded-lg" style="background-color: rgba(19, 236, 91, 0.1);">
+                            <i class="material-icons text-base lg:text-xl" style="color: #13ec5b;">corporate_fare</i>
+                        </div>
+                        <span class="text-[9px] lg:text-[10px] font-bold text-purple-500 bg-purple-500/10 px-1.5 py-0.5 rounded-full">Hoạt động</span>
+                    </div>
+                    <p class="text-[10px] lg:text-xs font-medium text-slate-500 mb-0.5">Phòng ban</p>
+                    <h3 class="text-lg lg:text-xl font-black" id="total-departments">0 <span class="text-[10px] font-normal text-slate-400">phòng</span></h3>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 p-3 lg:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="p-1.5 lg:p-2 rounded-lg" style="background-color: rgba(239, 68, 68, 0.1);">
+                            <i class="material-icons text-base lg:text-xl text-red-500">warning</i>
+                        </div>
+                        <span class="text-[9px] lg:text-[10px] font-bold text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded-full">Cảnh báo</span>
+                    </div>
+                    <p class="text-[10px] lg:text-xs font-medium text-slate-500 mb-0.5">OT cao (>40h)</p>
+                    <h3 class="text-lg lg:text-xl font-black" id="high-ot-count">0 <span class="text-[10px] font-normal text-slate-400">người</span></h3>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6">
+                <!-- Trend Chart -->
+                <div class="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base lg:text-lg font-bold text-slate-900 dark:text-slate-100">Xu hướng tăng ca</h3>
+                        <select class="text-xs lg:text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-800">
+                            <option>6 tháng gần nhất</option>
+                            <option>12 tháng gần nhất</option>
+                        </select>
+                    </div>
+                    <div class="h-64 flex items-center justify-center text-slate-400">
+                        <div class="text-center">
+                            <i class="material-icons text-5xl mb-2">show_chart</i>
+                            <p class="text-sm">Biểu đồ xu hướng</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Departments -->
+                <div class="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h3 class="text-base lg:text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Top phòng ban</h3>
+                    <div id="top-departments" class="space-y-4">
+                        <div class="text-center text-slate-400 py-8">
+                            <i class="material-icons text-5xl mb-2">leaderboard</i>
+                            <p class="text-sm">Đang tải dữ liệu...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Table -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="p-4 lg:p-6 border-b border-slate-200 dark:border-slate-800">
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                            <h3 class="text-base lg:text-lg font-bold text-slate-900 dark:text-slate-100">Chi tiết theo phòng ban</h3>
+                            <div class="flex gap-2">
+                                <select id="status-filter" onchange="applyFilters()" class="text-xs lg:text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
+                                    <option value="all">Tất cả trạng thái</option>
+                                    <option value="pending">Chờ duyệt</option>
+                                    <option value="approved" selected>Đã duyệt</option>
+                                    <option value="rejected">Từ chối</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Filter Row -->
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                            <input type="text" id="filter-employee" placeholder="Tìm nhân viên..." onkeyup="applyFilters()" class="text-xs lg:text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
+                            <select id="filter-department" onchange="applyFilters()" class="text-xs lg:text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
+                                <option value="">Tất cả phòng ban</option>
+                            </select>
+                            <input type="date" id="filter-date-from" onchange="applyFilters()" placeholder="Từ ngày" class="text-xs lg:text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
+                            <input type="date" id="filter-date-to" onchange="applyFilters()" placeholder="Đến ngày" class="text-xs lg:text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop Table -->
+                <div class="hidden lg:block overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 dark:bg-slate-800/50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Phòng ban</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Số nhân viên</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Số lần tăng ca</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng giờ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="desktop-table-body" class="divide-y divide-slate-200 dark:divide-slate-800">
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                                    <i class="material-icons text-5xl mb-2">hourglass_empty</i>
+                                    <p>Đang tải dữ liệu...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile Cards -->
+                <div id="mobile-cards" class="lg:hidden divide-y divide-slate-200 dark:divide-slate-800">
+                    <div class="p-6 text-center text-slate-400">
+                        <i class="material-icons text-5xl mb-2">hourglass_empty</i>
+                        <p>Đang tải dữ liệu...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal 1: Danh sách nhân viên theo phòng ban -->
+    <div id="department-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-4 flex-1">
+                    <div class="w-16 h-16 rounded-full flex items-center justify-center" style="background-color: rgba(19, 236, 91, 0.1);">
+                        <i class="material-icons text-3xl" style="color: #13ec5b;">corporate_fare</i>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-black text-slate-900 dark:text-slate-100" id="dept-modal-name"></h2>
+                        <p class="text-sm text-slate-500" id="dept-modal-employee-count"></p>
+                    </div>
+                    <div class="flex gap-8">
+                        <div class="text-center">
+                            <p class="text-xs text-slate-500 mb-1">Tổng số lần</p>
+                            <p class="text-2xl font-black text-slate-900 dark:text-slate-100" id="dept-modal-total-count">0</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-xs text-slate-500 mb-1">Tổng giờ</p>
+                            <p class="text-2xl font-black text-slate-900 dark:text-slate-100" id="dept-modal-total-hours">0h</p>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="closeDeptModal()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors ml-4">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Danh sách nhân viên</h3>
+                    <div class="relative">
+                        <input type="text" id="dept-search-employee" onkeyup="filterDeptEmployees()" placeholder="Tìm nhân viên..." class="text-sm border border-slate-200 dark:border-slate-700 rounded-lg pl-10 pr-4 py-2 bg-white dark:bg-slate-800 w-64">
+                        <i class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</i>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Nhân viên</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Mã NV</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Số lần</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Tổng giờ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dept-employee-list" class="divide-y divide-slate-200 dark:divide-slate-800">
+                            <tr>
+                                <td colspan="4" class="px-4 py-8 text-center text-slate-400">
+                                    <i class="material-icons text-4xl mb-2">hourglass_empty</i>
+                                    <p>Đang tải...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination for department employees -->
+                <div id="dept-pagination" class="flex items-center justify-between mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                    <div class="text-sm text-slate-600 dark:text-slate-400">
+                        Hiển thị <span id="dept-showing-start">0</span>-<span id="dept-showing-end">0</span> trong tổng số <span id="dept-total">0</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="changeDeptPage('prev')" id="dept-prev-btn" class="px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="material-icons text-sm">chevron_left</i>
+                        </button>
+                        <div id="dept-page-numbers" class="flex gap-1"></div>
+                        <button onclick="changeDeptPage('next')" id="dept-next-btn" class="px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="material-icons text-sm">chevron_right</i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-6 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
+                <button onclick="closeDeptModal()" class="px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity text-white" style="background-color: #13ec5b;">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Lịch sử tăng ca chi tiết của nhân viên -->
+    <div id="employee-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-4 flex-1">
+                    <div class="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                        <span class="text-2xl font-bold" id="modal-avatar"></span>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-black text-slate-900 dark:text-slate-100" id="modal-employee-name"></h2>
+                        <p class="text-sm text-slate-500" id="modal-employee-id"></p>
+                        <p class="text-sm text-slate-600 dark:text-slate-400" id="modal-department"></p>
+                    </div>
+                    <div class="flex gap-8">
+                        <div class="text-center">
+                            <p class="text-xs text-slate-500 mb-1">Tổng số lần</p>
+                            <p class="text-2xl font-black text-slate-900 dark:text-slate-100" id="modal-total-count">0</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-xs text-slate-500 mb-1">Tổng giờ</p>
+                            <p class="text-2xl font-black text-slate-900 dark:text-slate-100" id="modal-total-hours">0h</p>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="closeEmployeeModal()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors ml-4">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+
+            <!-- Modal Filters -->
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                <div class="flex items-center gap-4">
+                    <!-- Tabs -->
+                    <div class="flex gap-2">
+                        <button onclick="switchEmployeeTab('history')" id="tab-history" class="px-4 py-2 rounded-lg text-sm font-bold transition-colors text-white" style="background-color: #13ec5b;">
+                            Lịch sử chi tiết
+                        </button>
+                        <button onclick="switchEmployeeTab('monthly')" id="tab-monthly" class="px-4 py-2 rounded-lg text-sm font-bold transition-colors bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+                            Tổng theo tháng
+                        </button>
+                    </div>
+                    
+                    <!-- Filters for history tab -->
+                    <div id="history-filters" class="flex gap-3 flex-1">
+                        <input type="month" id="modal-filter-month" onchange="filterModalData()" class="text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
+                        <select id="modal-filter-status" onchange="filterModalData()" class="text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="pending">Chờ duyệt</option>
+                            <option value="approved">Đã duyệt</option>
+                            <option value="rejected">Từ chối</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- History Tab Content -->
+                <div id="history-content">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Lịch sử đăng ký tăng ca</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Ngày</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Thời gian</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Tổng giờ</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Lý do</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modal-table-body" class="divide-y divide-slate-200 dark:divide-slate-800">
+                                <tr>
+                                    <td colspan="5" class="px-4 py-8 text-center text-slate-400">
+                                        <i class="material-icons text-4xl mb-2">hourglass_empty</i>
+                                        <p>Đang tải...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination for history -->
+                    <div id="history-pagination" class="flex items-center justify-between mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                        <div class="text-sm text-slate-600 dark:text-slate-400">
+                            Hiển thị <span id="history-showing-start">0</span>-<span id="history-showing-end">0</span> trong tổng số <span id="history-total">0</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="changeHistoryPage('prev')" id="history-prev-btn" class="px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="material-icons text-sm">chevron_left</i>
+                            </button>
+                            <div id="history-page-numbers" class="flex gap-1"></div>
+                            <button onclick="changeHistoryPage('next')" id="history-next-btn" class="px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="material-icons text-sm">chevron_right</i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Tab Content -->
+                <div id="monthly-content" class="hidden">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Tổng giờ tăng ca theo tháng</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Tháng</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Số lần</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Tổng giờ</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Trung bình/lần</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monthly-table-body" class="divide-y divide-slate-200 dark:divide-slate-800">
+                                <tr>
+                                    <td colspan="4" class="px-4 py-8 text-center text-slate-400">
+                                        <i class="material-icons text-4xl mb-2">hourglass_empty</i>
+                                        <p>Đang tải...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination for monthly -->
+                    <div id="monthly-pagination" class="flex items-center justify-between mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                        <div class="text-sm text-slate-600 dark:text-slate-400">
+                            Hiển thị <span id="monthly-showing-start">0</span>-<span id="monthly-showing-end">0</span> trong tổng số <span id="monthly-total">0</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="changeMonthlyPage('prev')" id="monthly-prev-btn" class="px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="material-icons text-sm">chevron_left</i>
+                            </button>
+                            <div id="monthly-page-numbers" class="flex gap-1"></div>
+                            <button onclick="changeMonthlyPage('next')" id="monthly-next-btn" class="px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="material-icons text-sm">chevron_right</i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-6 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
+                <button onclick="exportEmployeeData()" class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors">
+                    <i class="material-icons text-sm">download</i>
+                    Xuất Excel
+                </button>
+                <button onclick="closeEmployeeModal()" class="px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity text-white" style="background-color: #13ec5b;">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allRequests = [];
+        let filteredRequests = [];
+        let currentEmployeeData = null;
+        let currentDepartmentData = null;
+        let currentDeptEmployeeList = []; // Store full employee list for filtering
+        let filteredDeptEmployeeList = []; // Store filtered employee list for pagination
+        let modalFilteredData = [];
+        let currentDeptList = []; // Store department list for modal
+        let currentEmployeeTab = 'history'; // Track current tab
+        let historyCurrentPage = 1;
+        let historyItemsPerPage = 10;
+        let monthlyCurrentPage = 1;
+        let monthlyItemsPerPage = 10;
+        let deptCurrentPage = 1;
+        let deptItemsPerPage = 10;
+        const HOURLY_RATE = 50000; // 50k VNĐ per hour (example rate)
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default date to current year (start and end of year)
+            const today = new Date();
+            const startOfYear = new Date(today.getFullYear(), 0, 1);
+            const endOfYear = new Date(today.getFullYear(), 11, 31);
+            
+            document.getElementById('filter-date-from').value = startOfYear.toISOString().split('T')[0];
+            document.getElementById('filter-date-to').value = endOfYear.toISOString().split('T')[0];
+            
+            loadData();
+        });
+
+        async function loadData() {
+            try {
+                const statusFilter = document.getElementById('status-filter').value;
+                const response = await fetch(`/admin/overtime-requests/list?status=${statusFilter}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    allRequests = data.requests;
+                    populateDepartmentFilter();
+                    applyFilters();
+                } else {
+                    showError('Không thể tải dữ liệu');
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('Lỗi khi tải dữ liệu');
+            }
+        }
+
+        function populateDepartmentFilter() {
+            const departments = [...new Set(allRequests.map(req => req.department))].sort();
+            const select = document.getElementById('filter-department');
+            select.innerHTML = '<option value="">Tất cả phòng ban</option>';
+            departments.forEach(dept => {
+                select.innerHTML += `<option value="${dept}">${dept}</option>`;
+            });
+        }
+
+        function applyFilters() {
+            const employeeFilter = document.getElementById('filter-employee').value.toLowerCase();
+            const departmentFilter = document.getElementById('filter-department').value;
+            const dateFrom = document.getElementById('filter-date-from').value;
+            const dateTo = document.getElementById('filter-date-to').value;
+
+            filteredRequests = allRequests.filter(req => {
+                // Employee name or ID filter
+                if (employeeFilter && !req.employee_name.toLowerCase().includes(employeeFilter) && !req.employee_id.toLowerCase().includes(employeeFilter)) {
+                    return false;
+                }
+
+                // Department filter
+                if (departmentFilter && req.department !== departmentFilter) {
+                    return false;
+                }
+
+                // Date range filter
+                if (dateFrom && req.overtime_date < dateFrom) {
+                    return false;
+                }
+                if (dateTo && req.overtime_date > dateTo) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            updateStats();
+            updateTopDepartments();
+            renderTable();
+        }
+
+        function updateStats() {
+            // Calculate total hours from filtered requests
+            const totalHours = filteredRequests.reduce((sum, req) => sum + req.total_hours, 0);
+            document.getElementById('total-hours').innerHTML = `${totalHours.toFixed(1)} <span class="text-xs font-normal text-slate-400">giờ</span>`;
+
+            // Calculate total cost
+            const totalCost = totalHours * HOURLY_RATE;
+
+            // Count unique departments
+            const departments = new Set(filteredRequests.map(req => req.department));
+            document.getElementById('total-departments').innerHTML = `${departments.size} <span class="text-xs font-normal text-slate-400">phòng</span>`;
+
+            // Count high OT employees (>40 hours)
+            const employeeHours = {};
+            filteredRequests.forEach(req => {
+                if (req.status === 'approved') {
+                    employeeHours[req.employee_id] = (employeeHours[req.employee_id] || 0) + req.total_hours;
+                }
+            });
+            const highOtCount = Object.values(employeeHours).filter(hours => hours > 40).length;
+            document.getElementById('high-ot-count').innerHTML = `${highOtCount} <span class="text-xs font-normal text-slate-400">người</span>`;
+        }
+
+        function updateTopDepartments() {
+            // Group by department from filtered requests
+            const deptStats = {};
+            filteredRequests.forEach(req => {
+                if (!deptStats[req.department]) {
+                    deptStats[req.department] = { hours: 0, count: 0 };
+                }
+                deptStats[req.department].hours += req.total_hours;
+                deptStats[req.department].count += 1;
+            });
+
+            // Sort by hours
+            const sorted = Object.entries(deptStats)
+                .sort((a, b) => b[1].hours - a[1].hours)
+                .slice(0, 5);
+
+            const maxHours = sorted[0]?.[1].hours || 1;
+
+            const html = sorted.map(([dept, stats]) => {
+                const percentage = (stats.hours / maxHours * 100).toFixed(0);
+                return `
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-bold text-slate-900 dark:text-slate-100">${dept}</span>
+                            <span class="text-xs font-bold text-slate-500">${stats.hours.toFixed(1)}h</span>
+                        </div>
+                        <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5">
+                            <div class="h-2.5 rounded-full transition-all duration-500" style="width: ${percentage}%; background-color: #13ec5b;"></div>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">${stats.count} yêu cầu</p>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('top-departments').innerHTML = html || '<p class="text-center text-slate-400 py-8">Chưa có dữ liệu</p>';
+        }
+
+        function renderTable() {
+            // Group by department
+            const deptStats = {};
+            filteredRequests.forEach(req => {
+                if (!deptStats[req.department]) {
+                    deptStats[req.department] = {
+                        department: req.department,
+                        employees: new Set(),
+                        total_hours: 0,
+                        count: 0
+                    };
+                }
+                deptStats[req.department].employees.add(req.employee_id);
+                deptStats[req.department].total_hours += req.total_hours;
+                deptStats[req.department].count += 1;
+            });
+
+            // Convert to array and sort by total hours
+            const deptList = Object.values(deptStats).map(dept => ({
+                ...dept,
+                employee_count: dept.employees.size
+            })).sort((a, b) => b.total_hours - a.total_hours);
+
+            // Store for modal access
+            currentDeptList = deptList;
+
+            // Desktop table
+            const desktopHtml = deptList.map((dept, index) => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onclick="openDeptModal(${index})">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background-color: rgba(19, 236, 91, 0.1);">
+                                <i class="material-icons" style="color: #13ec5b;">corporate_fare</i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-900 dark:text-slate-100">${dept.department}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm font-bold text-slate-900 dark:text-slate-100">${dept.employee_count} người</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm font-bold text-slate-900 dark:text-slate-100">${dept.count} lần</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm font-bold text-slate-900 dark:text-slate-100">${dept.total_hours.toFixed(1)}h</span>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('desktop-table-body').innerHTML = desktopHtml || `
+                <tr>
+                    <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                        <i class="material-icons text-5xl mb-2">inbox</i>
+                        <p>Không có dữ liệu</p>
+                    </td>
+                </tr>
+            `;
+
+            // Mobile cards
+            const mobileHtml = deptList.map((dept, index) => `
+                <div class="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border-b border-slate-200 dark:border-slate-800" onclick="openDeptModal(${index})">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background-color: rgba(19, 236, 91, 0.1);">
+                            <i class="material-icons" style="color: #13ec5b;">corporate_fare</i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">${dept.department}</p>
+                            <p class="text-xs text-slate-500">${dept.employee_count} nhân viên</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <p class="text-slate-500 mb-1">Số lần</p>
+                            <p class="font-bold text-slate-900 dark:text-slate-100">${dept.count} lần</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-500 mb-1">Tổng giờ</p>
+                            <p class="font-bold text-slate-900 dark:text-slate-100">${dept.total_hours.toFixed(1)}h</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('mobile-cards').innerHTML = mobileHtml || `
+                <div class="p-6 text-center text-slate-400">
+                    <i class="material-icons text-5xl mb-2">inbox</i>
+                    <p>Không có dữ liệu</p>
+                </div>
+            `;
+        }
+
+        function openDeptModal(index) {
+            // Get department from stored list
+            if (!currentDeptList || !currentDeptList[index]) return;
+            
+            const dept = currentDeptList[index];
+            const department = dept.department;
+            
+            // Find department data
+            const departmentRequests = filteredRequests.filter(req => req.department === department);
+            if (departmentRequests.length === 0) return;
+
+            currentDepartmentData = { department, requests: departmentRequests };
+
+            // Group by employee
+            const employeeStats = {};
+            departmentRequests.forEach(req => {
+                const key = req.employee_id;
+                if (!employeeStats[key]) {
+                    employeeStats[key] = {
+                        employee_id: req.employee_id,
+                        employee_name: req.employee_name,
+                        department: req.department,
+                        total_hours: 0,
+                        count: 0
+                    };
+                }
+                employeeStats[key].total_hours += req.total_hours;
+                employeeStats[key].count += 1;
+            });
+
+            const employeeList = Object.values(employeeStats).sort((a, b) => b.total_hours - a.total_hours);
+            
+            // Store for filtering
+            currentDeptEmployeeList = employeeList;
+            filteredDeptEmployeeList = employeeList;
+            
+            // Set modal header
+            document.getElementById('dept-modal-name').textContent = department;
+            document.getElementById('dept-modal-employee-count').textContent = `${employeeList.length} nhân viên`;
+
+            // Set modal stats
+            const totalHours = departmentRequests.reduce((sum, req) => sum + req.total_hours, 0);
+            document.getElementById('dept-modal-total-count').textContent = departmentRequests.length;
+            document.getElementById('dept-modal-total-hours').textContent = totalHours.toFixed(1) + 'h';
+
+            // Clear search box and reset pagination
+            document.getElementById('dept-search-employee').value = '';
+            deptCurrentPage = 1;
+
+            // Render employee list
+            renderDeptEmployeeList();
+
+            // Show modal
+            document.getElementById('department-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDeptModal() {
+            document.getElementById('department-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            currentDepartmentData = null;
+            currentDeptEmployeeList = [];
+        }
+
+        function renderDeptEmployeeList() {
+            const totalItems = filteredDeptEmployeeList.length;
+            const totalPages = Math.ceil(totalItems / deptItemsPerPage);
+            const startIndex = (deptCurrentPage - 1) * deptItemsPerPage;
+            const endIndex = startIndex + deptItemsPerPage;
+            const pageData = filteredDeptEmployeeList.slice(startIndex, endIndex);
+
+            const html = pageData.map(emp => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onclick="openEmployeeModal('${emp.employee_id}')">
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                                <span class="text-sm font-bold">${emp.employee_name[0]}</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-900 dark:text-slate-100">${emp.employee_name}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <span class="text-sm text-slate-600 dark:text-slate-400">${emp.employee_id}</span>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <span class="text-sm font-bold text-slate-900 dark:text-slate-100">${emp.count} lần</span>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <span class="text-sm font-bold text-slate-900 dark:text-slate-100">${emp.total_hours.toFixed(1)}h</span>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('dept-employee-list').innerHTML = html || `
+                <tr>
+                    <td colspan="4" class="px-4 py-8 text-center text-slate-400">
+                        <i class="material-icons text-4xl mb-2">inbox</i>
+                        <p>Không có dữ liệu</p>
+                    </td>
+                </tr>
+            `;
+
+            // Update pagination info
+            document.getElementById('dept-showing-start').textContent = totalItems > 0 ? startIndex + 1 : 0;
+            document.getElementById('dept-showing-end').textContent = Math.min(endIndex, totalItems);
+            document.getElementById('dept-total').textContent = totalItems;
+
+            // Update pagination buttons
+            document.getElementById('dept-prev-btn').disabled = deptCurrentPage === 1;
+            document.getElementById('dept-next-btn').disabled = deptCurrentPage === totalPages || totalPages === 0;
+
+            // Render page numbers
+            renderDeptPageNumbers(totalPages);
+        }
+
+        function renderDeptPageNumbers(totalPages) {
+            const container = document.getElementById('dept-page-numbers');
+            let html = '';
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === deptCurrentPage) {
+                    html += `<button class="px-3 py-1.5 rounded-lg text-sm font-bold text-white" style="background-color: #13ec5b;">${i}</button>`;
+                } else {
+                    html += `<button onclick="goToDeptPage(${i})" class="px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50">${i}</button>`;
+                }
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function changeDeptPage(direction) {
+            const totalPages = Math.ceil(filteredDeptEmployeeList.length / deptItemsPerPage);
+
+            if (direction === 'prev' && deptCurrentPage > 1) {
+                deptCurrentPage--;
+            } else if (direction === 'next' && deptCurrentPage < totalPages) {
+                deptCurrentPage++;
+            }
+            renderDeptEmployeeList();
+        }
+
+        function goToDeptPage(page) {
+            deptCurrentPage = page;
+            renderDeptEmployeeList();
+        }
+
+        function filterDeptEmployees() {
+            const searchTerm = document.getElementById('dept-search-employee').value.toLowerCase();
+            
+            if (!searchTerm) {
+                filteredDeptEmployeeList = currentDeptEmployeeList;
+            } else {
+                filteredDeptEmployeeList = currentDeptEmployeeList.filter(emp => 
+                    emp.employee_name.toLowerCase().includes(searchTerm) || 
+                    emp.employee_id.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Reset to page 1 when filtering
+            deptCurrentPage = 1;
+            renderDeptEmployeeList();
+        }
+
+        function openEmployeeModal(employeeId) {
+            // Find employee data from current department
+            if (!currentDepartmentData) return;
+            
+            const employeeRequests = currentDepartmentData.requests.filter(req => req.employee_id === employeeId);
+            if (employeeRequests.length === 0) return;
+
+            currentEmployeeData = employeeRequests;
+            
+            const employee = employeeRequests[0];
+            
+            // Set modal header
+            document.getElementById('modal-avatar').textContent = employee.employee_name[0];
+            document.getElementById('modal-employee-name').textContent = employee.employee_name;
+            document.getElementById('modal-employee-id').textContent = employee.employee_id;
+            document.getElementById('modal-department').textContent = employee.department;
+
+            // Set default filter to show current year (clear month filter to show all)
+            document.getElementById('modal-filter-month').value = '';
+            document.getElementById('modal-filter-status').value = 'all';
+
+            // Filter data from start of current year to now
+            const today = new Date();
+            const startOfYear = new Date(today.getFullYear(), 0, 1); // January 1st of current year
+            
+            modalFilteredData = employeeRequests.filter(req => {
+                const reqDate = new Date(req.overtime_date);
+                return reqDate >= startOfYear && reqDate <= today;
+            });
+
+            // Set modal stats based on filtered data
+            const totalHours = modalFilteredData.reduce((sum, req) => sum + req.total_hours, 0);
+            document.getElementById('modal-total-count').textContent = modalFilteredData.length;
+            document.getElementById('modal-total-hours').textContent = totalHours.toFixed(1) + 'h';
+
+            // Reset pagination
+            historyCurrentPage = 1;
+            monthlyCurrentPage = 1;
+
+            // Default to monthly tab instead of history
+            switchEmployeeTab('monthly');
+
+            // Render table
+            renderModalTable();
+            renderMonthlyTable();
+
+            // Show modal
+            document.getElementById('employee-modal').classList.remove('hidden');
+        }
+
+        function closeEmployeeModal() {
+            document.getElementById('employee-modal').classList.add('hidden');
+            currentEmployeeData = null;
+        }
+
+        function switchEmployeeTab(tab) {
+            currentEmployeeTab = tab;
+            
+            // Update tab buttons
+            const historyTab = document.getElementById('tab-history');
+            const monthlyTab = document.getElementById('tab-monthly');
+            
+            if (tab === 'history') {
+                // History tab active
+                historyTab.className = 'px-4 py-2 rounded-lg text-sm font-bold transition-colors text-white';
+                historyTab.style.backgroundColor = '#13ec5b';
+                
+                monthlyTab.className = 'px-4 py-2 rounded-lg text-sm font-bold transition-colors bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300';
+                monthlyTab.style.backgroundColor = '';
+                
+                // Show/hide content
+                document.getElementById('history-content').classList.remove('hidden');
+                document.getElementById('monthly-content').classList.add('hidden');
+                document.getElementById('history-filters').classList.remove('hidden');
+            } else {
+                // Monthly tab active
+                monthlyTab.className = 'px-4 py-2 rounded-lg text-sm font-bold transition-colors text-white';
+                monthlyTab.style.backgroundColor = '#13ec5b';
+                
+                historyTab.className = 'px-4 py-2 rounded-lg text-sm font-bold transition-colors bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300';
+                historyTab.style.backgroundColor = '';
+                
+                // Show/hide content
+                document.getElementById('history-content').classList.add('hidden');
+                document.getElementById('monthly-content').classList.remove('hidden');
+                document.getElementById('history-filters').classList.add('hidden');
+            }
+        }
+
+        function renderMonthlyTable() {
+            if (!currentEmployeeData) return;
+
+            // Group by month
+            const monthlyStats = {};
+            currentEmployeeData.forEach(req => {
+                if (req.status !== 'approved') return; // Only count approved requests
+                
+                const date = new Date(req.overtime_date);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!monthlyStats[monthKey]) {
+                    monthlyStats[monthKey] = {
+                        month: monthKey,
+                        count: 0,
+                        total_hours: 0
+                    };
+                }
+                
+                monthlyStats[monthKey].count += 1;
+                monthlyStats[monthKey].total_hours += req.total_hours;
+            });
+
+            // Convert to array and sort by month (newest first)
+            const monthlyList = Object.values(monthlyStats).sort((a, b) => b.month.localeCompare(a.month));
+
+            // Pagination
+            const totalItems = monthlyList.length;
+            const totalPages = Math.ceil(totalItems / monthlyItemsPerPage);
+            const startIndex = (monthlyCurrentPage - 1) * monthlyItemsPerPage;
+            const endIndex = startIndex + monthlyItemsPerPage;
+            const pageData = monthlyList.slice(startIndex, endIndex);
+
+            const html = pageData.map(month => {
+                const avgHours = month.total_hours / month.count;
+                const [year, monthNum] = month.month.split('-');
+                const monthName = `Tháng ${monthNum}/${year}`;
+                
+                return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onclick="viewMonthDetails('${month.month}')">
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="text-sm font-bold text-slate-900 dark:text-slate-100">${monthName}</span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="text-sm text-slate-900 dark:text-slate-100">${month.count} lần</span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="text-sm font-bold text-slate-900 dark:text-slate-100">${month.total_hours.toFixed(1)}h</span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="text-sm text-slate-600 dark:text-slate-400">${avgHours.toFixed(1)}h</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('monthly-table-body').innerHTML = html || `
+                <tr>
+                    <td colspan="4" class="px-4 py-8 text-center text-slate-400">
+                        <i class="material-icons text-4xl mb-2">inbox</i>
+                        <p>Không có dữ liệu</p>
+                    </td>
+                </tr>
+            `;
+
+            // Update pagination info
+            document.getElementById('monthly-showing-start').textContent = totalItems > 0 ? startIndex + 1 : 0;
+            document.getElementById('monthly-showing-end').textContent = Math.min(endIndex, totalItems);
+            document.getElementById('monthly-total').textContent = totalItems;
+
+            // Update pagination buttons
+            document.getElementById('monthly-prev-btn').disabled = monthlyCurrentPage === 1;
+            document.getElementById('monthly-next-btn').disabled = monthlyCurrentPage === totalPages || totalPages === 0;
+
+            // Render page numbers
+            renderMonthlyPageNumbers(totalPages);
+        }
+
+        function viewMonthDetails(monthKey) {
+            // Set the month filter
+            document.getElementById('modal-filter-month').value = monthKey;
+            
+            // Switch to history tab
+            switchEmployeeTab('history');
+            
+            // Apply filter
+            filterModalData();
+        }
+
+        function renderMonthlyPageNumbers(totalPages) {
+            const container = document.getElementById('monthly-page-numbers');
+            let html = '';
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === monthlyCurrentPage) {
+                    html += `<button class="px-3 py-1.5 rounded-lg text-sm font-bold text-white" style="background-color: #13ec5b;">${i}</button>`;
+                } else {
+                    html += `<button onclick="goToMonthlyPage(${i})" class="px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50">${i}</button>`;
+                }
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function changeMonthlyPage(direction) {
+            const monthlyStats = {};
+            currentEmployeeData.forEach(req => {
+                if (req.status !== 'approved') return;
+                const date = new Date(req.overtime_date);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                if (!monthlyStats[monthKey]) {
+                    monthlyStats[monthKey] = { month: monthKey, count: 0, total_hours: 0 };
+                }
+                monthlyStats[monthKey].count += 1;
+                monthlyStats[monthKey].total_hours += req.total_hours;
+            });
+            const monthlyList = Object.values(monthlyStats);
+            const totalPages = Math.ceil(monthlyList.length / monthlyItemsPerPage);
+
+            if (direction === 'prev' && monthlyCurrentPage > 1) {
+                monthlyCurrentPage--;
+            } else if (direction === 'next' && monthlyCurrentPage < totalPages) {
+                monthlyCurrentPage++;
+            }
+            renderMonthlyTable();
+        }
+
+        function goToMonthlyPage(page) {
+            monthlyCurrentPage = page;
+            renderMonthlyTable();
+        }
+
+        function filterModalData() {
+            if (!currentEmployeeData) return;
+
+            const monthFilter = document.getElementById('modal-filter-month').value;
+            const status = document.getElementById('modal-filter-status').value;
+
+            // If no month filter, show current year by default
+            if (!monthFilter) {
+                const today = new Date();
+                const startOfYear = new Date(today.getFullYear(), 0, 1);
+                
+                modalFilteredData = currentEmployeeData.filter(req => {
+                    const reqDate = new Date(req.overtime_date);
+                    const inDateRange = reqDate >= startOfYear && reqDate <= today;
+                    const matchStatus = status === 'all' || req.status === status;
+                    return inDateRange && matchStatus;
+                });
+            } else {
+                // Filter by selected month
+                modalFilteredData = currentEmployeeData.filter(req => {
+                    const reqDate = new Date(req.overtime_date);
+                    const reqMonth = `${reqDate.getFullYear()}-${String(reqDate.getMonth() + 1).padStart(2, '0')}`;
+                    const matchMonth = reqMonth === monthFilter;
+                    const matchStatus = status === 'all' || req.status === status;
+                    return matchMonth && matchStatus;
+                });
+            }
+
+            // Update stats
+            const totalHours = modalFilteredData.reduce((sum, req) => sum + req.total_hours, 0);
+            document.getElementById('modal-total-count').textContent = modalFilteredData.length;
+            document.getElementById('modal-total-hours').textContent = totalHours.toFixed(1) + 'h';
+
+            // Reset to page 1 when filtering
+            historyCurrentPage = 1;
+
+            renderModalTable();
+        }
+
+        function renderModalTable() {
+            const totalItems = modalFilteredData.length;
+            const totalPages = Math.ceil(totalItems / historyItemsPerPage);
+            const startIndex = (historyCurrentPage - 1) * historyItemsPerPage;
+            const endIndex = startIndex + historyItemsPerPage;
+            const pageData = modalFilteredData.slice(startIndex, endIndex);
+
+            const html = pageData.map(req => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100">${formatDate(req.overtime_date)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100">${req.start_time} - ${req.end_time}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm font-bold text-slate-900 dark:text-slate-100">${req.total_hours.toFixed(1)}h</td>
+                    <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">${req.reason}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${getStatusBadge(req.status)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('modal-table-body').innerHTML = html || `
+                <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-slate-400">
+                        <i class="material-icons text-4xl mb-2">inbox</i>
+                        <p>Không có dữ liệu</p>
+                    </td>
+                </tr>
+            `;
+
+            // Update pagination info
+            document.getElementById('history-showing-start').textContent = totalItems > 0 ? startIndex + 1 : 0;
+            document.getElementById('history-showing-end').textContent = Math.min(endIndex, totalItems);
+            document.getElementById('history-total').textContent = totalItems;
+
+            // Update pagination buttons
+            document.getElementById('history-prev-btn').disabled = historyCurrentPage === 1;
+            document.getElementById('history-next-btn').disabled = historyCurrentPage === totalPages || totalPages === 0;
+
+            // Render page numbers
+            renderHistoryPageNumbers(totalPages);
+        }
+
+        function renderHistoryPageNumbers(totalPages) {
+            const container = document.getElementById('history-page-numbers');
+            let html = '';
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === historyCurrentPage) {
+                    html += `<button class="px-3 py-1.5 rounded-lg text-sm font-bold text-white" style="background-color: #13ec5b;">${i}</button>`;
+                } else {
+                    html += `<button onclick="goToHistoryPage(${i})" class="px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50">${i}</button>`;
+                }
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function changeHistoryPage(direction) {
+            if (direction === 'prev' && historyCurrentPage > 1) {
+                historyCurrentPage--;
+            } else if (direction === 'next') {
+                const totalPages = Math.ceil(modalFilteredData.length / historyItemsPerPage);
+                if (historyCurrentPage < totalPages) {
+                    historyCurrentPage++;
+                }
+            }
+            renderModalTable();
+        }
+
+        function goToHistoryPage(page) {
+            historyCurrentPage = page;
+            renderModalTable();
+        }
+
+        function exportEmployeeData() {
+            if (!modalFilteredData || modalFilteredData.length === 0) return;
+
+            const employee = modalFilteredData[0];
+            const headers = ['Ngày', 'Giờ bắt đầu', 'Giờ kết thúc', 'Tổng giờ', 'Lý do', 'Trạng thái'];
+            const rows = modalFilteredData.map(req => [
+                req.overtime_date,
+                req.start_time,
+                req.end_time,
+                req.total_hours,
+                req.reason,
+                req.status
+            ]);
+
+            let csvContent = '\uFEFF'; // UTF-8 BOM
+            csvContent += `Nhân viên: ${employee.employee_name} (${employee.employee_id})\n`;
+            csvContent += `Phòng ban: ${employee.department}\n\n`;
+            csvContent += headers.join(',') + '\n';
+            rows.forEach(row => {
+                csvContent += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `lich-su-tang-ca-${employee.employee_id}-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        function toggleDetails(index) {
+            // Deprecated - now using modal
+        }
+
+        function toggleMobileDetails(index) {
+            // Deprecated - now using modal
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                'pending': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">Chờ duyệt</span>',
+                'approved': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">Đã duyệt</span>',
+                'rejected': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">Từ chối</span>'
+            };
+            return badges[status] || status;
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('vi-VN');
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(Math.round(amount));
+        }
+
+        function toggleFilter() {
+            const filterRow = document.querySelector('.grid.grid-cols-2');
+            if (filterRow.style.display === 'none') {
+                filterRow.style.display = 'grid';
+            } else {
+                filterRow.style.display = 'none';
+            }
+        }
+
+        function exportExcel() {
+            // Group by employee for export
+            const employeeStats = {};
+            filteredRequests.forEach(req => {
+                const key = req.employee_id;
+                if (!employeeStats[key]) {
+                    employeeStats[key] = {
+                        employee_name: req.employee_name,
+                        employee_id: req.employee_id,
+                        department: req.department,
+                        total_hours: 0,
+                        count: 0
+                    };
+                }
+                employeeStats[key].total_hours += req.total_hours;
+                employeeStats[key].count += 1;
+            });
+
+            const employeeList = Object.values(employeeStats).sort((a, b) => b.total_hours - a.total_hours);
+
+            // Create CSV content from grouped data by department
+            const deptStats = {};
+            filteredRequests.forEach(req => {
+                if (!deptStats[req.department]) {
+                    deptStats[req.department] = {
+                        department: req.department,
+                        employees: new Set(),
+                        total_hours: 0,
+                        count: 0
+                    };
+                }
+                deptStats[req.department].employees.add(req.employee_id);
+                deptStats[req.department].total_hours += req.total_hours;
+                deptStats[req.department].count += 1;
+            });
+
+            const deptList = Object.values(deptStats).map(dept => ({
+                ...dept,
+                employee_count: dept.employees.size
+            })).sort((a, b) => b.total_hours - a.total_hours);
+
+            const headers = ['Phòng ban', 'Số nhân viên', 'Số lần tăng ca', 'Tổng giờ'];
+            const rows = deptList.map(dept => [
+                dept.department,
+                dept.employee_count,
+                dept.count,
+                dept.total_hours.toFixed(1)
+            ]);
+
+            let csvContent = '\uFEFF'; // UTF-8 BOM
+            csvContent += headers.join(',') + '\n';
+            rows.forEach(row => {
+                csvContent += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+
+            // Download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `bao-cao-tang-ca-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        function showError(message) {
+            alert(message);
+        }
+    </script>
+</body>
+</html>

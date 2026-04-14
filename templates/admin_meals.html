@@ -135,19 +135,39 @@
                                     <span class="material-symbols-outlined text-base">expand_more</span>
                                 </button>
                                 <div id="excelDropdownMenu"
-                                     class="hidden absolute right-0 mt-1 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+                                     class="hidden absolute right-0 mt-1 w-64 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+                                    <!-- Download Template -->
                                     <a href="{{ url_for('download_meal_template') }}"
-                                       class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                                       class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border-b border-slate-100 dark:border-slate-700">
                                         <span class="material-symbols-outlined text-base text-blue-500">download</span>
-                                        Tải template
+                                        <div>
+                                            <div class="font-medium">Tải template Excel</div>
+                                            <div class="text-xs text-slate-500">File mẫu để import thực đơn</div>
+                                        </div>
                                     </a>
+                                    
+                                    <!-- Import Single Day -->
                                     <button onclick="document.getElementById('importExcelInput').click(); toggleExcelDropdown()"
-                                            class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                                            class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border-b border-slate-100 dark:border-slate-700">
                                         <span class="material-symbols-outlined text-base text-green-500">upload_file</span>
-                                        Import Excel
+                                        <div class="text-left">
+                                            <div class="font-medium">Import Excel (1 ngày)</div>
+                                            <div class="text-xs text-slate-500">Import thực đơn cho ngày được chọn</div>
+                                        </div>
+                                    </button>
+                                    
+                                    <!-- Import 7 Days -->
+                                    <button onclick="document.getElementById('importExcel7DaysInput').click(); toggleExcelDropdown()"
+                                            class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                                        <span class="material-symbols-outlined text-base text-orange-500">calendar_view_week</span>
+                                        <div class="text-left">
+                                            <div class="font-medium">Import Excel (7 ngày)</div>
+                                            <div class="text-xs text-slate-500">Tự động điền từ ngày hiện tại</div>
+                                        </div>
                                     </button>
                                 </div>
-                                <input type="file" id="importExcelInput" accept=".xlsx,.xls" class="hidden" onchange="importExcel(this)">
+                                <input type="file" id="importExcelInput" accept=".xlsx,.xls" class="hidden" onchange="importExcel(this, false)">
+                                <input type="file" id="importExcel7DaysInput" accept=".xlsx,.xls" class="hidden" onchange="importExcel(this, true)">
                             </div>
 
                             <select onchange="window.location.href='/set-language/' + this.value" class="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm font-medium">
@@ -942,10 +962,34 @@
 
         function showNotification(message, type) {
             const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white max-w-sm animate-slide-in`;
+            let bgColor, icon;
+            
+            switch(type) {
+                case 'success':
+                    bgColor = 'bg-green-500';
+                    icon = 'check_circle';
+                    break;
+                case 'error':
+                    bgColor = 'bg-red-500';
+                    icon = 'error';
+                    break;
+                case 'warning':
+                    bgColor = 'bg-orange-500';
+                    icon = 'warning';
+                    break;
+                case 'info':
+                    bgColor = 'bg-blue-500';
+                    icon = 'info';
+                    break;
+                default:
+                    bgColor = 'bg-gray-500';
+                    icon = 'notifications';
+            }
+            
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${bgColor} text-white max-w-sm animate-slide-in`;
             notification.innerHTML = `
                 <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined">${type === 'success' ? 'check_circle' : 'error'}</span>
+                    <span class="material-symbols-outlined">${icon}</span>
                     <span>${message}</span>
                 </div>
             `;
@@ -955,7 +999,7 @@
                 notification.style.opacity = '0';
                 notification.style.transform = 'translateX(100%)';
                 setTimeout(() => notification.remove(), 300);
-            }, 3000);
+            }, type === 'info' ? 2000 : 3000);
         }
 
         function toggleExcelDropdown() {
@@ -970,31 +1014,215 @@
             }
         });
 
-        async function importExcel(input) {
+        async function importExcel(input, is7Days = false) {
             const file = input.files[0];
             if (!file) return;
 
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('is_7_days', is7Days);
+            formData.append('preview_only', true); // First, get preview
+            
+            // If 7 days mode, add selected date as start date
+            if (is7Days && selectedDate) {
+                formData.append('start_date', selectedDate);
+            }
+            
             input.value = '';
 
-            showNotification('Đang xử lý file...', 'info');
+            showNotification('Đang phân tích file Excel...', 'info');
 
             try {
                 const res = await fetch('/admin/meals/import', { method: 'POST', body: formData });
                 const data = await res.json();
 
                 if (data.success) {
+                    // Show preview modal
+                    showImportPreviewModal(data.preview_data, is7Days);
+                } else {
+                    showNotification(data.message || 'Lỗi phân tích file', 'error');
+                }
+            } catch (e) {
+                showNotification('Lỗi kết nối server', 'error');
+            }
+        }
+
+        function showImportPreviewModal(previewData, is7Days) {
+            // Create modal HTML
+            const modalHTML = `
+                <div id="importPreviewModal" class="fixed inset-0 z-50 overflow-y-auto">
+                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onclick="closeImportPreviewModal()"></div>
+                        
+                        <div class="inline-block w-full max-w-4xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-lg font-bold text-gray-900">
+                                    <span class="material-symbols-outlined text-blue-600 mr-2">preview</span>
+                                    Xác nhận Import Thực đơn
+                                </h3>
+                                <button onclick="closeImportPreviewModal()" class="text-gray-400 hover:text-gray-600">
+                                    <span class="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+                            
+                            <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+                                <div class="flex items-center gap-2 text-blue-800">
+                                    <span class="material-symbols-outlined">info</span>
+                                    <span class="font-semibold">Thông tin Import:</span>
+                                </div>
+                                <div class="mt-2 text-sm text-blue-700">
+                                    <div>• Tổng số dòng: <strong>${previewData.total_rows}</strong></div>
+                                    <div>• Tổng số món: <strong>${previewData.total_meals}</strong> (${previewData.total_rows} × 2)</div>
+                                    <div>• Từ ngày: <strong>${previewData.date_range.start}</strong> đến <strong>${previewData.date_range.end}</strong></div>
+                                    ${previewData.updates > 0 ? `<div class="text-orange-600">• Sẽ cập nhật: <strong>${previewData.updates}</strong> món đã tồn tại</div>` : ''}
+                                    ${previewData.errors.length > 0 ? `<div class="text-red-600">• Lỗi: <strong>${previewData.errors.length}</strong> dòng</div>` : ''}
+                                </div>
+                            </div>
+                            
+                            <div class="max-h-96 overflow-y-auto border rounded-lg">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50 sticky top-0">
+                                        <tr>
+                                            <th class="px-3 py-2 text-left font-semibold">Ngày</th>
+                                            <th class="px-3 py-2 text-left font-semibold">Thứ</th>
+                                            <th class="px-3 py-2 text-left font-semibold">Món Thường</th>
+                                            <th class="px-3 py-2 text-left font-semibold">Món Cải thiện</th>
+                                            <th class="px-3 py-2 text-left font-semibold">Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        ${previewData.meals.map(meal => `
+                                            <tr class="${meal.has_error ? 'bg-red-50' : (meal.will_update ? 'bg-orange-50' : 'bg-green-50')}">
+                                                <td class="px-3 py-2 font-mono text-xs">${meal.date}</td>
+                                                <td class="px-3 py-2 text-xs">${meal.day_name}</td>
+                                                <td class="px-3 py-2">
+                                                    <div class="font-medium">${meal.normal_name}</div>
+                                                    ${meal.normal_desc ? `<div class="text-xs text-gray-500">${meal.normal_desc}</div>` : ''}
+                                                </td>
+                                                <td class="px-3 py-2">
+                                                    <div class="font-medium">${meal.special_name}</div>
+                                                    ${meal.special_desc ? `<div class="text-xs text-gray-500">${meal.special_desc}</div>` : ''}
+                                                </td>
+                                                <td class="px-3 py-2">
+                                                    ${meal.has_error ? 
+                                                        `<span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">
+                                                            <span class="material-symbols-outlined text-sm">error</span>
+                                                            Lỗi
+                                                        </span>` :
+                                                        meal.will_update ? 
+                                                        `<span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-orange-700 bg-orange-100 rounded-full">
+                                                            <span class="material-symbols-outlined text-sm">update</span>
+                                                            Cập nhật
+                                                        </span>` :
+                                                        `<span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
+                                                            <span class="material-symbols-outlined text-sm">add</span>
+                                                            Mới
+                                                        </span>`
+                                                    }
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            ${previewData.errors.length > 0 ? `
+                                <div class="mt-4 p-4 bg-red-50 rounded-lg">
+                                    <div class="flex items-center gap-2 text-red-800 mb-2">
+                                        <span class="material-symbols-outlined">error</span>
+                                        <span class="font-semibold">Lỗi cần sửa:</span>
+                                    </div>
+                                    <ul class="text-sm text-red-700 space-y-1">
+                                        ${previewData.errors.map(error => `<li>• ${error}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="flex justify-end gap-3 mt-6">
+                                <button onclick="closeImportPreviewModal()" 
+                                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                                    Hủy
+                                </button>
+                                ${previewData.errors.length === 0 ? `
+                                    <button onclick="confirmImport(${is7Days})" 
+                                            class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-lg">check</span>
+                                        Xác nhận Import (${previewData.total_meals} món)
+                                    </button>
+                                ` : `
+                                    <button disabled 
+                                            class="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-lg cursor-not-allowed">
+                                        Không thể import (có lỗi)
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to page
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            document.body.style.overflow = 'hidden';
+            
+            // Store preview data for confirmation
+            window.importPreviewData = previewData;
+            console.log('Stored preview data:', previewData); // Debug log
+        }
+
+        function closeImportPreviewModal() {
+            const modal = document.getElementById('importPreviewModal');
+            if (modal) {
+                modal.remove();
+                document.body.style.overflow = 'auto';
+            }
+            // Don't reset importPreviewData here - keep it for confirmation
+            // window.importPreviewData = null;
+        }
+
+        async function confirmImport(is7Days) {
+            if (!window.importPreviewData) {
+                showNotification('Không có dữ liệu preview để import', 'error');
+                return;
+            }
+            
+            // Store the data before closing modal
+            const previewDataToSend = window.importPreviewData;
+            
+            showNotification('Đang import thực đơn...', 'info');
+            closeImportPreviewModal();
+            
+            try {
+                // Send confirmation to import
+                const formData = new FormData();
+                formData.append('confirm_import', 'true');
+                formData.append('preview_data', JSON.stringify(previewDataToSend));
+                formData.append('is_7_days', is7Days ? 'true' : 'false');
+                
+                console.log('Sending preview data:', previewDataToSend); // Debug log
+                
+                const res = await fetch('/admin/meals/import', { method: 'POST', body: formData });
+                const data = await res.json();
+
+                if (data.success) {
                     showNotification(data.message, 'success');
-                    if (data.errors && data.errors.length > 0) {
-                        console.warn('Import warnings:', data.errors);
-                        setTimeout(() => showNotification(`Có ${data.skipped} dòng lỗi - xem console để biết chi tiết`, 'warning'), 1500);
-                    }
-                    loadMeals();
+                    loadMenus();
+                    
+                    // Clear the data after successful import
+                    window.importPreviewData = null;
+                    
+                    // Update UI after successful import
+                    setTimeout(() => {
+                        updateAllDayColors();
+                        if (selectedDate) {
+                            displayMealsForDate(selectedDate);
+                        }
+                    }, 500);
                 } else {
                     showNotification(data.message || 'Import thất bại', 'error');
                 }
             } catch (e) {
+                console.error('Import error:', e); // Debug log
                 showNotification('Lỗi kết nối server', 'error');
             }
         }

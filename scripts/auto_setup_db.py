@@ -5,9 +5,13 @@ Supports automatic table creation when new models are added
 """
 import mysql.connector
 from mysql.connector import Error
+import sys
+import os
+
+# Add parent directory to path to import config
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import Config
 from werkzeug.security import generate_password_hash
-import sys
 
 def create_database_if_not_exists():
     """Create database if it doesn't exist"""

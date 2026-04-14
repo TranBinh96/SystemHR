@@ -654,9 +654,9 @@ def add_user():
             position_id=data['position'],  # Position ID
             role=data.get('role', 'user'),
             work_status=data.get('work_status', 'working'),
-            is_active=data.get('is_active', True) if isinstance(data.get('is_active'), bool) else data.get('is_active') in ['true', 'True', True, 1, '1'],
-            can_approve=data.get('can_approve', False) if isinstance(data.get('can_approve'), bool) else data.get('can_approve') in ['true', 'True', True, 1, '1'],
-            can_register=data.get('can_register', True) if isinstance(data.get('can_register'), bool) else data.get('can_register') in ['true', 'True', True, 1, '1']
+            is_active=True,  # Mặc định luôn active khi tạo mới
+            can_approve=data.get('can_approve') in ['true', 'True', True, 1, '1'] if 'can_approve' in data else False,
+            can_register=data.get('can_register') in ['true', 'True', True, 1, '1'] if 'can_register' in data else True
         )
         new_user.set_password(data['password'])
         
@@ -1667,7 +1667,7 @@ def get_stats_data():
     from sqlalchemy import func
     from models import Menu
     
-    period = request.args.get('period', 'tomorrow')  # tomorrow, week, month
+    period = request.args.get('period', 'week')  # week, tomorrow, month
     
     # Calculate date range
     today = datetime.now().date()
@@ -1687,12 +1687,63 @@ def get_stats_data():
         else:
             end_date = (today.replace(month=today.month + 1, day=1) - timedelta(days=1))
     
-    # Get registrations for the period
-    registrations = MealRegistration.query.filter(
+    # AUTO-REGISTER: Tự động đăng ký cho user chưa đăng ký trong khoảng thời gian này
+    auto_registered_count = 0
+    current_date = start_date
+    
+    while current_date <= end_date:
+        # Chỉ đăng ký cho ngày hôm nay trở đi (không đăng ký cho quá khứ)
+        if current_date >= today:
+            # Lấy menu bình thường cho ngày này
+            normal_menu = Menu.query.filter(
+                Menu.date == current_date,
+                Menu.is_special == False,
+                Menu.is_active == True,
+                Menu.meal_type == 'lunch'
+            ).first()
+            
+            if normal_menu:
+                # Lấy tất cả user có trạng thái hoạt động (bỏ is_active)
+                active_users = User.query.filter(
+                    User.work_status.in_(['working', 'business_trip']),
+                    User.can_register == True
+                ).all()
+                
+                for user in active_users:
+                    # Kiểm tra xem user đã đăng ký chưa
+                    existing = MealRegistration.query.filter_by(
+                        user_id=user.id,
+                        date=current_date
+                    ).first()
+                    
+                    if not existing:
+                        # Tự động đăng ký suất ăn bình thường
+                        new_registration = MealRegistration(
+                            user_id=user.id,
+                            date=current_date,
+                            meal_id=normal_menu.id,
+                            meal_type='lunch',
+                            has_meal=True,
+                            notes='Tự động đăng ký bởi hệ thống'
+                        )
+                        db.session.add(new_registration)
+                        auto_registered_count += 1
+        
+        current_date += timedelta(days=1)
+    
+    # Commit tất cả đăng ký tự động
+    if auto_registered_count > 0:
+        db.session.commit()
+        print(f"✅ AUTO-REGISTER: Đã tự động đăng ký {auto_registered_count} suất ăn")
+    
+    # Get registrations for the period with proper joins
+    registrations = MealRegistration.query.join(User).join(Menu).filter(
         MealRegistration.date >= start_date,
         MealRegistration.date <= end_date,
         MealRegistration.has_meal == True
     ).all()
+    
+    print(f"DEBUG: Found {len(registrations)} registrations for period {period} ({start_date} to {end_date})")  # Debug log
     
     # Calculate summary
     total_meals = len(registrations)
@@ -1719,17 +1770,21 @@ def get_stats_data():
     # Get detailed registration list with user info
     registration_list = []
     for reg in registrations:
-        registration_list.append({
-            'id': reg.id,
-            'user_name': reg.user.name,
-            'employee_id': reg.user.employee_id,
-            'department': reg.user.department,
-            'date': reg.date.strftime('%d/%m/%Y'),
-            'meal_name': reg.menu.dish_name if reg.menu else 'N/A',
-            'meal_type': 'Cải Thiện' if (reg.menu and reg.menu.is_special) else 'Bình Thường',
-            'is_special': reg.menu.is_special if reg.menu else False,
-            'notes': reg.notes or ''
-        })
+        try:
+            registration_list.append({
+                'id': reg.id,
+                'user_name': reg.user.name,
+                'employee_id': reg.user.employee_id,
+                'department': reg.user.dept.name if reg.user.dept else 'N/A',  # Use dept relationship
+                'date': reg.date.strftime('%d/%m/%Y'),
+                'meal_name': reg.menu.dish_name if reg.menu else 'N/A',
+                'meal_type': 'Cải Thiện' if (reg.menu and reg.menu.is_special) else 'Bình Thường',
+                'is_special': reg.menu.is_special if reg.menu else False,
+                'notes': reg.notes or ''
+            })
+        except Exception as e:
+            print(f"DEBUG: Error processing registration {reg.id}: {e}")  # Debug log
+            continue
     
     return {
         'success': True,
@@ -1917,6 +1972,7 @@ def download_meal_template():
     import openpyxl
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from flask import send_file
+    from datetime import datetime, timedelta
 
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -1929,8 +1985,15 @@ def download_meal_template():
     thin = Side(style='thin', color='CCCCCC')
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    headers = ['Ngày (YYYY-MM-DD)', 'Loại bữa (lunch/dinner/breakfast)', 'Tên món', 'Mô tả', 'Cải thiện (TRUE/FALSE)', 'Ăn chay (TRUE/FALSE)']
-    col_widths = [22, 32, 30, 40, 24, 22]
+    # New headers - simplified format
+    headers = [
+        'Ngày (YYYY-MM-DD)', 
+        'Tên món (Thường)', 
+        'Mô tả (Thường)', 
+        'Tên món (Cải thiện)', 
+        'Mô tả (Cải thiện)'
+    ]
+    col_widths = [20, 25, 30, 25, 30]
 
     for col, (h, w) in enumerate(zip(headers, col_widths), 1):
         cell = ws.cell(row=1, column=col, value=h)
@@ -1942,11 +2005,12 @@ def download_meal_template():
 
     ws.row_dimensions[1].height = 22
 
-    # Sample rows
+    # Sample rows for single day import with auto-filled dates
+    today = datetime.now().date()
     samples = [
-        ['2026-04-01', 'lunch', 'Cơm gà xối mỡ', 'Gà chiên giòn, cơm trắng', False, False],
-        ['2026-04-01', 'dinner', 'Bún bò Huế', 'Bún bò đặc biệt', True, False],
-        ['2026-04-02', 'lunch', 'Cơm chay', 'Đậu hũ, rau củ', False, True],
+        [(today + timedelta(days=0)).strftime('%Y-%m-%d'), 'Cơm gà xối mỡ', 'Gà chiên giòn, cơm trắng', 'Bún bò Huế', 'Bún bò đặc biệt'],
+        [(today + timedelta(days=1)).strftime('%Y-%m-%d'), 'Cơm sườn nướng', 'Sườn nướng BBQ', 'Phở bò', 'Phở bò tái chín'],
+        [(today + timedelta(days=2)).strftime('%Y-%m-%d'), 'Cơm chiên dương châu', 'Cơm chiên hải sản', 'Mì quảng', 'Mì quảng tôm thịt'],
     ]
     sample_fill = PatternFill(fill_type='solid', fgColor='F5F5F5')
     for r, row in enumerate(samples, 2):
@@ -1954,25 +2018,59 @@ def download_meal_template():
             cell = ws.cell(row=r, column=c, value=val)
             cell.border = border
             cell.alignment = Alignment(vertical='center')
-            if r % 2 == 0:
+            if c == 1:  # Date column - highlight with light blue
+                cell.fill = PatternFill(fill_type='solid', fgColor='E3F2FD')
+            elif r % 2 == 0:
                 cell.fill = sample_fill
 
-    # Note sheet
-    ws2 = wb.create_sheet('Hướng dẫn')
-    notes = [
-        ('Cột', 'Giá trị hợp lệ'),
-        ('Ngày', 'Định dạng YYYY-MM-DD, ví dụ: 2026-04-01'),
-        ('Loại bữa', 'lunch | dinner | breakfast'),
-        ('Tên món', 'Bắt buộc, tối đa 200 ký tự'),
-        ('Mô tả', 'Tùy chọn'),
-        ('Cải thiện', 'TRUE hoặc FALSE'),
-        ('Ăn chay', 'TRUE hoặc FALSE'),
+    # Create second sheet for 7-day import with auto-filled dates
+    ws2 = wb.create_sheet('Import 7 ngày')
+    
+    # Headers for 7-day sheet
+    for col, (h, w) in enumerate(zip(headers, col_widths), 1):
+        cell = ws2.cell(row=1, column=col, value=h)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = center
+        cell.border = border
+        ws2.column_dimensions[cell.column_letter].width = w
+
+    # Sample data for 7-day import with AUTO-FILLED dates
+    day_names = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật']
+    samples_7days = [
+        ['Cơm gà nướng', 'Gà nướng mật ong', 'Phở bò', 'Phở bò tái chín'],
+        ['Cơm sườn nướng', 'Sườn nướng BBQ', 'Bún chả', 'Bún chả Hà Nội'],
+        ['Cơm chiên dương châu', 'Cơm chiên hải sản', 'Mì quảng', 'Mì quảng tôm thịt'],
+        ['Cơm tấm', 'Cơm tấm sườn bì', 'Bún bò Huế', 'Bún bò đặc biệt'],
+        ['Cơm rang thập cẩm', 'Cơm rang hải sản', 'Phở gà', 'Phở gà ta'],
+        ['Cơm gà roti', 'Gà roti cà ri', 'Bún riêu', 'Bún riêu cua'],
+        ['Cơm thịt nướng', 'Thịt nướng BBQ', 'Hủ tiếu', 'Hủ tiếu Nam Vang'],
     ]
-    ws2.column_dimensions['A'].width = 15
-    ws2.column_dimensions['B'].width = 45
-    for r, (a, b) in enumerate(notes, 1):
-        ws2.cell(row=r, column=1, value=a).font = Font(bold=(r == 1))
-        ws2.cell(row=r, column=2, value=b)
+    
+    # Auto-fill dates for 7 days starting from today
+    for i, meal_data in enumerate(samples_7days):
+        auto_date = today + timedelta(days=i)
+        date_str = auto_date.strftime('%Y-%m-%d')
+        day_name = day_names[auto_date.weekday()]
+        
+        # Create row with auto-filled date
+        row_data = [date_str] + meal_data
+        
+        for c, val in enumerate(row_data, 1):
+            cell = ws2.cell(row=i+2, column=c, value=val)
+            cell.border = border
+            cell.alignment = Alignment(vertical='center')
+            
+            # Highlight date column with auto-filled dates
+            if c == 1:  # Date column - auto-filled
+                cell.fill = PatternFill(fill_type='solid', fgColor='E8F5E8')
+                # Add comment showing day name
+                cell.comment = openpyxl.comments.Comment(
+                    f'TỰ ĐỘNG ĐIỀN\n{day_name}\n({date_str})', 
+                    'System'
+                )
+            elif (i+2) % 2 == 0:
+                cell.fill = sample_fill
 
     buf = io.BytesIO()
     wb.save(buf)
@@ -1982,21 +2080,26 @@ def download_meal_template():
         buf,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         as_attachment=True,
-        download_name='template_thuc_don.xlsx'
+        download_name=f'template_thuc_don_{today.strftime("%Y%m%d")}.xlsx'
     )
 
 
 @app.route('/admin/meals/import', methods=['POST'])
 @login_required
 def import_meals_excel():
-    """Import meals from Excel file"""
+    """Import meals from Excel file with preview and update support"""
     if current_user.role != 'admin':
         return {'success': False, 'message': 'Không có quyền'}, 403
 
     import openpyxl
-    from datetime import datetime
+    from datetime import datetime, timedelta
     from models import Menu
 
+    # Check if this is a confirmation request
+    if request.form.get('confirm_import'):
+        return handle_import_confirmation()
+
+    # Regular import with preview
     if 'file' not in request.files:
         return {'success': False, 'message': 'Không có file'}, 400
 
@@ -2004,75 +2107,251 @@ def import_meals_excel():
     if not file.filename.endswith(('.xlsx', '.xls')):
         return {'success': False, 'message': 'Chỉ hỗ trợ file .xlsx hoặc .xls'}, 400
 
+    # Check if this is preview mode
+    preview_only = request.form.get('preview_only', 'false').lower() == 'true'
+    is_7_days = request.form.get('is_7_days', 'false').lower() == 'true'
+    start_date_str = request.form.get('start_date')
+    
     try:
         wb = openpyxl.load_workbook(file, data_only=True)
         ws = wb.active
 
-        added, skipped, errors = 0, 0, []
-        valid_meal_types = {'lunch', 'dinner', 'breakfast'}
+        errors = []
+        preview_meals = []
+        updates = 0
+
+        # Parse start date for 7-day mode or use today as default
+        start_date = None
+        if is_7_days and start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                start_date = datetime.now().date()
+        elif is_7_days:
+            start_date = datetime.now().date()
+        else:
+            start_date = datetime.now().date()
+
+        day_names = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật']
 
         for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), 2):
             if not any(row):
                 continue
 
-            date_val, meal_type, dish_name, description, is_special, is_vegetarian = (list(row) + [None]*6)[:6]
+            # New format: Date, Normal_Name, Normal_Desc, Special_Name, Special_Desc
+            date_val, normal_name, normal_desc, special_name, special_desc = (list(row) + [None]*5)[:5]
 
-            # Validate
-            if not date_val or not meal_type or not dish_name:
-                errors.append(f'Dòng {row_num}: Thiếu ngày, loại bữa hoặc tên món')
-                skipped += 1
+            # Convert None values to empty strings for validation
+            normal_name = str(normal_name).strip() if normal_name is not None else ''
+            special_name = str(special_name).strip() if special_name is not None else ''
+            normal_desc = str(normal_desc).strip() if normal_desc is not None else ''
+            special_desc = str(special_desc).strip() if special_desc is not None else ''
+
+            # Validate required fields
+            if not normal_name or not special_name:
+                errors.append(f'Dòng {row_num}: Thiếu tên món (cả Thường và Cải thiện đều bắt buộc)')
                 continue
 
-            # Parse date
-            if isinstance(date_val, str):
-                try:
-                    date_obj = datetime.strptime(date_val.strip(), '%Y-%m-%d').date()
-                except ValueError:
-                    errors.append(f'Dòng {row_num}: Ngày không đúng định dạng YYYY-MM-DD')
-                    skipped += 1
-                    continue
-            elif hasattr(date_val, 'date'):
-                date_obj = date_val.date()
+            # Handle date logic - AUTO-FILL if empty
+            date_obj = None
+            
+            if is_7_days:
+                # For 7-day mode, use sequential dates from start_date
+                day_offset = (row_num - 2) % 7  # Cycle through 7 days
+                date_obj = start_date + timedelta(days=day_offset)
             else:
-                errors.append(f'Dòng {row_num}: Ngày không hợp lệ')
-                skipped += 1
-                continue
+                # For single day mode - auto-fill if date is empty/invalid
+                if not date_val or str(date_val).strip().upper() in ['', 'IGNORE', 'AUTO', 'NULL']:
+                    # AUTO-FILL: Use today + row offset
+                    day_offset = row_num - 2  # Sequential days from today
+                    date_obj = start_date + timedelta(days=day_offset)
+                else:
+                    # Parse date from Excel
+                    if isinstance(date_val, str):
+                        try:
+                            date_obj = datetime.strptime(date_val.strip(), '%Y-%m-%d').date()
+                        except ValueError:
+                            # If invalid date format, auto-fill
+                            day_offset = row_num - 2
+                            date_obj = start_date + timedelta(days=day_offset)
+                            errors.append(f'Dòng {row_num}: Ngày không hợp lệ "{date_val}", đã tự động điền {date_obj}')
+                    elif hasattr(date_val, 'date'):
+                        date_obj = date_val.date()
+                    else:
+                        # Auto-fill for any other case
+                        day_offset = row_num - 2
+                        date_obj = start_date + timedelta(days=day_offset)
 
-            meal_type = str(meal_type).strip().lower()
-            if meal_type not in valid_meal_types:
-                errors.append(f'Dòng {row_num}: Loại bữa phải là lunch/dinner/breakfast')
-                skipped += 1
-                continue
-
-            menu = Menu(
+            # Check for existing meals on this date
+            existing_normal = Menu.query.filter_by(
                 date=date_obj,
-                meal_type=meal_type,
-                dish_name=str(dish_name).strip()[:200],
-                description=str(description).strip() if description else None,
-                is_special=bool(is_special) if is_special is not None else False,
-                is_vegetarian=bool(is_vegetarian) if is_vegetarian is not None else False,
-                is_active=True
-            )
-            db.session.add(menu)
-            added += 1
+                meal_type='lunch',
+                is_special=False,
+                is_vegetarian=True
+            ).first()
+            
+            existing_special = Menu.query.filter_by(
+                date=date_obj,
+                meal_type='lunch',
+                is_special=True,
+                is_vegetarian=False
+            ).first()
+
+            will_update = existing_normal or existing_special
+            if will_update:
+                updates += 1
+
+            # Create preview data (ensure all values are JSON serializable)
+            preview_meal = {
+                'row_num': int(row_num),
+                'date': date_obj.strftime('%Y-%m-%d'),
+                'day_name': day_names[date_obj.weekday()],
+                'normal_name': normal_name[:200],  # Already cleaned above
+                'normal_desc': normal_desc,        # Already cleaned above
+                'special_name': special_name[:200], # Already cleaned above
+                'special_desc': special_desc,       # Already cleaned above
+                'will_update': bool(will_update),
+                'has_error': False,
+                'existing_normal_id': int(existing_normal.id) if existing_normal else None,
+                'existing_special_id': int(existing_special.id) if existing_special else None
+            }
+            
+            preview_meals.append(preview_meal)
+
+        # If preview mode, return preview data (ensure all data is JSON serializable)
+        if preview_only:
+            return {
+                'success': True,
+                'preview_data': {
+                    'total_rows': int(len(preview_meals)),
+                    'total_meals': int(len(preview_meals) * 2),
+                    'updates': int(updates),
+                    'errors': list(errors),
+                    'meals': list(preview_meals),
+                    'date_range': {
+                        'start': str(min(m['date'] for m in preview_meals)) if preview_meals else '',
+                        'end': str(max(m['date'] for m in preview_meals)) if preview_meals else ''
+                    }
+                }
+            }
+
+    except Exception as e:
+        return {'success': False, 'message': f'Lỗi xử lý file: {str(e)}'}, 500
+
+
+def handle_import_confirmation():
+    """Handle the actual import after user confirmation"""
+    import json
+    from datetime import datetime
+    from models import Menu
+    
+    try:
+        # Get preview data with proper error handling
+        preview_data_str = request.form.get('preview_data')
+        print(f"DEBUG: Received preview_data_str: {preview_data_str[:200] if preview_data_str else 'None'}...")  # Debug log
+        
+        if not preview_data_str:
+            print("DEBUG: No preview_data in request.form")  # Debug log
+            return {'success': False, 'message': 'Không có dữ liệu preview'}, 400
+        
+        try:
+            preview_data = json.loads(preview_data_str)
+            print(f"DEBUG: Parsed preview_data keys: {list(preview_data.keys()) if isinstance(preview_data, dict) else 'Not a dict'}")  # Debug log
+        except (json.JSONDecodeError, TypeError) as e:
+            print(f"DEBUG: JSON decode error: {e}")  # Debug log
+            return {'success': False, 'message': f'Lỗi phân tích dữ liệu preview: {str(e)}'}, 400
+        
+        if not preview_data or not isinstance(preview_data, dict):
+            print(f"DEBUG: Invalid preview_data type: {type(preview_data)}")  # Debug log
+            return {'success': False, 'message': 'Dữ liệu preview không hợp lệ'}, 400
+        
+        is_7_days = request.form.get('is_7_days', 'false').lower() == 'true'
+        print(f"DEBUG: is_7_days: {is_7_days}")  # Debug log
+        
+        added, updated = 0, 0
+        
+        meals_data = preview_data.get('meals', [])
+        print(f"DEBUG: Found {len(meals_data)} meals in preview_data")  # Debug log
+        
+        if not meals_data:
+            return {'success': False, 'message': 'Không có dữ liệu món ăn để import'}, 400
+        
+        for meal_data in meals_data:
+            if not meal_data or meal_data.get('has_error'):
+                continue
+                
+            # Validate required fields
+            if not meal_data.get('date') or not meal_data.get('normal_name') or not meal_data.get('special_name'):
+                continue
+                
+            date_obj = datetime.strptime(meal_data['date'], '%Y-%m-%d').date()
+            
+            # Handle Normal meal
+            if meal_data.get('existing_normal_id'):
+                # Update existing normal meal
+                existing_normal = Menu.query.get(meal_data['existing_normal_id'])
+                if existing_normal:
+                    existing_normal.dish_name = meal_data['normal_name']
+                    existing_normal.description = meal_data.get('normal_desc') or None
+                    updated += 1
+            else:
+                # Create new normal meal
+                normal_menu = Menu(
+                    date=date_obj,
+                    meal_type='lunch',
+                    dish_name=meal_data['normal_name'],
+                    description=meal_data.get('normal_desc') or None,
+                    is_special=False,
+                    is_vegetarian=True,
+                    is_active=True
+                )
+                db.session.add(normal_menu)
+                added += 1
+            
+            # Handle Special meal
+            if meal_data.get('existing_special_id'):
+                # Update existing special meal
+                existing_special = Menu.query.get(meal_data['existing_special_id'])
+                if existing_special:
+                    existing_special.dish_name = meal_data['special_name']
+                    existing_special.description = meal_data.get('special_desc') or None
+                    updated += 1
+            else:
+                # Create new special meal
+                special_menu = Menu(
+                    date=date_obj,
+                    meal_type='lunch',
+                    dish_name=meal_data['special_name'],
+                    description=meal_data.get('special_desc') or None,
+                    is_special=True,
+                    is_vegetarian=False,
+                    is_active=True
+                )
+                db.session.add(special_menu)
+                added += 1
 
         db.session.commit()
 
-        msg = f'Đã thêm {added} món'
-        if skipped:
-            msg += f', bỏ qua {skipped} dòng lỗi'
+        # Create success message
+        msg_parts = []
+        if added > 0:
+            msg_parts.append(f'Đã thêm {added} món mới')
+        if updated > 0:
+            msg_parts.append(f'Đã cập nhật {updated} món')
+            
+        message = ', '.join(msg_parts) if msg_parts else 'Import hoàn tất'
 
         return {
             'success': True,
-            'message': msg,
-            'added': added,
-            'skipped': skipped,
-            'errors': errors[:10]  # trả về tối đa 10 lỗi đầu
+            'message': str(message),
+            'added': int(added),
+            'updated': int(updated),
+            'total': int(added + updated)
         }
 
     except Exception as e:
         db.session.rollback()
-        return {'success': False, 'message': f'Lỗi xử lý file: {str(e)}'}, 500
+        return {'success': False, 'message': f'Lỗi import: {str(e)}'}, 500
 
 
 # ============= END MEAL MANAGEMENT ROUTES =============
@@ -2773,3 +3052,6 @@ def service_worker():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5002)
+
+
+

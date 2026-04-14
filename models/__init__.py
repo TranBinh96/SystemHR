@@ -432,3 +432,23 @@ class ExitEntryRequest(db.Model):
 
     def __repr__(self):
         return f'<ExitEntryRequest {self.id} - {self.status}>'
+
+
+
+class AutoRegisterLog(db.Model):
+    """Lịch sử tự động đăng ký suất ăn"""
+    __tablename__ = 'auto_register_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    run_date = db.Column(db.Date, nullable=False)  # Ngày chạy auto-register
+    run_time = db.Column(db.DateTime, nullable=False)  # Thời gian chạy
+    target_date = db.Column(db.Date, nullable=False)  # Ngày đăng ký (ngày mai)
+    total_users = db.Column(db.Integer, default=0)  # Tổng số user
+    already_registered = db.Column(db.Integer, default=0)  # Đã đăng ký trước
+    auto_registered = db.Column(db.Integer, default=0)  # Tự động đăng ký
+    status = db.Column(db.String(20), default='success')  # success, failed
+    error_message = db.Column(db.Text)  # Thông báo lỗi nếu có
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<AutoRegisterLog {self.run_date} - {self.status}>'

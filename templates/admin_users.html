@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="{{ current_lang }}">
 <head>
     <meta charset="UTF-8">
@@ -11,6 +11,8 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+        html, body { scrollbar-width: none; -ms-overflow-style: none; }
+        html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
         
         /* Avatar hover zoom effect */
         .avatar-container {
@@ -27,185 +29,76 @@
             transition: transform 0.3s ease-in-out;
         }
         
-        /* Sidebar collapsed styles */
-        #sidebar.collapsed #sidebarContent {
-            width: 5rem !important;
-        }
-        
-        #sidebar.collapsed nav a {
-            justify-content: center !important;
-            gap: 0 !important;
-            position: relative;
-        }
-        
-        #sidebar.collapsed nav a .material-symbols-outlined {
-            margin: 0 !important;
-        }
-        
-        #sidebar.collapsed nav a .menu-text {
-            display: none !important;
-        }
-        
-        #sidebar.collapsed .section-title {
-            display: none !important;
-        }
-        
-        #sidebar.collapsed #appTitle {
-            display: none !important;
-        }
-        
-        /* Tooltip styles - only show when sidebar is collapsed */
-        #sidebar.collapsed nav a[data-tooltip]::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            left: calc(100% + 0.5rem);
-            top: 50%;
-            transform: translateY(-50%);
-            padding: 0.5rem 0.75rem;
-            background-color: #1e293b;
-            color: white;
-            font-size: 0.875rem;
-            font-weight: 500;
-            white-space: nowrap;
-            border-radius: 0.5rem;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease-in-out;
-            z-index: 1000;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        
-        #sidebar.collapsed nav a[data-tooltip]:hover::after,
-        #sidebar.collapsed nav a[data-tooltip]:focus::after {
-            opacity: 1;
-        }
+    {% include 'includes/admin_sidebar_styles.html' %}
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900">
     <div class="flex h-screen">
         <!-- Sidebar -->
-        <aside id="sidebar" class="hidden lg:flex lg:flex-shrink-0 transition-all duration-300">
-            <div id="sidebarContent" class="flex w-72 flex-col transition-all duration-300">
-                <div class="flex min-h-0 flex-1 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-                    <div class="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
-                        <div class="flex flex-shrink-0 items-center justify-between px-6 mb-8">
-                            <h1 id="appTitle" class="text-2xl font-bold text-primary">{{ t.app_name }}</h1>
-                            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-                                <span id="toggleIcon" class="material-symbols-outlined">chevron_left</span>
-                            </button>
-                        </div>
-                        <nav class="mt-5 flex-1 flex flex-col px-4">
-                            <ul role="list" class="flex flex-1 flex-col gap-y-5">
-                                <!-- BẢNG ĐIỀU KHIỂN -->
-                                <li>
-                                    <div class="section-title text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Bảng điều khiển</div>
-                                    <ul role="list" class="-mx-2 space-y-1">
-                                        <li>
-                                            <a href="{{ url_for('admin_dashboard') }}" data-tooltip="Bảng điều khiển" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                                <span class="material-symbols-outlined">dashboard</span>
-                                                <span class="menu-text">Bảng điều khiển</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-
-                                <!-- NGƯỜI DÙNG -->
-                                <li>
-                                    <div class="section-title text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Người dùng</div>
-                                    <ul role="list" class="-mx-2 space-y-1">
-                                        <li>
-                                            <a href="{{ url_for('admin_users') }}" data-tooltip="Người dùng" class="bg-slate-100 dark:bg-slate-800 text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">group</span>
-                                                <span class="menu-text">Người dùng</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ url_for('admin_positions') }}" data-tooltip="Chức vụ" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                                <span class="material-symbols-outlined">badge</span>
-                                                <span class="menu-text">Chức vụ</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-
-                                <!-- ĐĂNG KÝ -->
-                                <li>
-                                    <div class="section-title text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Đăng ký</div>
-                                    <ul role="list" class="-mx-2 space-y-1">
-                                        <li>
-                                            <a href="{{ url_for('admin_meals') }}" data-tooltip="Quản lý Thực đơn" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                                <span class="material-symbols-outlined">restaurant</span>
-                                                <span class="menu-text">Quản lý Thực đơn</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-
-                                <!-- THỐNG KÊ -->
-                                <li>
-                                    <div class="section-title text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Thống kê</div>
-                                    <ul role="list" class="-mx-2 space-y-1">
-                                        <li>
-                                            <a href="{{ url_for('admin_overtime_approvals') }}" data-tooltip="Thống kê Làm thêm" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                                <span class="material-symbols-outlined">schedule</span>
-                                                <span class="menu-text">Thống kê Làm thêm</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ url_for('admin_stats') }}" data-tooltip="Thống kê Suất ăn" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                                <span class="material-symbols-outlined">bar_chart</span>
-                                                <span class="menu-text">Thống kê Suất ăn</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ url_for('profile') }}" data-tooltip="Hỗ trợ" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                                <span class="material-symbols-outlined">help</span>
-                                                <span class="menu-text">Hỗ trợ</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-
-                                <!-- LOGOUT -->
-                                <li class="mt-auto">
-                                    <ul role="list" class="-mx-2 space-y-1">
-                                        <li>
-                                            <a href="{{ url_for('logout') }}" data-tooltip="Đăng Xuất" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
-                                                <span class="material-symbols-outlined">logout</span>
-                                                <span class="menu-text">Đăng Xuất</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-            </div>
-        </aside>
+        {% include 'includes/admin_sidebar.html' %}
 
         <!-- Main Content -->
-        <div class="flex-1 overflow-auto">
+        <div class="lg:pl-72 flex-1 overflow-auto min-w-0">
             <!-- Top Header -->
             <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-                <div class="flex h-16 items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
+                <!-- Desktop Header -->
+                <div class="hidden md:flex h-16 items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
                     <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
                         <div class="flex flex-1 items-center">
                             <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">{{ t.user_management }}</h2>
                         </div>
                         <div class="flex items-center gap-x-4 lg:gap-x-6">
-                            <select onchange="window.location.href='/set-language/' + this.value" class="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm font-medium">
-                                <option value="vi" {% if current_lang == 'vi' %}selected{% endif %}>🇻🇳 Tiếng Việt</option>
-                                <option value="en" {% if current_lang == 'en' %}selected{% endif %}>🇬🇧 English</option>
-                                <option value="ja" {% if current_lang == 'ja' %}selected{% endif %}>🇯🇵 日本語</option>
-                            </select>
+                            <button onclick="openAddUserModal()" 
+                                    style="background-color: #2563eb;"
+                                    class="inline-flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-all shadow-sm">
+                                <span class="material-symbols-outlined text-lg">person_add</span>
+                                <span class="font-medium">Thêm người dùng</span>
+                            </button>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- Mobile Header -->
+                <div class="md:hidden p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Danh sách người dùng</h2>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Nhấn vào thẻ để chỉnh sửa</p>
+                        </div>
+                        <button onclick="openAddUserModal()" 
+                                style="background-color: #2563eb;"
+                                class="inline-flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-all shadow-sm">
+                            <span class="material-symbols-outlined text-lg">person_add</span>
+                            <span class="font-medium">Thêm</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Mobile Search -->
+                    <div class="relative mb-4">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base">search</span>
+                        <input type="text" id="mobileSearchInput" placeholder="Tìm kiếm tên, mã nhân viên..." 
+                               class="w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                               oninput="filterUsersMobile()">
+                    </div>
+                    
+                    <!-- Status Tabs -->
+                    <div class="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1 mb-4">
+                        <button id="activeTab" onclick="switchTab('active')" 
+                                class="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm">
+                            <span class="material-symbols-outlined text-sm mr-1">check_circle</span>
+                            Hoạt động
+                        </button>
+                        <button id="resignedTab" onclick="switchTab('resigned')" 
+                                class="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                            <span class="material-symbols-outlined text-sm mr-1">cancel</span>
+                            Nghỉ việc
+                        </button>
                     </div>
                 </div>
             </header>
 
             <!-- Main Content Area -->
-            <main class="p-6 pb-24 lg:pb-6">
+            <main class="p-3 pb-20 lg:pb-3">
                 <!-- Flash Messages -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
@@ -217,11 +110,11 @@
                     {% endif %}
                 {% endwith %}
 
-                <!-- Table Only (Form appears when row is selected) -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Left Column: Edit Form (hidden by default) -->
-                    <div class="lg:col-span-1">
-                        <div id="editFormContainer" class="hidden bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 sticky top-24">
+                <!-- Table Only -->
+                <div>
+                    <!-- Edit Form Col (unused - kept for compatibility) -->
+                    <div id="editFormCol" class="hidden">
+                        <div id="editFormContainer" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 sticky top-24">
                             <div class="flex items-center justify-between mb-6">
                                 <h3 class="text-lg font-bold flex items-center gap-2">
                                     <span class="material-symbols-outlined text-blue-600">person</span>
@@ -236,8 +129,10 @@
                             </div>
                             
                             <form id="userFormInline" class="space-y-4">
+                                <!-- UPDATED: 2-column layout only -->
                                 <input type="hidden" id="userIdInline">
                                 
+                                <!-- Hàng 1: Mã nhân viên | Họ và tên -->
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
                                         <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Mã nhân viên *</label>
@@ -256,48 +151,75 @@
                                     </div>
                                 </div>
                                 
-                                <div>
-                                    <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Email *</label>
-                                    <input type="email" id="emailInline" required
-                                           class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                           placeholder="VD: user@example.com"
-                                           maxlength="100">
-                                </div>
-                                
+                                <!-- Hàng 2: Mật khẩu | Phòng ban -->
                                 <div class="grid grid-cols-2 gap-3">
-                                    <div class="relative">
-                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Phòng ban *</label>
-                                        <input type="text" id="departmentInline" required
+                                    <div id="passwordSection">
+                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Mật khẩu <span id="passwordRequired">*</span></label>
+                                        <input type="password" id="passwordInline"
                                                class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                               placeholder="Chọn hoặc nhập phòng ban"
-                                               maxlength="100"
-                                               autocomplete="off"
-                                               onfocus="showDepartmentDropdown()"
-                                               oninput="filterDepartmentDropdown(this.value)">
-                                        <button type="button" onclick="toggleDepartmentDropdown()" 
-                                                class="absolute right-2 top-[34px] text-slate-400 hover:text-slate-600">
-                                            <span class="material-symbols-outlined text-lg">arrow_drop_down</span>
-                                        </button>
-                                        <div id="departmentDropdown" class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                            <div id="departmentOptions" class="py-1">
-                                                <!-- Options will be populated by JavaScript -->
-                                            </div>
-                                        </div>
+                                               placeholder="Để trống nếu..."
+                                               minlength="6">
                                     </div>
                                     
                                     <div>
-                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Chức vụ *</label>
-                                        <select id="positionInline" required
+                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Phòng ban *</label>
+                                        <select id="departmentInline" required
                                                 class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                            <option value="">Chọn chức vụ</option>
-                                            {% for position in positions %}
-                                            <option value="{{ position.code }}">{{ position.name }}</option>
+                                            <option value="">Chọn phòng ban</option>
+                                            {% for dept in departments %}
+                                            <option value="{{ dept.name }}">{{ dept.name }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
                                 </div>
                                 
+                                <!-- Hàng 3: Cấp bậc | Trạng thái -->
                                 <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Cấp bậc *</label>
+                                        <select id="positionInline" required
+                                                class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            <option value="">Chọn cấp bậc</option>
+                                            {% for position in positions %}
+                                            <option value="{{ position.code }}">{{ position.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Trạng thái *</label>
+                                        <select id="workStatusInline" required
+                                                class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            <option value="working">Hoạt động / Working</option>
+                                            <option value="business_trip">Công tác / Business Trip</option>
+                                            <option value="resigned">Nghỉ việc / Resigned</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Hàng 4: Quyền phê duyệt | Quyền đăng ký -->
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Quyền phê duyệt</label>
+                                        <select id="canApproveInline"
+                                                class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            <option value="false">Không có quyền</option>
+                                            <option value="true">Có quyền</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Quyền đăng ký</label>
+                                        <select id="canRegisterInline"
+                                                class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            <option value="false">Không có quyền</option>
+                                            <option value="true">Có quyền</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Hàng 5: Quyền (kéo dài full width) -->
+                                <div class="grid grid-cols-1 gap-3">
                                     <div>
                                         <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Quyền *</label>
                                         <select id="roleInline" required
@@ -306,185 +228,98 @@
                                             <option value="admin">Admin</option>
                                         </select>
                                     </div>
-                                    
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Trạng thái *</label>
-                                        <select id="workStatusInline" required
-                                                class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                            <option value="working">Làm việc</option>
-                                            <option value="business_trip">Công tác</option>
-                                            <option value="resigned">Nghỉ việc</option>
-                                        </select>
-                                    </div>
                                 </div>
                                 
                                 <input type="file" id="avatarInput" accept="image/*" 
                                        class="hidden" onchange="previewAvatar(this)">
                                 
-                                <div id="passwordSection">
-                                    <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Mật khẩu <span id="passwordRequired">*</span></label>
-                                    <input type="password" id="passwordInline"
-                                           class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                           placeholder="Tối thiểu 6 ký tự"
-                                           minlength="6">
-                                </div>
-                                
-                                <p class="text-xs text-slate-500 dark:text-slate-400 -mt-2" id="passwordHint">Để trống mật khẩu nếu không muốn đổi</p>
-                                
-                                <!-- Personal Information Fields -->
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Giới tính</label>
-                                        <select id="genderInline"
-                                                class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                            <option value="">Chọn giới tính</option>
-                                            <option value="male">Nam</option>
-                                            <option value="female">Nữ</option>
-                                            <option value="other">Khác</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Số điện thoại</label>
-                                        <input type="tel" id="phoneInline"
-                                               class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                               placeholder="VD: 0912345678"
-                                               maxlength="20">
-                                    </div>
-                                </div>
-                                
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Căn cước công dân</label>
-                                        <input type="text" id="citizenIdInline"
-                                               class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                               placeholder="VD: 001234567890"
-                                               maxlength="20">
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Quê quán</label>
-                                        <input type="text" id="hometownInline"
-                                               class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                               placeholder="VD: Hà Nội"
-                                               maxlength="200">
-                                    </div>
-                                </div>
-                                
-                                <div class="grid grid-cols-4 gap-2 pt-4">
+                                <!-- Buttons -->
+                                <div class="flex gap-3 pt-4">
+                                    <button type="button" onclick="cancelEdit()" 
+                                            class="flex-1 px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-center">
+                                        Hủy
+                                    </button>
                                     <button type="button" onclick="saveUserInline()" 
                                             style="background-color: #2563eb;"
-                                            class="hover:opacity-90 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center"
-                                            title="Cập nhật">
-                                        <span class="material-symbols-outlined text-lg" id="saveBtnIconInline">save</span>
+                                            class="flex-1 hover:opacity-90 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all text-center">
+                                        Lưu thay đổi
                                     </button>
+                                </div>
+                                
+                                <div class="hidden grid-cols-4 gap-2 pt-4" id="extraButtons">
                                     <button type="button" onclick="resetPasswordInline()" id="resetPasswordBtn"
-                                            class="hidden px-4 py-2.5 border border-orange-300 dark:border-orange-600 text-orange-600 dark:text-orange-400 rounded-lg text-sm font-semibold hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors flex items-center justify-center"
+                                            class="px-4 py-2.5 border border-orange-300 dark:border-orange-600 text-orange-600 dark:text-orange-400 rounded-lg text-sm font-semibold hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors flex items-center justify-center"
                                             title="Reset mật khẩu về 123456">
                                         <span class="material-symbols-outlined text-lg">lock_reset</span>
                                     </button>
                                     <button type="button" onclick="deleteUserInline()" id="deleteUserBtn"
-                                            class="hidden px-4 py-2.5 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-lg text-sm font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center"
+                                            class="px-4 py-2.5 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-lg text-sm font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center"
                                             title="Xóa người dùng">
                                         <span class="material-symbols-outlined text-lg">delete</span>
-                                    </button>
-                                    <button type="button" onclick="cancelEdit()" 
-                                            class="px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center"
-                                            title="Hủy">
-                                        <span class="material-symbols-outlined text-lg">close</span>
                                     </button>
                                 </div>
                             </form>
                         </div>
                     </div>
                     
-                    <!-- Right Column: Users Table -->
-                    <div id="tableContainer" class="lg:col-span-3">
-                        <!-- Combined Header and Filters Section -->
-                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 mb-4">
-                            <!-- Header Row -->
-                            <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-                                <div>
-                                    <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Danh sách người dùng</h3>
-                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Click vào người dùng để chỉnh sửa</p>
+                    <!-- Users Table -->
+                    <div id="tableContainer" class="w-full">
+                        <!-- Filters (hidden on mobile) -->
+                        <div class="hidden md:block bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 mb-2 px-3 py-2">
+                            <div class="flex items-center gap-2 w-full">
+                                <!-- Search -->
+                                <div class="relative flex-1 min-w-0">
+                                    <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+                                    <input type="text" id="searchInput" placeholder="Tên, mã NV..."
+                                           class="w-full pl-8 pr-3 py-1.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary text-xs"
+                                           oninput="filterUsers()">
                                 </div>
-                                <button onclick="openAddUserModal()" 
-                                        style="background-color: #2563eb;"
-                                        class="inline-flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-all shadow-sm">
-                                    <span class="material-symbols-outlined text-lg">person_add</span>
-                                    <span class="font-medium">Thêm người dùng</span>
+                                <!-- Department -->
+                                <select id="departmentFilter" onchange="filterUsers()"
+                                        class="flex-1 px-2 py-1.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-xs focus:ring-2 focus:ring-primary">
+                                    <option value="">Phòng ban</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept.name }}">{{ dept.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <!-- Role -->
+                                <select id="roleFilter" onchange="filterUsers()"
+                                        class="flex-1 px-2 py-1.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-xs focus:ring-2 focus:ring-primary">
+                                    <option value="">Quyền</option>
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                                <!-- Status -->
+                                <select id="statusFilter" onchange="filterUsers()"
+                                        class="flex-1 px-2 py-1.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-xs focus:ring-2 focus:ring-primary">
+                                    <option value="">Trạng thái</option>
+                                    <option value="working">Làm việc</option>
+                                    <option value="business_trip">Công tác</option>
+                                    <option value="resigned">Nghỉ việc</option>
+                                </select>
+                                <!-- Divider -->
+                                <div class="h-5 w-px bg-slate-200 dark:bg-slate-600"></div>
+                                <!-- Tabs -->
+                                <button id="desktopActiveTab" onclick="switchDesktopTab('active')"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all bg-green-500 text-white shadow-sm">
+                                    <span class="material-symbols-outlined text-sm">check_circle</span>Hoạt động
                                 </button>
-                            </div>
-                            
-                            <!-- Filters Row -->
-                            <div class="px-4 py-3">
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                                    <!-- Search -->
-                                    <div class="flex items-center gap-2">
-                                        <label class="text-xs font-semibold text-slate-600 dark:text-slate-400 w-20 flex-shrink-0">Tìm kiếm</label>
-                                        <div class="relative flex-1">
-                                            <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-base">search</span>
-                                            <input type="text" id="searchInput" placeholder="Tên, mã NV..." 
-                                                   class="w-full pl-8 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                                                   oninput="filterUsers()">
-                                        </div>
-                                    </div>
-
-                                    <!-- Department Filter -->
-                                    <div class="flex items-center gap-2">
-                                        <label class="text-xs font-semibold text-slate-600 dark:text-slate-400 w-20 flex-shrink-0">Phòng ban</label>
-                                        <select id="departmentFilter" 
-                                                class="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                                                onchange="filterUsers()">
-                                            <option value="">Tất cả</option>
-                                            <option value="production">Production</option>
-                                            <option value="hr">HR</option>
-                                            <option value="it">IT</option>
-                                            <option value="quality">Quality</option>
-                                            <option value="finance">Finance</option>
-                                            <option value="sales">Sales</option>
-                                            <option value="marketing">Marketing</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Role Filter -->
-                                    <div class="flex items-center gap-2">
-                                        <label class="text-xs font-semibold text-slate-600 dark:text-slate-400 w-20 flex-shrink-0">Quyền</label>
-                                        <select id="roleFilter" 
-                                                class="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                                                onchange="filterUsers()">
-                                            <option value="">Tất cả</option>
-                                            <option value="user">User</option>
-                                            <option value="admin">Admin</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Status Filter -->
-                                    <div class="flex items-center gap-2">
-                                        <label class="text-xs font-semibold text-slate-600 dark:text-slate-400 w-20 flex-shrink-0">Trạng thái</label>
-                                        <select id="statusFilter" 
-                                                class="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                                                onchange="filterUsers()">
-                                            <option value="">Tất cả</option>
-                                            <option value="active">{{ t.active }}</option>
-                                            <option value="inactive">{{ t.inactive }}</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- Filter Results Info -->
-                                <div class="mt-2 flex items-center justify-between text-xs">
-                                    <span id="filterResults" class="text-slate-600 dark:text-slate-400"></span>
-                                    <button onclick="clearFilters()" class="text-primary hover:underline font-medium">
-                                        Xóa bộ lọc
-                                    </button>
-                                </div>
+                                <button id="desktopResignedTab" onclick="switchDesktopTab('resigned')"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-red-50 hover:text-red-600">
+                                    <span class="material-symbols-outlined text-sm">cancel</span>Nghỉ việc
+                                </button>
+                                <!-- Spacer + info + clear -->
+                                <div class="flex-1"></div>
+                                <span id="filterResults" class="text-xs text-slate-400"></span>
+                                <button onclick="clearFilters()" class="text-xs text-slate-400 hover:text-red-500 transition-colors">
+                                    <span class="material-symbols-outlined text-sm">close</span>
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Users Table -->
-                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-                            <div class="overflow-x-auto" style="max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                        <!-- Users Table (hidden on mobile) -->
+                        <div class="hidden md:block bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                            <div class="overflow-x-auto overflow-y-auto" style="max-width: 100%; height: 520px; -webkit-overflow-scrolling: touch; scrollbar-width: none;" onmouseover="this.style.scrollbarWidth='thin'" onmouseout="this.style.scrollbarWidth='none'">
                                 <style>
                                     .overflow-x-auto::-webkit-scrollbar {
                                         height: 8px;
@@ -504,237 +339,66 @@
                                         scrollbar-width: thin !important;
                                         scrollbar-color: #888 #f1f1f1 !important;
                                     }
-                                    
-                                    /* Sticky columns - STT to Status (7 columns) - v8 compact */
-                                    .sticky-col-stt {
-                                        position: sticky;
-                                        left: 0;
-                                        z-index: 20;
-                                        min-width: 60px;
-                                        max-width: 70px;
-                                    }
-                                    .sticky-col-employee-id {
-                                        position: sticky;
-                                        left: 60px;
-                                        z-index: 20;
-                                        min-width: 120px;
-                                        max-width: 140px;
-                                    }
-                                    .sticky-col-name {
-                                        position: sticky;
-                                        left: 180px;
-                                        z-index: 20;
-                                        min-width: 140px;
-                                        max-width: 160px;
-                                    }
-                                    .sticky-col-avatar {
-                                        position: sticky;
-                                        left: 320px;
-                                        z-index: 20;
-                                        min-width: 90px;
-                                        max-width: 100px;
-                                    }
-                                    .sticky-col-department {
-                                        position: sticky;
-                                        left: 410px;
-                                        z-index: 20;
-                                        min-width: 130px;
-                                        max-width: 150px;
-                                    }
-                                    .sticky-col-position {
-                                        position: sticky;
-                                        left: 540px;
-                                        z-index: 20;
-                                        min-width: 130px;
-                                        max-width: 150px;
-                                    }
-                                    .sticky-col-status {
-                                        position: sticky;
-                                        left: 670px;
-                                        z-index: 20;
-                                        min-width: 120px;
-                                        max-width: 140px;
-                                    }
-                                    
-                                    /* Ensure solid background for sticky columns */
-                                    thead .sticky-col-stt,
-                                    thead .sticky-col-employee-id,
-                                    thead .sticky-col-name,
-                                    thead .sticky-col-avatar,
-                                    thead .sticky-col-department,
-                                    thead .sticky-col-position,
-                                    thead .sticky-col-status {
-                                        background-color: rgb(248 250 252) !important;
-                                    }
-                                    
-                                    tbody .sticky-col-stt,
-                                    tbody .sticky-col-employee-id,
-                                    tbody .sticky-col-name,
-                                    tbody .sticky-col-avatar,
-                                    tbody .sticky-col-department,
-                                    tbody .sticky-col-position,
-                                    tbody .sticky-col-status {
-                                        background-color: white !important;
-                                    }
-                                    
-                                    /* Dark mode backgrounds */
-                                    .dark thead .sticky-col-stt,
-                                    .dark thead .sticky-col-employee-id,
-                                    .dark thead .sticky-col-name,
-                                    .dark thead .sticky-col-avatar,
-                                    .dark thead .sticky-col-department,
-                                    .dark thead .sticky-col-position,
-                                    .dark thead .sticky-col-status {
-                                        background-color: rgb(15 23 42) !important;
-                                    }
-                                    
-                                    .dark tbody .sticky-col-stt,
-                                    .dark tbody .sticky-col-employee-id,
-                                    .dark tbody .sticky-col-name,
-                                    .dark tbody .sticky-col-avatar,
-                                    .dark tbody .sticky-col-department,
-                                    .dark tbody .sticky-col-position,
-                                    .dark tbody .sticky-col-status {
-                                        background-color: rgb(30 41 59) !important;
-                                    }
-                                    
-                                    /* Add single shadow only at the end of sticky columns */
-                                    .sticky-col-status::after {
-                                        content: '';
-                                        position: absolute;
-                                        top: 0;
-                                        right: -10px;
-                                        bottom: 0;
-                                        width: 10px;
-                                        background: linear-gradient(to right, rgba(0,0,0,0.15), transparent);
-                                        pointer-events: none;
-                                    }
+                                    /* Hide vertical scrollbar */
+                                    .overflow-x-auto::-webkit-scrollbar:vertical { width: 0; display: none; }
                                 </style>
-                                <table class="w-full divide-y divide-slate-200 dark:divide-slate-700" style="min-width: 1600px;">
-                                    <thead class="bg-slate-50 dark:bg-slate-900">
+                                <table class="w-full divide-y divide-slate-200 dark:divide-slate-700">
+                                    <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10">
                                         <tr>
-                                            <th class="sticky-col-stt px-3 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                STT
-                                            </th>
-                                            <th class="sticky-col-employee-id px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                {{ t.employee_id }}
-                                            </th>
-                                            <th class="sticky-col-name px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                {{ t.name }}
-                                            </th>
-                                            <th class="sticky-col-avatar px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                Ảnh
-                                            </th>
-                                            <th class="sticky-col-department px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                {{ t.department }}
-                                            </th>
-                                            <th class="sticky-col-position px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                {{ t.position }}
-                                            </th>
-                                            <th class="sticky-col-status px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                {{ t.status }}
-                                            </th>
-                                            <th class="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                Giới tính
-                                            </th>
-                                            <th class="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                Căn cước công dân
-                                            </th>
-                                            <th class="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                Số điện thoại
-                                            </th>
-                                            <th class="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                Email
-                                            </th>
-                                            <th class="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                Quê quán
-                                            </th>
-                                            <th class="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                {{ t.role }}
-                                            </th>
+                                            <th class="px-3 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-10">STT</th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ t.employee_id }}</th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ t.name }}</th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-14">Ảnh</th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ t.department }}</th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ t.position }}</th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ t.status }}</th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ t.role }}</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                                         {% for user in users %}
-                                        <tr id="user-row-{{ user.id }}" 
+                                        <tr id="user-row-{{ user.id }}"
                                             class="hover:bg-slate-50 dark:hover:bg-slate-700/50 user-row cursor-pointer transition-colors"
                                             data-employee-id="{{ user.employee_id|lower }}"
                                             data-name="{{ user.name|lower }}"
-                                            data-email="{{ user.email|lower }}"
-                                            data-department="{{ user.department }}"
-                                            data-position="{{ user.position|default('staff') }}"
+                                            data-department="{{ user.dept.name if user.dept else user.department or '' }}"
+                                            data-position="{{ user.position_id or '' }}"
                                             data-role="{{ user.role }}"
-                                            data-status="{% if user.is_active %}active{% else %}inactive{% endif %}"
-                                            onclick="selectUser({{ user.id }}, '{{ user.employee_id }}', '{{ user.name }}', '{{ user.email }}', '{{ user.department }}', '{{ user.position|default('staff') }}', '{{ user.role }}', '{{ user.work_status|default('working') }}', {{ user.is_active|int }}, '{{ user.avatar_url or '' }}', '{{ user.gender|default('') }}', '{{ user.phone|default('') }}', '{{ user.citizen_id|default('') }}', '{{ user.hometown|default('') }}')">
-                                    <td class="sticky-col-stt px-3 py-4 whitespace-nowrap text-sm text-center font-medium text-slate-900 dark:text-slate-100">
-                                        {{ loop.index }}
-                                    </td>
-                                    <td class="sticky-col-employee-id px-3 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100 lowercase">
-                                        {{ user.employee_id|lower }}
-                                    </td>
-                                    <td class="sticky-col-name px-3 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 capitalize">
-                                        {{ user.name }}
-                                    </td>
-                                    <td class="sticky-col-avatar px-3 py-4 whitespace-nowrap">
-                                        <div class="avatar-container w-14 h-14 rounded-full flex items-center justify-center overflow-hidden" style="{% if user.gender == 'female' %}background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);{% else %}background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);{% endif %}">
-                                            {% if user.avatar_url %}
-                                            <img src="{{ user.avatar_url }}" alt="{{ user.name }}" class="w-full h-full object-cover">
-                                            {% else %}
-                                                {% if user.gender == 'female' %}
-                                                <i class="fas fa-user text-white text-2xl"></i>
-                                                {% else %}
-                                                <i class="fas fa-user text-white text-2xl"></i>
-                                                {% endif %}
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                    <td class="sticky-col-department px-3 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                                        {{ user.department }}
-                                    </td>
-                                    <td class="sticky-col-position px-3 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400">
-                                            {{ position_dict.get(user.position, user.position) if user.position else 'Chưa xác định' }}
-                                        </span>
-                                    </td>
-                                    <td class="sticky-col-status px-3 py-4 whitespace-nowrap">
-                                        <button onclick="toggleActive({{ user.id }})" 
-                                                id="status-btn-{{ user.id }}"
-                                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {% if user.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}"
-                                                {% if user.id == current_user.id %}disabled{% endif %}>
-                                            <span class="material-symbols-outlined text-sm mr-1">
-                                                {% if user.is_active %}check_circle{% else %}cancel{% endif %}
-                                            </span>
-                                            <span id="status-text-{{ user.id }}">
-                                                {% if user.is_active %}{{ t.active }}{% else %}{{ t.inactive }}{% endif %}
-                                            </span>
-                                        </button>
-                                    </td>
-                                    <td class="px-3 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                                        {% if user.gender == 'male' %}Nam
-                                        {% elif user.gender == 'female' %}Nữ
-                                        {% elif user.gender == 'other' %}Khác
-                                        {% else %}-{% endif %}
-                                    </td>
-                                    <td class="px-3 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                                        {{ user.citizen_id if user.citizen_id else '-' }}
-                                    </td>
-                                    <td class="px-3 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                                        {{ user.phone if user.phone else '-' }}
-                                    </td>
-                                    <td class="px-3 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                                        {{ user.email }}
-                                    </td>
-                                    <td class="px-3 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                                        {{ user.hometown if user.hometown else '-' }}
-                                    </td>
-                                    <td class="px-3 py-4 whitespace-nowrap">
-                                        <select onchange="changeRole({{ user.id }}, this.value)" 
-                                                class="text-sm rounded-lg px-3 py-1 border {% if user.role == 'admin' %}bg-purple-50 text-purple-700 border-purple-200{% else %}bg-blue-50 text-blue-700 border-blue-200{% endif %}"
-                                                {% if user.id == current_user.id %}disabled{% endif %}>
-                                            <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
-                                            <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-                                        </select>
-                                    </td>
+                                            data-status="{{ user.work_status|default('working') }}"
+                                            onclick="selectUser({{ user.id }}, '{{ user.employee_id }}', '{{ user.name }}', '{{ user.dept.name if user.dept else user.department or '' }}', '{{ user.position_id or '' }}', '{{ user.role }}', '{{ user.work_status|default('working') }}', {{ user.is_active|int }}, '{{ user.avatar_url or '' }}', {{ user.can_approve|int }}, {{ user.can_register|int }})">
+                                            <td class="px-3 py-3 text-center text-xs text-slate-400">{{ loop.index }}</td>
+                                            <td class="px-3 py-3 text-sm font-medium text-slate-900 dark:text-slate-100 lowercase">{{ user.employee_id|lower }}</td>
+                                            <td class="px-3 py-3 text-sm text-slate-900 dark:text-slate-100">{{ user.name }}</td>
+                                            <td class="px-3 py-3">
+                                                <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden" style="background:linear-gradient(135deg,#3b82f6,#60a5fa)">
+                                                    {% if user.avatar_url %}<img src="{{ user.avatar_url }}" class="w-full h-full object-cover">
+                                                    {% else %}<i class="fas fa-user text-white text-xs"></i>{% endif %}
+                                                </div>
+                                            </td>
+                                            <td class="px-3 py-3 text-sm text-slate-500 dark:text-slate-400">{{ user.dept.name if user.dept else user.department or '—' }}</td>
+                                            <td class="px-3 py-3">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400">
+                                                    {{ user.pos.name if user.pos else '—' }}
+                                                </span>
+                                            </td>
+                                            <td class="px-3 py-3">
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
+                                                    {% if user.work_status == 'working' %}bg-green-100 text-green-700
+                                                    {% elif user.work_status == 'business_trip' %}bg-blue-100 text-blue-700
+                                                    {% elif user.work_status == 'resigned' %}bg-red-100 text-red-700
+                                                    {% else %}bg-slate-100 text-slate-600{% endif %}">
+                                                    <span class="material-symbols-outlined text-xs">{% if user.work_status == 'working' %}check_circle{% elif user.work_status == 'business_trip' %}flight_takeoff{% elif user.work_status == 'resigned' %}cancel{% else %}help{% endif %}</span>
+                                                    {% if user.work_status == 'working' %}Hoạt động{% elif user.work_status == 'business_trip' %}Công tác{% elif user.work_status == 'resigned' %}Nghỉ việc{% else %}{{ user.work_status }}{% endif %}
+                                                </span>
+                                            </td>
+                                            <td class="px-3 py-3" onclick="event.stopPropagation()">
+                                                <select onchange="changeRole({{ user.id }}, this.value)"
+                                                        class="text-xs rounded-lg px-2 py-1 border {% if user.role == 'admin' %}bg-purple-50 text-purple-700 border-purple-200{% else %}bg-blue-50 text-blue-700 border-blue-200{% endif %}"
+                                                        {% if user.id == current_user.id %}disabled{% endif %}>
+                                                    <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+                                                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                                                </select>
+                                            </td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -746,80 +410,55 @@
 
                 <!-- Users Cards (Mobile) -->
                 <div class="md:hidden space-y-4">
+                    
+                    <!-- Mobile Cards -->
                     {% for user in users %}
                     <div id="user-card-{{ user.id }}" 
                          class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 user-card"
                          data-employee-id="{{ user.employee_id|lower }}"
                          data-name="{{ user.name|lower }}"
-                         data-email="{{ user.email|lower }}"
-                         data-department="{{ user.department }}"
-                         data-position="{{ user.position|default('staff') }}"
+                         data-department="{{ user.dept.name if user.dept else user.department or '' }}"
+                         data-position="{{ user.position_id or '' }}"
                          data-role="{{ user.role }}"
-                         data-status="{% if user.is_active %}active{% else %}inactive{% endif %}">
+                         data-status="{{ user.work_status|default('working') }}">
                         <!-- Header -->
                         <div class="flex items-start justify-between mb-3">
                             <div class="flex-1">
                                 <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 capitalize">{{ user.name }}</h3>
                                 <p class="text-sm text-slate-500 dark:text-slate-400 lowercase">{{ user.employee_id|lower }}</p>
                             </div>
-                            <button onclick="toggleActive({{ user.id }})" 
-                                    id="status-btn-mobile-{{ user.id }}"
-                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {% if user.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}"
-                                    {% if user.id == current_user.id %}disabled{% endif %}>
+                            <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
+                                {% if user.work_status == 'working' %}bg-green-100 text-green-800
+                                {% elif user.work_status == 'business_trip' %}bg-blue-100 text-blue-800
+                                {% elif user.work_status == 'resigned' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
                                 <span class="material-symbols-outlined text-sm mr-1">
-                                    {% if user.is_active %}check_circle{% else %}cancel{% endif %}
+                                    {% if user.work_status == 'working' %}check_circle
+                                    {% elif user.work_status == 'business_trip' %}flight_takeoff
+                                    {% elif user.work_status == 'resigned' %}cancel
+                                    {% else %}help{% endif %}
                                 </span>
-                                <span id="status-text-mobile-{{ user.id }}">
-                                    {% if user.is_active %}{{ t.active }}{% else %}{{ t.inactive }}{% endif %}
+                                <span>
+                                    {% if user.work_status == 'working' %}Hoạt động
+                                    {% elif user.work_status == 'business_trip' %}Công tác
+                                    {% elif user.work_status == 'resigned' %}Nghỉ việc
+                                    {% else %}{{ user.work_status }}{% endif %}
                                 </span>
-                            </button>
+                            </div>
                         </div>
 
                         <!-- Info -->
                         <div class="space-y-2 mb-4">
                             <div class="flex items-center text-sm">
-                                <span class="material-symbols-outlined text-slate-400 mr-2 text-base">email</span>
-                                <span class="text-slate-600 dark:text-slate-300">{{ user.email }}</span>
-                            </div>
-                            <div class="flex items-center text-sm">
                                 <span class="material-symbols-outlined text-slate-400 mr-2 text-base">business</span>
-                                <span class="text-slate-600 dark:text-slate-300">{{ user.department }}</span>
+                                <span class="text-slate-600 dark:text-slate-300">{{ user.dept.name if user.dept else user.department or 'Chưa xác định' }}</span>
                             </div>
                             <div class="flex items-center text-sm">
                                 <span class="material-symbols-outlined text-slate-400 mr-2 text-base">badge</span>
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400">
-                                    {{ user.position if user.position else 'Chưa xác định' }}
+                                    {{ user.pos.name if user.pos else 'Chưa xác định' }}{% if user.pos and user.pos.description %}/{{ user.pos.description }}{% endif %}
                                 </span>
                             </div>
-                            {% if user.gender %}
-                            <div class="flex items-center text-sm">
-                                <span class="material-symbols-outlined text-slate-400 mr-2 text-base">person</span>
-                                <span class="text-slate-600 dark:text-slate-300">
-                                    {% if user.gender == 'male' %}Nam
-                                    {% elif user.gender == 'female' %}Nữ
-                                    {% elif user.gender == 'other' %}Khác
-                                    {% endif %}
-                                </span>
-                            </div>
-                            {% endif %}
-                            {% if user.phone %}
-                            <div class="flex items-center text-sm">
-                                <span class="material-symbols-outlined text-slate-400 mr-2 text-base">phone</span>
-                                <span class="text-slate-600 dark:text-slate-300">{{ user.phone }}</span>
-                            </div>
-                            {% endif %}
-                            {% if user.citizen_id %}
-                            <div class="flex items-center text-sm">
-                                <span class="material-symbols-outlined text-slate-400 mr-2 text-base">badge</span>
-                                <span class="text-slate-600 dark:text-slate-300">CCCD: {{ user.citizen_id }}</span>
-                            </div>
-                            {% endif %}
-                            {% if user.hometown %}
-                            <div class="flex items-center text-sm">
-                                <span class="material-symbols-outlined text-slate-400 mr-2 text-base">home</span>
-                                <span class="text-slate-600 dark:text-slate-300">{{ user.hometown }}</span>
-                            </div>
-                            {% endif %}
                         </div>
 
                         <!-- Actions -->
@@ -833,7 +472,7 @@
                                     <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
                                 </select>
                             </div>
-                            <button onclick="openEditModal({{ user.id }}, '{{ user.employee_id }}', '{{ user.name }}', '{{ user.email }}', '{{ user.department }}', '{{ user.position|default('staff') }}', '{{ user.role }}', {{ user.is_active|int }}, '{{ user.gender|default('') }}', '{{ user.phone|default('') }}', '{{ user.citizen_id|default('') }}', '{{ user.hometown|default('') }}', '{{ user.avatar_url|default('') }}')" 
+                            <button onclick="openEditModal({{ user.id }}, '{{ user.employee_id }}', '{{ user.name }}', '{{ user.dept.name if user.dept else user.department or '' }}', '{{ user.position_id or '' }}', '{{ user.role }}', {{ user.is_active|int }}, '{{ user.avatar_url|default('') }}', {{ user.can_approve|int }}, {{ user.can_register|int }}, '{{ user.work_status|default('working') }}')" 
                                     class="mt-5 p-3 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400"
                                     title="Sửa">
                                 <span class="material-symbols-outlined">edit</span>
@@ -921,6 +560,28 @@
         </div>
     </div>
 
+    <!-- Mobile Bottom Navigation -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 z-50">
+        <div class="grid grid-cols-4 gap-1 p-2">
+            <a href="{{ url_for('admin_dashboard') }}" class="flex flex-col items-center py-2 px-1 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-xl mb-1">dashboard</span>
+                <span class="text-xs font-medium">Trang chủ</span>
+            </a>
+            <a href="{{ url_for('admin_users') }}" class="flex flex-col items-center py-2 px-1 text-primary bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <span class="material-symbols-outlined text-xl mb-1" style="font-variation-settings: 'FILL' 1">group</span>
+                <span class="text-xs font-medium">Người dùng</span>
+            </a>
+            <a href="{{ url_for('admin_departments') }}" class="flex flex-col items-center py-2 px-1 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-xl mb-1">corporate_fare</span>
+                <span class="text-xs font-medium">Phòng ban</span>
+            </a>
+            <a href="{{ url_for('admin_positions') }}" class="flex flex-col items-center py-2 px-1 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-xl mb-1">badge</span>
+                <span class="text-xs font-medium">Chức vụ</span>
+            </a>
+        </div>
+    </div>
+
     <!-- Custom Confirmation Modal -->
     <div id="confirmModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
@@ -995,8 +656,8 @@
                         <input type="hidden" id="editUserId">
                         <input type="hidden" id="editAvatarChanged" value="false">
                         
-                        <!-- Row 1: Mã nhân viên + Họ và tên + Email -->
-                        <div class="grid grid-cols-3 gap-4">
+                        <!-- Row 1: Mã nhân viên + Họ và tên -->
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                                     Mã nhân viên
@@ -1013,18 +674,9 @@
                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                                        oninput="checkFormChanges()">
                             </div>
-                            
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Email
-                                </label>
-                                <input type="email" id="editEmail" 
-                                       class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                       oninput="checkFormChanges()">
-                            </div>
                         </div>
 
-                        <!-- Row 2: Password + Giới tính + Số điện thoại -->
+                        <!-- Row 2: Mật khẩu + Phòng ban + Cấp bậc -->
                         <div class="grid grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
@@ -1044,42 +696,16 @@
                             
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Giới tính
-                                </label>
-                                <select id="editGender" 
-                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                        onchange="checkFormChanges()">
-                                    <option value="">Chọn giới tính</option>
-                                    <option value="male">Nam</option>
-                                    <option value="female">Nữ</option>
-                                    <option value="other">Khác</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Số điện thoại
-                                </label>
-                                <input type="tel" id="editPhone" 
-                                       class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                       placeholder="0912345678"
-                                       maxlength="20"
-                                       oninput="checkFormChanges()">
-                            </div>
-                        </div>
-
-                        <!-- Row 3: Phòng ban + Cấp bậc + Quyền -->
-                        <div class="grid grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                                     Phòng ban
                                 </label>
-                                <input id="editDepartment" 
-                                       list="departmentList"
-                                       autocomplete="off"
-                                       placeholder="Chọn hoặc nhập phòng ban"
-                                       class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                       onchange="checkFormChanges()">
+                                <select id="editDepartment" 
+                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        onchange="checkFormChanges()">
+                                    <option value="">Chọn phòng ban</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept.name }}">{{ dept.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                             
                             <div>
@@ -1089,6 +715,37 @@
                                 <select id="editPosition" 
                                         class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                                         onchange="checkFormChanges()">
+                                    <option value="">Chọn cấp bậc</option>
+                                    {% for pos in positions %}
+                                    <option value="{{ pos.id }}">{{ pos.name }}{% if pos.description %}/{{ pos.description }}{% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Row 3: Quyền phê duyệt + Quyền đăng ký + Quyền -->
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                    Quyền phê duyệt
+                                </label>
+                                <select id="editCanApprove" 
+                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        onchange="checkFormChanges()">
+                                    <option value="1">Có quyền phê duyệt</option>
+                                    <option value="0">Không có quyền phê duyệt</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                    Quyền đăng ký
+                                </label>
+                                <select id="editCanRegister" 
+                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        onchange="checkFormChanges()">
+                                    <option value="1">Có quyền đăng ký</option>
+                                    <option value="0">Không có quyền đăng ký</option>
                                 </select>
                             </div>
 
@@ -1105,28 +762,18 @@
                             </div>
                         </div>
 
-                        <!-- Row 4: Căn cước công dân + Quê quán + Trạng thái -->
-                        <div class="grid grid-cols-3 gap-4">
+                        <!-- Row 4: Trạng thái + Mật khẩu -->
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Căn cước công dân
+                                    Quyền
                                 </label>
-                                <input type="text" id="editCitizenId" 
-                                       class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                       placeholder="001234567890"
-                                       maxlength="20"
-                                       oninput="checkFormChanges()">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Quê quán
-                                </label>
-                                <input type="text" id="editHometown" 
-                                       class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                       placeholder="Hà Nội"
-                                       maxlength="200"
-                                       oninput="checkFormChanges()">
+                                <select id="editRole" 
+                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        onchange="checkFormChanges()">
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                </select>
                             </div>
 
                             <div>
@@ -1136,8 +783,9 @@
                                 <select id="editStatus" 
                                         class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                                         onchange="checkFormChanges()">
-                                    <option value="1">{{ t.active }}</option>
-                                    <option value="0">{{ t.inactive }}</option>
+                                    <option value="working">Hoạt động / Working</option>
+                                    <option value="business_trip">Công tác / Business Trip</option>
+                                    <option value="resigned">Nghỉ việc / Resigned</option>
                                 </select>
                             </div>
                         </div>
@@ -1190,6 +838,8 @@
             closeConfirmModal();
         }
 
+        // DEPRECATED: toggleActive function - no longer used since status is now display-only
+        /*
         function toggleActive(userId) {
             showConfirmModal('{{ t.confirm_toggle_status }}', 'Thay đổi trạng thái', () => {
                 fetch(`/admin/users/${userId}/toggle-active`, {
@@ -1247,6 +897,7 @@
                 });
             });
         }
+        */
 
         function changeRole(userId, newRole) {
             showConfirmModal('{{ t.confirm_change_role }}', 'Thay đổi quyền', () => {
@@ -1316,72 +967,97 @@
             }, 3000);
         }
 
-        function openEditModal(userId, employeeId, name, email, department, position, role, isActive, gender, phone, citizenId, hometown, avatarUrl) {
-            console.log('Opening modal with data:', {userId, employeeId, name, email, department, position, role, isActive, gender, phone, citizenId, hometown, avatarUrl});
+        window.openEditModal = function(userId, employeeId, name, department, position, role, isActive, avatarUrl, canApprove, canRegister, workStatus) {
             
-            document.getElementById('editUserId').value = userId;
-            document.getElementById('editEmployeeId').value = employeeId;
-            document.getElementById('editName').value = name;
-            document.getElementById('editEmail').value = email;
-            document.getElementById('editPassword').value = ''; // Clear password field
-            
-            // Load avatar
-            const avatarPreview = document.getElementById('editAvatarPreview');
-            if (avatarUrl && avatarUrl !== 'None' && avatarUrl !== '') {
-                avatarPreview.innerHTML = `<img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover">`;
-            } else {
-                avatarPreview.innerHTML = '<span class="material-symbols-outlined text-slate-400 text-5xl">person</span>';
+            try {
+                document.getElementById('editUserId').value = userId;
+                document.getElementById('editEmployeeId').value = employeeId;
+                document.getElementById('editName').value = name;
+                document.getElementById('editPassword').value = ''; // Clear password field
+                
+                // Load avatar
+                const avatarPreview = document.getElementById('editAvatarPreview');
+                if (avatarUrl && avatarUrl !== 'None' && avatarUrl !== '') {
+                    avatarPreview.innerHTML = `<img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover">`;
+                } else {
+                    avatarPreview.innerHTML = '<span class="material-symbols-outlined text-slate-400 text-5xl">person</span>';
+                }
+                document.getElementById('editAvatarChanged').value = 'false';
+                
+                // Populate dropdowns FIRST
+                populatePositionList();
+                
+                // Wait a bit for dropdowns to populate, then set values
+                setTimeout(() => {
+                    
+                    const deptSelect = document.getElementById('editDepartment');
+                    const posSelect = document.getElementById('editPosition');
+                    const roleSelect = document.getElementById('editRole');
+                    const statusSelect = document.getElementById('editStatus');
+                    
+                    if (posSelect) {
+                        // Available position options
+                    }
+                    
+                    if (deptSelect) {
+                        deptSelect.value = department || '';
+                    }
+                    
+                    if (posSelect) {
+                        posSelect.value = position || '';
+                    }
+                    
+                    if (roleSelect) {
+                        roleSelect.value = role;
+                    }
+                    
+                    if (statusSelect) {
+                        statusSelect.value = workStatus || 'working';
+                    }
+                    
+                    // Set permission fields
+                    const canApproveSelect = document.getElementById('editCanApprove');
+                    const canRegisterSelect = document.getElementById('editCanRegister');
+                    
+                    if (canApproveSelect) {
+                        canApproveSelect.value = canApprove ? '1' : '0';
+                    }
+                    
+                    if (canRegisterSelect) {
+                        canRegisterSelect.value = canRegister ? '1' : '0';
+                    }
+                    
+                }, 100); // Reduced timeout since no async loading needed
+                
+                // Store original values for comparison
+                window.originalEditValues = {
+                    employeeId: employeeId,
+                    name: name,
+                    department: department,
+                    position: position || '',
+                    role: role,
+                    isActive: isActive ? '1' : '0',
+                    canApprove: canApprove ? '1' : '0',
+                    canRegister: canRegister ? '1' : '0',
+                    password: '',
+                    avatarChanged: 'false'
+                };
+                
+                // Reset save button to disabled state
+                const saveBtn = document.getElementById('saveEditBtn');
+                saveBtn.disabled = true;
+                saveBtn.style.backgroundColor = '#e2e8f0';
+                saveBtn.style.color = '#94a3b8';
+                saveBtn.style.cursor = 'not-allowed';
+                
+                // Show modal
+                document.getElementById('editModal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                
+            } catch (error) {
+                console.error('Error in openEditModal:', error);
+                alert('Có lỗi khi mở form chỉnh sửa: ' + error.message);
             }
-            document.getElementById('editAvatarChanged').value = 'false';
-            
-            // Populate dropdowns FIRST
-            populateDepartmentList();
-            populatePositionList();
-            
-            // Wait a bit for dropdowns to populate, then set values
-            setTimeout(() => {
-                document.getElementById('editDepartment').value = department;
-                document.getElementById('editPosition').value = position || '';
-                document.getElementById('editRole').value = role;
-                document.getElementById('editStatus').value = isActive ? '1' : '0';
-                
-                // Set personal information fields
-                document.getElementById('editGender').value = gender || '';
-                document.getElementById('editPhone').value = phone || '';
-                document.getElementById('editCitizenId').value = citizenId || '';
-                document.getElementById('editHometown').value = hometown || '';
-                
-                console.log('Values set. Department:', document.getElementById('editDepartment').value);
-                console.log('Position:', document.getElementById('editPosition').value);
-            }, 100);
-            
-            // Store original values for comparison
-            window.originalEditValues = {
-                employeeId: employeeId,
-                name: name,
-                email: email,
-                department: department,
-                position: position || '',
-                role: role,
-                isActive: isActive ? '1' : '0',
-                gender: gender || '',
-                phone: phone || '',
-                citizenId: citizenId || '',
-                hometown: hometown || '',
-                password: '',
-                avatarChanged: 'false'
-            };
-            
-            // Reset save button to disabled state
-            const saveBtn = document.getElementById('saveEditBtn');
-            saveBtn.disabled = true;
-            saveBtn.style.backgroundColor = '#e2e8f0';
-            saveBtn.style.color = '#94a3b8';
-            saveBtn.style.cursor = 'not-allowed';
-            
-            const modal = document.getElementById('editModal');
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
         }
 
         function handleEditAvatarChange(input) {
@@ -1400,6 +1076,19 @@
         function togglePasswordVisibility() {
             const passwordInput = document.getElementById('editPassword');
             const toggleIcon = document.getElementById('passwordToggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.textContent = 'visibility_off';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.textContent = 'visibility';
+            }
+        }
+
+        function togglePasswordVisibilityMobile() {
+            const passwordInput = document.getElementById('editPasswordMobile');
+            const toggleIcon = document.getElementById('passwordToggleIconMobile');
             
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
@@ -1440,17 +1129,19 @@
             
             // Update datalist (shared between add and edit modals)
             const datalist = document.getElementById('departmentList');
+            if (!datalist) {
+                console.error('departmentList datalist not found!');
+                return;
+            }
             datalist.innerHTML = '';
             
             // Sort and add options
             const uniqueDepts = Array.from(departmentsMap.values()).sort();
-            console.log('Populating department datalist (edit) with:', uniqueDepts);
             uniqueDepts.forEach(dept => {
                 const option = document.createElement('option');
                 option.value = dept;
                 datalist.appendChild(option);
             });
-            console.log('Department datalist (edit) populated with', datalist.options.length, 'options');
             
             // Add focus event to show all options when clicking
             const editDeptInput = document.getElementById('editDepartment');
@@ -1472,22 +1163,11 @@
         }
 
         function populatePositionList() {
-            // Get positions from backend (passed via template)
-            const select = document.getElementById('editPosition');
-            select.innerHTML = '';
-            
-            // Add positions from database - use CODE as value, NAME as display
-            {% for pos in positions %}
-            const option{{ loop.index }} = document.createElement('option');
-            option{{ loop.index }}.value = '{{ pos.code }}';  // Store CODE
-            option{{ loop.index }}.textContent = '{{ pos.name }}';  // Display NAME
-            select.appendChild(option{{ loop.index }});
-            {% endfor %}
-            
-            console.log('Position options loaded from database');
+            // Position dropdown is now populated from server-side template
+            // No need for dynamic population since we use server-side template for positions
         }
 
-        function checkFormChanges() {
+        window.checkFormChanges = function() {
             // Check if originalEditValues exists (modal is open)
             if (!window.originalEditValues) {
                 return;
@@ -1496,15 +1176,12 @@
             const currentValues = {
                 employeeId: document.getElementById('editEmployeeId').value.trim(),
                 name: document.getElementById('editName').value.trim(),
-                email: document.getElementById('editEmail').value.trim(),
                 department: document.getElementById('editDepartment').value,
                 position: document.getElementById('editPosition').value,
                 role: document.getElementById('editRole').value,
-                isActive: document.getElementById('editStatus').value,
-                gender: document.getElementById('editGender').value,
-                phone: document.getElementById('editPhone').value.trim(),
-                citizenId: document.getElementById('editCitizenId').value.trim(),
-                hometown: document.getElementById('editHometown').value.trim(),
+                workStatus: document.getElementById('editStatus').value,
+                canApprove: document.getElementById('editCanApprove').value,
+                canRegister: document.getElementById('editCanRegister').value,
                 password: document.getElementById('editPassword').value,
                 avatarChanged: document.getElementById('editAvatarChanged').value
             };
@@ -1512,15 +1189,12 @@
             const hasChanges = 
                 currentValues.employeeId !== window.originalEditValues.employeeId ||
                 currentValues.name !== window.originalEditValues.name ||
-                currentValues.email !== window.originalEditValues.email ||
                 currentValues.department !== window.originalEditValues.department ||
                 currentValues.position !== window.originalEditValues.position ||
                 currentValues.role !== window.originalEditValues.role ||
                 currentValues.isActive !== window.originalEditValues.isActive ||
-                currentValues.gender !== window.originalEditValues.gender ||
-                currentValues.phone !== window.originalEditValues.phone ||
-                currentValues.citizenId !== window.originalEditValues.citizenId ||
-                currentValues.hometown !== window.originalEditValues.hometown ||
+                currentValues.canApprove !== window.originalEditValues.canApprove ||
+                currentValues.canRegister !== window.originalEditValues.canRegister ||
                 currentValues.password !== '' ||
                 currentValues.avatarChanged === 'true';
             
@@ -1548,7 +1222,7 @@
         }
 
         // Add User Modal Functions
-        function openAddUserModal() {
+        window.openAddUserModal = function() {
             // Reset avatar preview
             const avatarPreview = document.getElementById('addAvatarPreview');
             avatarPreview.innerHTML = '<span class="material-symbols-outlined text-slate-400 text-5xl">person</span>';
@@ -1563,7 +1237,6 @@
             document.getElementById('addRole').value = 'user';
             document.getElementById('addStatus').value = '1';
             document.getElementById('addPassword').value = '123456'; // Default password
-            document.getElementById('addGender').value = 'male'; // Default gender: Nam
             
             // Set default position to "Worker" after a short delay to ensure dropdown is populated
             setTimeout(() => {
@@ -1615,43 +1288,9 @@
         }
 
         function populateAddDepartmentList() {
-            const departmentsMap = new Map();
-            
-            document.querySelectorAll('.user-row').forEach(row => {
-                const dept = row.dataset.department;
-                if (dept && dept.trim()) {
-                    const deptTrimmed = dept.trim();
-                    const deptLower = deptTrimmed.toLowerCase();
-                    if (!departmentsMap.has(deptLower)) {
-                        departmentsMap.set(deptLower, deptTrimmed);
-                    }
-                }
-            });
-            
-            document.querySelectorAll('.user-card').forEach(card => {
-                const dept = card.dataset.department;
-                if (dept && dept.trim()) {
-                    const deptTrimmed = dept.trim();
-                    const deptLower = deptTrimmed.toLowerCase();
-                    if (!departmentsMap.has(deptLower)) {
-                        departmentsMap.set(deptLower, deptTrimmed);
-                    }
-                }
-            });
-            
-            const datalist = document.getElementById('departmentList');
-            datalist.innerHTML = '';
-            
-            const uniqueDepts = Array.from(departmentsMap.values()).sort();
-            console.log('Populating department datalist with:', uniqueDepts);
-            uniqueDepts.forEach(dept => {
-                const option = document.createElement('option');
-                option.value = dept;
-                datalist.appendChild(option);
-            });
-            console.log('Department datalist populated with', datalist.options.length, 'options');
-            
-            // Add focus event to show all options when clicking
+            // Department dropdown is now populated from server-side template
+            // No need for dynamic population since we use server-side template for departments
+        }
             const addDeptInput = document.getElementById('addDepartment');
             if (addDeptInput && !addDeptInput.dataset.listenerAdded) {
                 addDeptInput.addEventListener('focus', function() {
@@ -1667,18 +1306,11 @@
                 });
                 addDeptInput.dataset.listenerAdded = 'true';
             }
-        }
+        
 
         function populateAddPositionList() {
-            const select = document.getElementById('addPosition');
-            select.innerHTML = '<option value="">-- Chọn cấp bậc --</option>';
-            
-            {% for pos in positions %}
-            const option{{ loop.index }} = document.createElement('option');
-            option{{ loop.index }}.value = '{{ pos.code }}';  // Store CODE
-            option{{ loop.index }}.textContent = '{{ pos.name }}';  // Display NAME
-            select.appendChild(option{{ loop.index }});
-            {% endfor %}
+            // Position dropdown is now populated from server-side template
+            // No need for dynamic population since we use server-side template for positions
         }
 
         function saveAddUser() {
@@ -1690,20 +1322,17 @@
                 const formData = new FormData();
                 formData.append('employee_id', document.getElementById('addEmployeeId').value.trim());
                 formData.append('name', document.getElementById('addName').value.trim());
-                formData.append('email', document.getElementById('addEmail').value.trim());
                 formData.append('department', document.getElementById('addDepartment').value);
                 formData.append('position', document.getElementById('addPosition').value);
                 formData.append('password', document.getElementById('addPassword').value);
                 formData.append('role', document.getElementById('addRole').value);
-                formData.append('is_active', document.getElementById('addStatus').value === '1');
-                formData.append('gender', document.getElementById('addGender').value);
-                formData.append('phone', document.getElementById('addPhone').value);
-                formData.append('citizen_id', document.getElementById('addCitizenId').value);
-                formData.append('hometown', document.getElementById('addHometown').value);
+                formData.append('work_status', document.getElementById('addStatus').value);
+                formData.append('can_approve', document.getElementById('addCanApprove').value === 'true');
+                formData.append('can_register', document.getElementById('addCanRegister').value === 'true');
                 formData.append('avatar', avatarInput.files[0]);
                 
                 // Validate required fields
-                if (!formData.get('employee_id') || !formData.get('name') || !formData.get('email') || 
+                if (!formData.get('employee_id') || !formData.get('name') || 
                     !formData.get('department') || !formData.get('position')) {
                     showNotification('Vui lòng điền đầy đủ thông tin', 'error');
                     return;
@@ -1731,19 +1360,16 @@
                 const data = {
                     employee_id: document.getElementById('addEmployeeId').value.trim(),
                     name: document.getElementById('addName').value.trim(),
-                    email: document.getElementById('addEmail').value.trim(),
                     department: document.getElementById('addDepartment').value,
                     position: document.getElementById('addPosition').value,
                     password: document.getElementById('addPassword').value,
                     role: document.getElementById('addRole').value,
-                    is_active: document.getElementById('addStatus').value === '1',
-                    gender: document.getElementById('addGender').value,
-                    phone: document.getElementById('addPhone').value,
-                    citizen_id: document.getElementById('addCitizenId').value,
-                    hometown: document.getElementById('addHometown').value
+                    work_status: document.getElementById('addStatus').value,
+                    can_approve: document.getElementById('addCanApprove').value === 'true',
+                    can_register: document.getElementById('addCanRegister').value === 'true'
                 };
                 
-                if (!data.employee_id || !data.name || !data.email || !data.department || !data.position) {
+                if (!data.employee_id || !data.name || !data.department || !data.position) {
                     showNotification('Vui lòng điền đầy đủ thông tin', 'error');
                     return;
                 }
@@ -1782,15 +1408,12 @@
                 const formData = new FormData();
                 formData.append('employee_id', document.getElementById('editEmployeeId').value);
                 formData.append('name', document.getElementById('editName').value);
-                formData.append('email', document.getElementById('editEmail').value);
                 formData.append('department', document.getElementById('editDepartment').value);
                 formData.append('position', document.getElementById('editPosition').value);
                 formData.append('role', document.getElementById('editRole').value);
-                formData.append('is_active', document.getElementById('editStatus').value === '1');
-                formData.append('gender', document.getElementById('editGender').value);
-                formData.append('phone', document.getElementById('editPhone').value);
-                formData.append('citizen_id', document.getElementById('editCitizenId').value);
-                formData.append('hometown', document.getElementById('editHometown').value);
+                formData.append('work_status', document.getElementById('editStatus').value);
+                formData.append('can_approve', document.getElementById('editCanApprove').value === '1');
+                formData.append('can_register', document.getElementById('editCanRegister').value === '1');
                 formData.append('avatar', avatarInput.files[0]);
                 
                 const password = document.getElementById('editPassword').value;
@@ -1820,15 +1443,12 @@
                 const data = {
                     employee_id: document.getElementById('editEmployeeId').value,
                     name: document.getElementById('editName').value,
-                    email: document.getElementById('editEmail').value,
                     department: document.getElementById('editDepartment').value,
                     position: document.getElementById('editPosition').value,
                     role: document.getElementById('editRole').value,
-                    is_active: document.getElementById('editStatus').value === '1',
-                    gender: document.getElementById('editGender').value,
-                    phone: document.getElementById('editPhone').value,
-                    citizen_id: document.getElementById('editCitizenId').value,
-                    hometown: document.getElementById('editHometown').value
+                    work_status: document.getElementById('editStatus').value,
+                    can_approve: document.getElementById('editCanApprove').value === '1',
+                    can_register: document.getElementById('editCanRegister').value === '1'
                 };
                 
                 const password = document.getElementById('editPassword').value;
@@ -1892,10 +1512,10 @@
         let selectedUserId = null;
 
         // User selection function - opens edit modal
-        function selectUser(id, employeeId, name, email, department, position, role, workStatus, isActive, avatarUrl, gender, phone, citizenId, hometown) {
+        function selectUser(id, employeeId, name, department, position, role, workStatus, isActive, avatarUrl, canApprove, canRegister) {
             selectedUserId = id;
             // Open modal instead of inline form
-            openEditModal(id, employeeId, name, email, department, position, role, isActive, gender, phone, citizenId, hometown, avatarUrl);
+            openEditModal(id, employeeId, name, department, position, role, isActive, avatarUrl, canApprove, canRegister, workStatus);
         }
 
         function resetPasswordInline() {
@@ -2079,7 +1699,6 @@
             fetch('/admin/users/list')
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Refreshed user data:', data); // Debug log
                     if (data.success) {
                         const tbody = document.querySelector('tbody.bg-white');
                         if (!tbody) return;
@@ -2087,27 +1706,31 @@
                         // Rebuild table rows
                         tbody.innerHTML = '';
                         data.users.forEach(user => {
-                            console.log('User avatar_url:', user.employee_id, user.avatar_url); // Debug log
                             const row = document.createElement('tr');
                             row.id = `user-row-${user.id}`;
                             row.className = 'hover:bg-slate-50 dark:hover:bg-slate-700/50 user-row cursor-pointer transition-colors';
                             row.dataset.employeeId = user.employee_id.toLowerCase();
                             row.dataset.name = user.name.toLowerCase();
-                            row.dataset.email = user.email.toLowerCase();
                             row.dataset.department = user.department;
-                            row.dataset.position = user.position || 'staff';
+                            row.dataset.position = user.position_id || '';
                             row.dataset.role = user.role;
-                            row.dataset.status = user.is_active ? 'active' : 'inactive';
-                            row.onclick = () => selectUser(user.id, user.employee_id, user.name, user.email, user.department, user.position || 'staff', user.role, user.work_status || 'working', user.is_active ? 1 : 0, user.avatar_url || '', user.gender || '', user.phone || '', user.citizen_id || '', user.hometown || '');
+                            row.dataset.status = user.work_status || 'working';
+                            row.onclick = () => selectUser(user.id, user.employee_id, user.name, user.department, user.position_id || '', user.role, user.work_status || 'working', user.is_active ? 1 : 0, user.avatar_url || '', user.can_approve ? 1 : 0, user.can_register ? 1 : 0);
                             
-                            const statusBadge = user.is_active 
-                                ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Hoạt động</span>'
-                                : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Không hoạt động</span>';
+                            let statusBadge = '';
+                            const workStatus = user.work_status || 'working';
+                            if (workStatus === 'working') {
+                                statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Hoạt động</span>';
+                            } else if (workStatus === 'business_trip') {
+                                statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">Công tác</span>';
+                            } else if (workStatus === 'resigned') {
+                                statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Nghỉ việc</span>';
+                            }
                             
                             row.innerHTML = `
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100 lowercase">${user.employee_id.toLowerCase()}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="avatar-container w-14 h-14 rounded-full flex items-center justify-center overflow-hidden" style="${user.gender === 'female' ? 'background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);' : 'background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);'}">
+                                    <div class="avatar-container w-14 h-14 rounded-full flex items-center justify-center overflow-hidden" style="background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);">
                                         ${user.avatar_url 
                                             ? `<img src="${user.avatar_url}?t=${Date.now()}" alt="${user.name}" class="w-full h-full object-cover">` 
                                             : '<i class="fas fa-user text-white text-2xl"></i>'
@@ -2115,7 +1738,6 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 capitalize">${user.name}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">${user.email}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">${user.department}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400">
@@ -2140,7 +1762,6 @@
                         
                         // Call callback if provided
                         if (callback && typeof callback === 'function') {
-                            console.log('Calling callback after table refresh'); // Debug log
                             callback();
                         }
                     }
@@ -2152,13 +1773,6 @@
 
         function cancelEdit() {
             selectedUserId = null;
-            
-            // Hide form container and expand table to full width
-            document.getElementById('editFormContainer').classList.add('hidden');
-            document.getElementById('tableContainer').classList.remove('lg:col-span-2');
-            document.getElementById('tableContainer').classList.add('lg:col-span-3');
-            
-            // Remove highlight from all rows
             document.querySelectorAll('.user-row').forEach(row => {
                 row.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'border-l-4', 'border-blue-500');
             });
@@ -2252,7 +1866,6 @@
             // Validate required fields
             const employeeId = document.getElementById('employeeIdInline').value.trim();
             const name = document.getElementById('nameInline').value.trim();
-            const email = document.getElementById('emailInline').value.trim();
             const department = document.getElementById('departmentInline').value;
             const position = document.getElementById('positionInline').value;
             
@@ -2271,18 +1884,11 @@
             const formData = new FormData();
             formData.append('employee_id', employeeId);
             formData.append('name', name);
-            formData.append('email', email);
             formData.append('department', department);
             formData.append('position', position);
             formData.append('role', document.getElementById('roleInline').value);
             formData.append('work_status', document.getElementById('workStatusInline').value);
             formData.append('is_active', 'true');
-            
-            // Add personal information fields
-            formData.append('gender', document.getElementById('genderInline').value);
-            formData.append('phone', document.getElementById('phoneInline').value.trim());
-            formData.append('citizen_id', document.getElementById('citizenIdInline').value.trim());
-            formData.append('hometown', document.getElementById('hometownInline').value.trim());
             
             if (password) {
                 formData.append('password', password);
@@ -2376,7 +1982,6 @@
             userRows.forEach(row => {
                 const employeeId = row.dataset.employeeId;
                 const name = row.dataset.name;
-                const email = row.dataset.email;
                 const department = row.dataset.department;
                 const position = row.dataset.position;
                 const role = row.dataset.role;
@@ -2384,8 +1989,7 @@
 
                 const matchesSearch = !searchTerm || 
                     employeeId.includes(searchTerm) || 
-                    name.includes(searchTerm) || 
-                    email.includes(searchTerm);
+                    name.includes(searchTerm);
                 
                 const matchesDepartment = !departmentFilter || department === departmentFilter;
                 const matchesRole = !roleFilter || role === roleFilter;
@@ -2403,7 +2007,6 @@
             userCards.forEach(card => {
                 const employeeId = card.dataset.employeeId;
                 const name = card.dataset.name;
-                const email = card.dataset.email;
                 const department = card.dataset.department;
                 const position = card.dataset.position;
                 const role = card.dataset.role;
@@ -2411,8 +2014,7 @@
 
                 const matchesSearch = !searchTerm || 
                     employeeId.includes(searchTerm) || 
-                    name.includes(searchTerm) || 
-                    email.includes(searchTerm);
+                    name.includes(searchTerm);
                 
                 const matchesDepartment = !departmentFilter || department === departmentFilter;
                 const matchesRole = !roleFilter || role === roleFilter;
@@ -2428,15 +2030,43 @@
             // Update filter results text
             const totalCount = userRows.length;
             const filterResults = document.getElementById('filterResults');
-            if (visibleCount === totalCount) {
-                filterResults.textContent = `Hiển thị tất cả ${totalCount} người dùng`;
-            } else {
-                filterResults.textContent = `Hiển thị ${visibleCount} / ${totalCount} người dùng`;
+            if (filterResults) {
+                if (visibleCount === totalCount) {
+                    filterResults.textContent = `Hiển thị tất cả ${totalCount} người dùng`;
+                } else {
+                    filterResults.textContent = `Hiển thị ${visibleCount} / ${totalCount} người dùng`;
+                }
             }
 
             // Reset to page 1 and display
             currentPage = 1;
             displayPage();
+        }
+
+        // Mobile-specific filter function
+        function filterUsersMobile() {
+            const searchTerm = document.getElementById('mobileSearchInput').value.toLowerCase();
+            const userCards = document.querySelectorAll('.user-card');
+
+            let visibleCount = 0;
+
+            userCards.forEach(card => {
+                const employeeId = card.dataset.employeeId;
+                const name = card.dataset.name;
+                const department = card.dataset.department;
+
+                const matchesSearch = !searchTerm || 
+                    employeeId.includes(searchTerm) || 
+                    name.includes(searchTerm) ||
+                    department.toLowerCase().includes(searchTerm);
+
+                if (matchesSearch) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
         }
 
         // Pagination Functions
@@ -2542,7 +2172,10 @@
 
         // Initialize filter results on page load
         document.addEventListener('DOMContentLoaded', function() {
-            restoreFilters();
+            // Clear any saved filters first to show all users
+            clearFilters();
+            // Then restore filters if needed
+            // restoreFilters();
         });
     </script>
 
@@ -2630,45 +2263,38 @@
                     <form id="addUserForm" class="space-y-4">
                         <input type="hidden" id="addAvatarChanged" value="false">
                         
-                        <!-- Row 1: Mã nhân viên + Họ và tên + Email -->
-                        <div class="grid grid-cols-3 gap-4">
+                        <!-- Hàng 1: Mã nhân viên | Họ và tên -->
+                        <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Mã nhân viên
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2">
+                                    Mã nhân viên *
                                 </label>
                                 <input type="text" id="addEmployeeId" required
-                                       class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                       placeholder="VD: nv001">
+                                       class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent lowercase"
+                                       placeholder="VD: nv001"
+                                       maxlength="50">
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Họ và tên
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2">
+                                    Họ và tên *
                                 </label>
                                 <input type="text" id="addName" required
-                                       class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                       placeholder="Nguyễn Văn A">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Email
-                                </label>
-                                <input type="email" id="addEmail" required
-                                       class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                       placeholder="email@example.com">
+                                       class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent capitalize"
+                                       placeholder="VD: Nguyễn Văn A"
+                                       maxlength="100">
                             </div>
                         </div>
 
-                        <!-- Row 2: Password + Giới tính + Số điện thoại -->
-                        <div class="grid grid-cols-3 gap-4">
+                        <!-- Hàng 2: Mật khẩu | Phòng ban -->
+                        <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Mật khẩu
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2">
+                                    Mật khẩu *
                                 </label>
                                 <div class="relative">
                                     <input type="password" id="addPassword" required
-                                           class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent pr-10"
+                                           class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
                                            placeholder="Tối thiểu 6 ký tự"
                                            minlength="6"
                                            value="123456">
@@ -2680,98 +2306,82 @@
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Giới tính
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2">
+                                    Phòng ban *
                                 </label>
-                                <select id="addGender" 
-                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                    <option value="">Chọn giới tính</option>
-                                    <option value="male">Nam</option>
-                                    <option value="female">Nữ</option>
-                                    <option value="other">Khác</option>
+                                <select id="addDepartment" required
+                                        class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Chọn phòng ban</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept.name }}">{{ dept.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Hàng 3: Cấp bậc | Trạng thái -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2">
+                                    Cấp bậc *
+                                </label>
+                                <select id="addPosition" required
+                                        class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Chọn cấp bậc</option>
+                                    {% for position in positions %}
+                                    <option value="{{ position.code }}">{{ position.name }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Số điện thoại
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2">
+                                    Trạng thái *
                                 </label>
-                                <input type="tel" id="addPhone" 
-                                       class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                       placeholder="0912345678"
-                                       maxlength="20">
+                                <select id="addStatus"
+                                        class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="working" selected>Hoạt động / Working</option>
+                                    <option value="business_trip">Công tác / Business Trip</option>
+                                    <option value="resigned">Nghỉ việc / Resigned</option>
+                                </select>
                             </div>
                         </div>
 
-                        <!-- Row 3: Phòng ban + Cấp bậc + Quyền -->
-                        <div class="grid grid-cols-3 gap-4">
+                        <!-- Hàng 4: Quyền phê duyệt | Quyền đăng ký -->
+                        <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Phòng ban
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2">
+                                    Quyền phê duyệt
                                 </label>
-                                <input id="addDepartment" 
-                                       list="departmentList"
-                                       required
-                                       autocomplete="off"
-                                       placeholder="Chọn hoặc nhập phòng ban"
-                                       onfocus="this.value=''; this.placeholder='Nhập hoặc chọn từ danh sách...'"
-                                       onblur="if(this.value==='') this.placeholder='Chọn hoặc nhập phòng ban'"
-                                       class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                <datalist id="departmentList">
-                                </datalist>
+                                <select id="addCanApprove"
+                                        class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="false" selected>Không có quyền</option>
+                                    <option value="true">Có quyền</option>
+                                </select>
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Cấp bậc
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2">
+                                    Quyền đăng ký
                                 </label>
-                                <select id="addPosition" required
-                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Quyền
-                                </label>
-                                <select id="addRole"
-                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                    <option value="user" selected>User</option>
-                                    <option value="admin">Admin</option>
+                                <select id="addCanRegister"
+                                        class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="false">Không có quyền</option>
+                                    <option value="true" selected>Có quyền</option>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- Row 4: Căn cước công dân + Quê quán + Trạng thái -->
-                        <div class="grid grid-cols-3 gap-4">
+                        <!-- Hàng 5: Quyền (kéo dài full width) -->
+                        <div class="grid grid-cols-1 gap-3">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Căn cước công dân
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2">
+                                    Quyền *
                                 </label>
-                                <input type="text" id="addCitizenId" 
-                                       class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                       placeholder="001234567890"
-                                       maxlength="20">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Quê quán
-                                </label>
-                                <input type="text" id="addHometown" 
-                                       class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                       placeholder="Hà Nội"
-                                       maxlength="200">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Trạng thái
-                                </label>
-                                <select id="addStatus"
-                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                    <option value="1" selected>{{ t.active }}</option>
-                                    <option value="0">{{ t.inactive }}</option>
+                                <select id="addRole"
+                                        class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="user" selected>User</option>
+                                    <option value="admin">Admin</option>
                                 </select>
                             </div>
                         </div>
@@ -2779,14 +2389,14 @@
                 </div>
                 
                 <!-- Footer Buttons -->
-                <div class="bg-slate-50 dark:bg-slate-900/50 px-6 py-4 flex flex-row justify-end gap-3">
+                <div class="flex gap-3 pt-4 px-6 pb-6">
                     <button type="button" onclick="closeAddUserModal()" 
-                            class="inline-flex justify-center rounded-lg border border-slate-300 dark:border-slate-600 shadow-sm px-6 py-2.5 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                            class="flex-1 px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-center">
                         Hủy
                     </button>
                     <button type="button" onclick="saveAddUser()" 
-                            class="inline-flex justify-center rounded-lg shadow-sm px-6 py-2.5 text-sm font-semibold transition-all"
-                            style="background-color: #10b981; color: #ffffff;">
+                            style="background-color: #2563eb;"
+                            class="flex-1 hover:opacity-90 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all text-center">
                         Thêm nhân viên
                     </button>
                 </div>
@@ -3027,6 +2637,10 @@
                 <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">group</span>
                 <span class="text-[10px] font-bold uppercase tracking-tighter">Người Dùng</span>
             </a>
+            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_departments') }}">
+                <span class="material-symbols-outlined text-2xl">corporate_fare</span>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Phòng Ban</span>
+            </a>
             <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_positions') }}">
                 <span class="material-symbols-outlined text-2xl">badge</span>
                 <span class="text-[10px] font-bold uppercase tracking-tighter">Chức Vụ</span>
@@ -3096,33 +2710,113 @@
         </div>
     </div>
 
+    {% include 'includes/admin_sidebar_scripts.html' %}
     <script>
-        // Sidebar toggle functionality
-        let sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        let currentTab = 'active';
+        let currentDesktopTab = 'active';
         
-        function toggleSidebar() {
-            sidebarCollapsed = !sidebarCollapsed;
-            localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
-            applySidebarState();
+        // Run on load
+        document.addEventListener('DOMContentLoaded', function() {
+            filterDesktopByTab();
+        });
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab appearance
+            const activeTab = document.getElementById('activeTab');
+            const resignedTab = document.getElementById('resignedTab');
+            
+            if (tab === 'active') {
+                activeTab.className = 'flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm';
+                resignedTab.className = 'flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100';
+            } else {
+                resignedTab.className = 'flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm';
+                activeTab.className = 'flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100';
+            }
+            
+            // Filter users based on tab
+            filterUsersByTab();
         }
         
-        function applySidebarState() {
-            const sidebar = document.getElementById('sidebar');
-            const toggleIcon = document.getElementById('toggleIcon');
+        function switchDesktopTab(tab) {
+            currentDesktopTab = tab;
             
-            if (sidebarCollapsed) {
-                sidebar.classList.add('collapsed');
-                toggleIcon.textContent = 'chevron_right';
+            const activeTab = document.getElementById('desktopActiveTab');
+            const resignedTab = document.getElementById('desktopResignedTab');
+            
+            if (tab === 'active') {
+                activeTab.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-green-500 text-white shadow-sm';
+                resignedTab.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-red-50 hover:text-red-600';
             } else {
-                sidebar.classList.remove('collapsed');
-                toggleIcon.textContent = 'chevron_left';
+                resignedTab.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-red-500 text-white shadow-sm';
+                activeTab.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-green-50 hover:text-green-600';
+            }
+            
+            filterDesktopByTab();
+        }
+        
+        function filterUsersByTab() {
+            const userCards = document.querySelectorAll('.user-card');
+            
+            userCards.forEach(card => {
+                const workStatus = card.dataset.status;
+                let shouldShow = false;
+                
+                if (currentTab === 'active') {
+                    // Show working and business_trip
+                    shouldShow = workStatus === 'working' || workStatus === 'business_trip';
+                } else if (currentTab === 'resigned') {
+                    // Show only resigned
+                    shouldShow = workStatus === 'resigned';
+                }
+                
+                // Also apply search filter
+                const searchTerm = document.getElementById('mobileSearchInput').value.toLowerCase();
+                const employeeId = card.dataset.employeeId;
+                const name = card.dataset.name;
+                const department = card.dataset.department;
+                
+                const matchesSearch = !searchTerm || 
+                    employeeId.includes(searchTerm) || 
+                    name.includes(searchTerm) ||
+                    department.toLowerCase().includes(searchTerm);
+                
+                card.style.display = (shouldShow && matchesSearch) ? '' : 'none';
+            });
+        }
+        
+        function filterDesktopByTab() {
+            const userRows = document.querySelectorAll('.user-row');
+            
+            userRows.forEach(row => {
+                const workStatus = row.dataset.status;
+                let shouldShow = false;
+                
+                if (currentDesktopTab === 'active') {
+                    // Show working and business_trip
+                    shouldShow = workStatus === 'working' || workStatus === 'business_trip';
+                } else if (currentDesktopTab === 'resigned') {
+                    // Show only resigned
+                    shouldShow = workStatus === 'resigned';
+                }
+                
+                row.style.display = shouldShow ? '' : 'none';
+            });
+            
+            // Update filter results
+            const visibleRows = document.querySelectorAll('.user-row[style=""], .user-row:not([style])');
+            const totalRows = document.querySelectorAll('.user-row');
+            const filterResults = document.getElementById('filterResults');
+            if (filterResults) {
+                filterResults.textContent = `Hiển thị ${visibleRows.length} / ${totalRows.length} người dùng`;
             }
         }
         
-        // Apply saved state on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            applySidebarState();
-        });
+        // Update mobile search to work with tabs
+        function filterUsersMobile() {
+            filterUsersByTab();
+        }
     </script>
 
 </body>

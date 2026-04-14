@@ -5,12 +5,30 @@ from datetime import datetime
 db = SQLAlchemy()
 
 
+class Department(db.Model):
+    __tablename__ = 'departments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    users = db.relationship('User', foreign_keys='User.department_id', backref='dept', lazy=True)
+    
+    def __repr__(self):
+        return f'<Department {self.code} - {self.name}>'
+
+
 class Position(db.Model):
     __tablename__ = 'positions'
     
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(50), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -24,27 +42,25 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.String(50), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
     
-    # Department and Position (simple string fields)
-    department = db.Column(db.String(100))  # Department name
-    position = db.Column(db.String(50))     # Position code (1, 2, 3, 4...)
+    # Department and Position
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
+    position_id = db.Column(db.Integer, db.ForeignKey('positions.id'))
     
-    # Work status: working, business_trip, resigned
+    # Work status
     work_status = db.Column(db.String(20), default='working')
     
-    # Avatar/Photo
-    avatar_url = db.Column(db.String(255))  # Path to avatar image
+    # Personal info
+    avatar_url = db.Column(db.String(255))
     
-    # Personal Information
-    gender = db.Column(db.String(10))  # male, female, other
-    phone = db.Column(db.String(20))  # Phone number
-    citizen_id = db.Column(db.String(20))  # CCCD/ID card number
-    hometown = db.Column(db.String(200))  # Quê quán
-    
-    role = db.Column(db.String(20), default='user')  # user, admin
+    role = db.Column(db.String(20), default='user')
     is_active = db.Column(db.Boolean, default=True)
+    
+    # Permission fields
+    can_approve = db.Column(db.Boolean, default=False)  # Quyền phê duyệt overtime
+    can_register = db.Column(db.Boolean, default=True)  # Quyền đăng ký overtime
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_activity = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -54,9 +70,10 @@ class User(UserMixin, db.Model):
                                        backref='user', 
                                        lazy=True)
     meal_registrations = db.relationship('MealRegistration', backref='user', lazy=True)
+    pos = db.relationship('Position', backref='users', lazy=True)
     
     def __repr__(self):
-        return f'<User {self.employee_id} - Position {self.position}>'
+        return f'<User {self.employee_id} - Position ID {self.position_id}>'
     
     def get_id(self):
         return str(self.id)
@@ -74,96 +91,54 @@ class User(UserMixin, db.Model):
     def get_approvers(self):
         """
         Get list of users who can approve this user's overtime requests.
-        Returns users in the same department with lower position code (higher authority).
-        Logic: Code càng nhỏ = cấp càng cao (1 > 2 > 3 > 4)
+        Returns users in the same department with can_approve = True.
         """
-        if not self.department or not self.position:
+        if not self.department_id:
             return []
         
-        try:
-            my_code = int(self.position)
-        except (ValueError, TypeError):
-            return []
-        
-        # Find users in same department with lower code (higher authority)
+        # Find users in same department with approval permission
         approvers = User.query.filter(
-            User.department == self.department,
-            User.position.isnot(None),
+            User.department_id == self.department_id,
+            User.can_approve == True,
             User.is_active == True,
             User.id != self.id
         ).all()
         
-        # Filter by code comparison
-        result = []
-        for user in approvers:
-            try:
-                user_code = int(user.position)
-                if user_code < my_code:  # Lower code = higher authority
-                    result.append(user)
-            except (ValueError, TypeError):
-                continue
-        
-        # Sort by code ascending (highest authority first)
-        result.sort(key=lambda u: int(u.position))
-        return result
+        return approvers
     
     def can_approve_for(self, user):
         """
         Check if this user can approve overtime for another user.
-        Returns True if this user has lower code (higher authority) in same department.
+        Returns True if this user has can_approve = True in same department.
         """
-        if not self.department or not user.department or not self.position or not user.position:
+        if not self.department_id or not user.department_id:
             return False
         
-        # Must be same department
-        if self.department != user.department:
-            return False
-        
-        try:
-            my_code = int(self.position)
-            their_code = int(user.position)
-            return my_code < their_code and self.is_active  # Lower code = can approve
-        except (ValueError, TypeError):
-            return False
+        # Must be same department and have approval permission
+        return (self.department_id == user.department_id and 
+                self.can_approve and 
+                self.is_active)
     
     def get_subordinates(self):
         """
         Get list of users this user can approve for.
-        Returns users in the same department with higher code (lower authority).
+        Returns users in the same department if this user has can_approve = True.
         """
-        if not self.department or not self.position:
+        if not self.department_id or not self.can_approve:
             return []
         
-        try:
-            my_code = int(self.position)
-        except (ValueError, TypeError):
-            return []
-        
-        # Find users in same department with higher code (lower authority)
+        # Find users in same department (excluding self)
         subordinates = User.query.filter(
-            User.department == self.department,
-            User.position.isnot(None),
+            User.department_id == self.department_id,
             User.is_active == True,
             User.id != self.id
         ).all()
         
-        # Filter by code comparison
-        result = []
-        for user in subordinates:
-            try:
-                user_code = int(user.position)
-                if user_code > my_code:  # Higher code = lower authority
-                    result.append(user)
-            except (ValueError, TypeError):
-                continue
-        
-        # Sort by code ascending
-        result.sort(key=lambda u: int(u.position))
-        return result
+        return subordinates
     
     def is_manager(self):
-        """Check if user is a manager (has subordinates)"""
-        return len(self.get_subordinates()) > 0
+        """Check if user is a manager (has approval permission)"""
+        return self.can_approve
 
 
 class OvertimeRequest(db.Model):
@@ -212,6 +187,47 @@ class OvertimeRequest(db.Model):
         return f'<OvertimeRequest {self.id} - {self.status}>'
 
 
+class LeaveRequest(db.Model):
+    __tablename__ = 'leave_requests'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    employee_id = db.Column(db.String(50), nullable=False)
+    employee_name = db.Column(db.String(100), nullable=False)
+    department = db.Column(db.String(100), nullable=False)
+    position = db.Column(db.String(50))
+    
+    # Leave info
+    leave_type = db.Column(db.String(50), nullable=False)  # annual, sick, personal, maternity, etc.
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    total_days = db.Column(db.Integer, nullable=False)
+    reason = db.Column(db.Text, nullable=False)
+    
+    # Emergency contact (for sick leave)
+    emergency_contact = db.Column(db.String(100))
+    emergency_phone = db.Column(db.String(20))
+    
+    # Approval status
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    
+    # Manager approval
+    manager_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    manager_approved_at = db.Column(db.DateTime)
+    manager_comment = db.Column(db.Text)
+    
+    # Metadata
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref='leave_requests')
+    manager = db.relationship('User', foreign_keys=[manager_id])
+    
+    def __repr__(self):
+        return f'<LeaveRequest {self.id} - {self.leave_type} - {self.status}>'
+
+
 class MealRegistration(db.Model):
     __tablename__ = 'meal_registrations'
     
@@ -249,3 +265,170 @@ class Menu(db.Model):
     
     def __repr__(self):
         return f'<Menu {self.date} - {self.dish_name}>'
+
+
+class ApprovalHierarchy(db.Model):
+    __tablename__ = 'approval_hierarchy'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=False)
+    approver_position_id = db.Column(db.Integer, db.ForeignKey('positions.id'), nullable=False)
+    approvee_position_id = db.Column(db.Integer, db.ForeignKey('positions.id'), nullable=False)
+    can_approve = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    department = db.relationship('Department', backref='approval_rules', lazy=True)
+    approver_position = db.relationship('Position', foreign_keys=[approver_position_id], backref='can_approve_positions', lazy=True)
+    approvee_position = db.relationship('Position', foreign_keys=[approvee_position_id], backref='approved_by_positions', lazy=True)
+    
+    # Unique constraint
+    __table_args__ = (
+        db.UniqueConstraint('department_id', 'approver_position_id', 'approvee_position_id', 
+                          name='unique_approval_rule'),
+    )
+    
+    def __repr__(self):
+        return f'<ApprovalHierarchy Dept:{self.department_id} {self.approver_position_id}->{self.approvee_position_id}>'
+    
+    @staticmethod
+    def can_user_approve(approver_user, approvee_user):
+        """
+        Check if approver_user can approve requests from approvee_user
+        based on department and position hierarchy
+        """
+        if not approver_user.department_id or not approvee_user.department_id:
+            return False
+        
+        if approver_user.department_id != approvee_user.department_id:
+            return False
+        
+        if not approver_user.position_id or not approvee_user.position_id:
+            return False
+        
+        # Check approval hierarchy
+        rule = ApprovalHierarchy.query.filter_by(
+            department_id=approver_user.department_id,
+            approver_position_id=approver_user.position_id,
+            approvee_position_id=approvee_user.position_id,
+            can_approve=True
+        ).first()
+        
+        return rule is not None
+    
+    @staticmethod
+    def get_approvers_for_user(user):
+        """
+        Get list of users who can approve for the given user
+        based on approval hierarchy
+        """
+        if not user.department_id or not user.position_id:
+            return []
+        
+        # Find approval rules for this user's position in their department
+        rules = ApprovalHierarchy.query.filter_by(
+            department_id=user.department_id,
+            approvee_position_id=user.position_id,
+            can_approve=True
+        ).all()
+        
+        if not rules:
+            return []
+        
+        # Get approver position IDs
+        approver_position_ids = [rule.approver_position_id for rule in rules]
+        
+        # Find active users with those positions in the same department
+        approvers = User.query.filter(
+            User.department_id == user.department_id,
+            User.position_id.in_(approver_position_ids),
+            User.is_active == True,
+            User.work_status.in_(['working', 'business_trip']),
+            User.id != user.id
+        ).all()
+        
+        return approvers
+    
+    @staticmethod
+    def get_approvees_for_user(user):
+        """
+        Get list of users that the given user can approve for
+        based on approval hierarchy
+        """
+        if not user.department_id or not user.position_id:
+            return []
+        
+        # Find approval rules where this user's position is the approver
+        rules = ApprovalHierarchy.query.filter_by(
+            department_id=user.department_id,
+            approver_position_id=user.position_id,
+            can_approve=True
+        ).all()
+        
+        if not rules:
+            return []
+        
+        # Get approvee position IDs
+        approvee_position_ids = [rule.approvee_position_id for rule in rules]
+        
+        # Find active users with those positions in the same department
+        approvees = User.query.filter(
+            User.department_id == user.department_id,
+            User.position_id.in_(approvee_position_ids),
+            User.is_active == True,
+            User.work_status.in_(['working', 'business_trip']),
+            User.id != user.id
+        ).all()
+        
+        return approvees
+
+
+
+
+
+class ExitEntryRequest(db.Model):
+    __tablename__ = 'exit_entry_requests'
+    __table_args__ = {'extend_existing': True}
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    employee_id = db.Column(db.String(50), nullable=False)
+    employee_name = db.Column(db.String(100), nullable=False)
+    department = db.Column(db.String(100), nullable=False)
+    position = db.Column(db.String(50))
+
+    # Request info
+    request_date = db.Column(db.Date, nullable=False)
+    exit_time = db.Column(db.Time)  # Thời gian ra
+    entry_time = db.Column(db.Time)  # Thời gian vào
+    reason = db.Column(db.Text, nullable=False)
+
+    # Approval status
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+
+    # Manager approval
+    manager_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    manager_approved_at = db.Column(db.DateTime)
+    manager_comment = db.Column(db.Text)
+
+    # HR approval
+    hr_approved = db.Column(db.Boolean, default=False)
+    hr_approved_at = db.Column(db.DateTime)
+    hr_comment = db.Column(db.Text)
+
+    # Security confirmation
+    security_confirmed = db.Column(db.Boolean, default=False)
+    security_confirmed_at = db.Column(db.DateTime)
+    security_comment = db.Column(db.Text)
+
+    # Metadata
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref='exit_entry_requests')
+    manager = db.relationship('User', foreign_keys=[manager_id])
+
+    def __repr__(self):
+        return f'<ExitEntryRequest {self.id} - {self.status}>'

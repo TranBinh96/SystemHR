@@ -10,7 +10,6 @@ class LoginForm(FlaskForm):
 class RegisterForm(FlaskForm):
     employee_id = StringField('Employee ID', validators=[DataRequired(), Length(min=3, max=50)])
     name = StringField('Full Name', validators=[DataRequired(), Length(min=2, max=100)])
-    email = StringField('Email', validators=[DataRequired(), Email()])
     department = SelectField('Department', choices=[
         ('production', 'Production Department'),
         ('hr', 'Human Resources'),
@@ -26,10 +25,6 @@ class RegisterForm(FlaskForm):
     def validate_employee_id(self, field):
         if User.query.filter_by(employee_id=field.data).first():
             raise ValidationError('Employee ID already exists')
-    
-    def validate_email(self, field):
-        if User.query.filter_by(email=field.data).first():
-            raise ValidationError('Email already registered')
 
 class OvertimeForm(FlaskForm):
     date = DateField('Date', validators=[DataRequired()])

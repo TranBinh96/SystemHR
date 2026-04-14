@@ -7,7 +7,7 @@ from flask_jwt_extended import JWTManager
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 
-from models import db, User, OvertimeRequest, MealRegistration
+from models import db, User, OvertimeRequest, LeaveRequest, MealRegistration, ExitEntryRequest
 from config import Config
 from translations import get_translation
 from forms import LoginForm, RegisterForm, OvertimeForm, ChangePasswordForm
@@ -262,15 +262,8 @@ def dashboard():
     if current_user.role == 'admin':
         return redirect(url_for('admin_dashboard'))
     
-    # Check if user can approve (Trưởng Phòng or has subordinates)
-    is_manager = False
-    
-    # Position code 1 = Trưởng Phòng = can approve
-    if current_user.position == '1':
-        is_manager = True
-    # Or if user has subordinates
-    elif current_user.is_manager():
-        is_manager = True
+    # Check if user can approve (has can_approve permission)
+    is_manager = current_user.can_approve
     
     return render_template('dashboard.html', user=current_user.name, is_manager=is_manager)
 
@@ -347,15 +340,24 @@ def admin_users():
         flash('Bạn không có quyền truy cập trang này', 'error')
         return redirect(url_for('dashboard'))
     
-    from models import Position
-    # Get all users and positions
+    from models import Position, Department
+    # Get all users and positions (sort positions numerically)
     users = User.query.order_by(User.created_at.desc()).all()
-    positions = Position.query.order_by(Position.code).all()
+    positions_raw = Position.query.all()
+    
+    # Sort positions numerically by extracting numbers from code
+    import re
+    def extract_number(code):
+        match = re.search(r'\d+', str(code))
+        return int(match.group()) if match else 0
+    
+    positions = sorted(positions_raw, key=lambda x: extract_number(x.code))
+    departments = Department.query.order_by(Department.name.asc()).all()
     
     # Create position lookup dictionary for template
     position_dict = {str(pos.code): pos.name for pos in positions}
     
-    return render_template('admin_users.html', users=users, positions=positions, position_dict=position_dict)
+    return render_template('admin_users.html', users=users, positions=positions, departments=departments, position_dict=position_dict)
 
 @app.route('/admin/users/list', methods=['GET'])
 @login_required
@@ -366,7 +368,15 @@ def admin_users_list():
     
     from models import Position
     users = User.query.order_by(User.created_at.desc()).all()
-    positions = Position.query.order_by(Position.code).all()
+    positions_raw = Position.query.all()
+    
+    # Sort positions numerically by extracting numbers from code
+    import re
+    def extract_number(code):
+        match = re.search(r'\d+', str(code))
+        return int(match.group()) if match else 0
+    
+    positions = sorted(positions_raw, key=lambda x: extract_number(x.code))
     
     # Create position lookup map (convert both to string for comparison)
     position_map = {str(pos.code): pos.name for pos in positions}
@@ -380,14 +390,15 @@ def admin_users_list():
             'id': user.id,
             'employee_id': user.employee_id,
             'name': user.name,
-            'email': user.email,
             'department': user.department,
-            'position': user.position,
-            'position_name': position_name,
+            'position_id': user.position_id,
+            'position_name': user.pos.name if user.pos else 'Chưa xác định',
             'role': user.role,
             'is_active': user.is_active,
             'work_status': user.work_status,
             'avatar_url': user.avatar_url,
+            'can_approve': user.can_approve,
+            'can_register': user.can_register,
             'gender': user.gender,
             'phone': user.phone,
             'citizen_id': user.citizen_id,
@@ -489,12 +500,6 @@ def edit_user(user_id):
         
         if 'name' in data:
             user.name = data['name']
-        if 'email' in data:
-            # Check if email already exists
-            existing = User.query.filter(User.email == data['email'], User.id != user_id).first()
-            if existing:
-                return {'success': False, 'message': 'Email đã tồn tại'}, 400
-            user.email = data['email']
         if 'employee_id' in data:
             # Check if employee_id already exists
             existing = User.query.filter(User.employee_id == data['employee_id'], User.id != user_id).first()
@@ -502,14 +507,18 @@ def edit_user(user_id):
                 return {'success': False, 'message': 'Mã nhân viên đã tồn tại'}, 400
             user.employee_id = data['employee_id']
         
-        # Handle department - just set the string field
+        # Handle department - find department_id from name
         if 'department' in data:
-            user.department = data['department']
+            from models import Department
+            dept = Department.query.filter_by(name=data['department']).first()
+            if dept:
+                user.department_id = dept.id
+            else:
+                user.department_id = None
         
-        # Handle position - store CODE in position field
+        # Handle position - store position_id
         if 'position' in data:
-            pos_value = data['position']  # This is the code (1, 2, 3, 4...)
-            user.position = pos_value  # Store code directly
+            user.position_id = data['position']  # This is the position ID
         
         if 'role' in data:
             user.role = data['role']
@@ -519,11 +528,11 @@ def edit_user(user_id):
             # Convert string 'true'/'false' to boolean
             user.is_active = data['is_active'] in ['true', 'True', True, 1, '1']
         
-        # Handle personal information fields
-        if 'gender' in data:
-            user.gender = data['gender'] if data['gender'] else None
-        if 'phone' in data:
-            user.phone = data['phone'] if data['phone'] else None
+        # Handle permission fields
+        if 'can_approve' in data:
+            user.can_approve = data['can_approve'] in ['true', 'True', True, 1, '1']
+        if 'can_register' in data:
+            user.can_register = data['can_register'] in ['true', 'True', True, 1, '1']
         if 'citizen_id' in data:
             user.citizen_id = data['citizen_id'] if data['citizen_id'] else None
         if 'hometown' in data:
@@ -623,7 +632,7 @@ def add_user():
             data = request.form.to_dict()
         
         # Validate required fields
-        required_fields = ['employee_id', 'name', 'email', 'password', 'department', 'position']
+        required_fields = ['employee_id', 'name', 'password', 'department', 'position']
         for field in required_fields:
             if field not in data or not data[field]:
                 return {'success': False, 'message': f'Thiếu thông tin: {field}'}, 400
@@ -632,24 +641,22 @@ def add_user():
         if User.query.filter_by(employee_id=data['employee_id']).first():
             return {'success': False, 'message': 'Mã nhân viên đã tồn tại'}, 400
         
-        # Check if email already exists
-        if User.query.filter_by(email=data['email']).first():
-            return {'success': False, 'message': 'Email đã tồn tại'}, 400
+        # Find department_id from department name
+        from models import Department
+        dept = Department.query.filter_by(name=data['department']).first()
+        department_id = dept.id if dept else None
         
-        # Create new user - store code directly in position field
+        # Create new user
         new_user = User(
             employee_id=data['employee_id'],
             name=data['name'],
-            email=data['email'],
-            department=data['department'],  # Department name
-            position=data['position'],  # Position code (1, 2, 3, 4...)
+            department_id=department_id,  # Department foreign key
+            position_id=data['position'],  # Position ID
             role=data.get('role', 'user'),
             work_status=data.get('work_status', 'working'),
             is_active=data.get('is_active', True) if isinstance(data.get('is_active'), bool) else data.get('is_active') in ['true', 'True', True, 1, '1'],
-            gender=data.get('gender') if data.get('gender') else None,
-            phone=data.get('phone') if data.get('phone') else None,
-            citizen_id=data.get('citizen_id') if data.get('citizen_id') else None,
-            hometown=data.get('hometown') if data.get('hometown') else None
+            can_approve=data.get('can_approve', False) if isinstance(data.get('can_approve'), bool) else data.get('can_approve') in ['true', 'True', True, 1, '1'],
+            can_register=data.get('can_register', True) if isinstance(data.get('can_register'), bool) else data.get('can_register') in ['true', 'True', True, 1, '1']
         )
         new_user.set_password(data['password'])
         
@@ -740,6 +747,26 @@ def admin_positions():
     positions = Position.query.order_by(Position.code).all()
     return render_template('admin_positions.html', positions=positions)
 
+@app.route('/admin/positions/employee-counts')
+@login_required
+def get_position_employee_counts():
+    """Get employee counts for each position"""
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    from models import Position
+    from sqlalchemy import func
+    
+    # Get count of users for each position
+    position_counts = db.session.query(
+        Position.id,
+        func.count(User.id).label('employee_count')
+    ).outerjoin(User, User.position_id == Position.id).group_by(Position.id).all()
+    
+    counts = {pos_id: count for pos_id, count in position_counts}
+    
+    return {'success': True, 'counts': counts}
+
 @app.route('/admin/positions/list')
 @login_required
 def list_positions():
@@ -748,11 +775,27 @@ def list_positions():
         return {'success': False, 'message': 'Không có quyền'}, 403
     
     from models import Position
-    positions = Position.query.order_by(Position.code).all()
-    return {
-        'success': True,
-        'positions': [{'id': p.id, 'code': p.code, 'name': p.name} for p in positions]
-    }
+    positions = Position.query.all()
+    
+    # Convert to list and sort by numeric value of code
+    positions_list = [{'id': p.id, 'code': p.code, 'name': p.name, 'description': p.description or ''} for p in positions]
+    
+    # Sort by numeric value of code
+    def sort_key(pos):
+        try:
+            # Extract numeric part from code
+            import re
+            numeric_part = re.findall(r'\d+', pos['code'])
+            if numeric_part:
+                return int(numeric_part[0])
+            else:
+                return float('inf')  # Non-numeric codes go to end
+        except:
+            return float('inf')
+    
+    positions_list.sort(key=sort_key)
+    
+    return positions_list
 
 @app.route('/admin/positions/add', methods=['POST'])
 @login_required
@@ -765,6 +808,7 @@ def add_position():
     data = request.json
     code = data.get('code', '').strip().upper()
     name = data.get('name', '').strip()
+    description = data.get('description', '').strip()
     
     if not code or not name:
         return {'success': False, 'message': 'Vui lòng điền đầy đủ thông tin'}, 400
@@ -774,7 +818,7 @@ def add_position():
     if existing:
         return {'success': False, 'message': 'Mã chức vụ đã tồn tại'}, 400
     
-    position = Position(code=code, name=name)
+    position = Position(code=code, name=name, description=description)
     db.session.add(position)
     db.session.commit()
     
@@ -791,12 +835,22 @@ def edit_position(position_id):
     position = Position.query.get_or_404(position_id)
     
     data = request.json
+    code = data.get('code', '').strip().upper()
     name = data.get('name', '').strip()
+    description = data.get('description', '').strip()
     
-    if not name:
-        return {'success': False, 'message': 'Vui lòng điền tên chức vụ'}, 400
+    if not code or not name:
+        return {'success': False, 'message': 'Vui lòng điền đầy đủ thông tin'}, 400
     
+    # Check if code already exists (excluding current position)
+    existing = Position.query.filter(Position.code == code, Position.id != position_id).first()
+    if existing:
+        return {'success': False, 'message': 'Mã chức vụ đã tồn tại'}, 400
+    
+    position.code = code
     position.name = name
+    position.description = description
+    position.updated_at = datetime.utcnow()
     db.session.commit()
     
     return {'success': True, 'message': f'Đã cập nhật chức vụ {name}'}
@@ -822,6 +876,134 @@ def delete_position(position_id):
     return {'success': True, 'message': f'Đã xóa chức vụ {position.name}'}
 
 # ============= END POSITION MANAGEMENT ROUTES =============
+
+# ============= DEPARTMENT MANAGEMENT ROUTES =============
+
+@app.route('/admin/departments')
+@login_required
+def admin_departments():
+    """Admin departments management page"""
+    if current_user.role != 'admin':
+        flash('Không có quyền truy cập', 'error')
+        return redirect(url_for('dashboard'))
+    
+    from models import Department
+    
+    # Get all departments
+    departments = Department.query.order_by(Department.name.asc()).all()
+    
+    # Create list with empty manager info for template compatibility
+    departments_with_manager = [(dept, None) for dept in departments]
+    
+    return render_template('admin_departments.html', departments=departments_with_manager)
+
+@app.route('/admin/departments/add', methods=['POST'])
+@login_required
+def add_department():
+    """Add new department"""
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    from models import Department
+    
+    try:
+        if request.is_json:
+            data = request.json
+        else:
+            data = request.form.to_dict()
+        
+        # Validate required fields
+        required_fields = ['code', 'name']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return {'success': False, 'message': f'Thiếu thông tin: {field}'}, 400
+        
+        # Check if code already exists
+        if Department.query.filter_by(code=data['code']).first():
+            return {'success': False, 'message': 'Mã phòng ban đã tồn tại'}, 400
+        
+        # Create new department
+        new_department = Department(
+            code=data['code'].upper(),
+            name=data['name'],
+            description=data.get('description', '')
+        )
+        
+        db.session.add(new_department)
+        db.session.commit()
+        
+        return {'success': True, 'message': f'Đã thêm phòng ban {data["name"]}'}
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
+
+@app.route('/admin/departments/<int:department_id>/edit', methods=['POST'])
+@login_required
+def edit_department(department_id):
+    """Edit department"""
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    from models import Department
+    
+    department = Department.query.get_or_404(department_id)
+    
+    try:
+        if request.is_json:
+            data = request.json
+        else:
+            data = request.form.to_dict()
+        
+        if 'code' in data:
+            # Check if code already exists (excluding current department)
+            existing = Department.query.filter(Department.code == data['code'], Department.id != department_id).first()
+            if existing:
+                return {'success': False, 'message': 'Mã phòng ban đã tồn tại'}, 400
+            department.code = data['code'].upper()
+        
+        if 'name' in data:
+            department.name = data['name']
+        if 'description' in data:
+            department.description = data['description']
+        
+        department.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return {'success': True, 'message': f'Đã cập nhật phòng ban {department.name}'}
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
+
+@app.route('/admin/departments/<int:department_id>/delete', methods=['POST'])
+@login_required
+def delete_department(department_id):
+    """Delete department"""
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    from models import Department
+    
+    department = Department.query.get_or_404(department_id)
+    department_name = department.name
+    
+    try:
+        # Check if department has users
+        users_count = User.query.filter_by(department_id=department_id).count()
+        if users_count > 0:
+            return {'success': False, 'message': f'Không thể xóa phòng ban có {users_count} nhân viên'}, 400
+        
+        db.session.delete(department)
+        db.session.commit()
+        
+        return {'success': True, 'message': f'Đã xóa phòng ban {department_name}'}
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
+
+# ============= END DEPARTMENT MANAGEMENT ROUTES =============
 
 # ============= DEPARTMENT MANAGER ROUTES - REMOVED =============
 # Old department_managers system has been replaced with level-based hierarchy
@@ -885,8 +1067,8 @@ def manager_overtime_approvals():
     if current_user.role == 'admin':
         return render_template('manager_overtime_approvals.html')
     
-    # Position code 1 (Trưởng Phòng) can approve
-    if current_user.position == '1':
+    # Check if user has approval permission
+    if current_user.can_approve:
         return render_template('manager_overtime_approvals.html')
     
     # Or if user has subordinates
@@ -895,6 +1077,7 @@ def manager_overtime_approvals():
     
     flash('Bạn không có quyền truy cập trang này', 'error')
     return redirect(url_for('dashboard'))
+
 
 @app.route('/manager/overtime-requests')
 @login_required
@@ -907,8 +1090,8 @@ def get_manager_overtime_requests():
             OvertimeRequest.created_at.desc()
         ).all()
     else:
-        # Position code 1 (Trưởng Phòng) can approve
-        can_approve = (current_user.position == '1') or current_user.is_manager()
+        # Check if user has approval permission
+        can_approve = current_user.can_approve
         
         if not can_approve:
             return {'success': False, 'message': 'Không có quyền'}, 403
@@ -917,8 +1100,8 @@ def get_manager_overtime_requests():
         subordinates = current_user.get_subordinates()
         subordinate_ids = [sub.id for sub in subordinates]
         
-        # If Trưởng Phòng (position 1), include own requests
-        if current_user.position == '1':
+        # If has approval permission, include own requests
+        if current_user.can_approve:
             subordinate_ids.append(current_user.id)
         
         # Get requests from subordinates (and self if Trưởng Phòng)
@@ -961,30 +1144,9 @@ def approve_overtime_request(request_id):
     # Can approve subordinates
     elif current_user.can_approve_for(requester):
         can_approve = True
-    # Can approve own request if highest level in department
-    elif requester.id == current_user.id:
-        if current_user.position:
-            try:
-                my_position_code = int(current_user.position)
-                users_in_dept = User.query.filter(
-                    User.department == current_user.department,
-                    User.work_status != 'resigned',
-                    User.position.isnot(None)
-                ).all()
-                
-                lowest_code = my_position_code
-                for user in users_in_dept:
-                    try:
-                        user_code = int(user.position)
-                        if user_code < lowest_code:
-                            lowest_code = user_code
-                    except (ValueError, TypeError):
-                        continue
-                
-                if my_position_code == lowest_code:
-                    can_approve = True
-            except (ValueError, TypeError):
-                pass
+    # Can approve own request if has approval permission
+    elif requester.id == current_user.id and current_user.can_approve:
+        can_approve = True
     
     if not can_approve:
         return {'success': False, 'message': 'Bạn không có quyền duyệt yêu cầu này'}, 403
@@ -1024,30 +1186,9 @@ def reject_overtime_request(request_id):
     # Can reject subordinates
     elif current_user.can_approve_for(requester):
         can_reject = True
-    # Can reject own request if highest level in department
-    elif requester.id == current_user.id:
-        if current_user.position:
-            try:
-                my_position_code = int(current_user.position)
-                users_in_dept = User.query.filter(
-                    User.department == current_user.department,
-                    User.work_status != 'resigned',
-                    User.position.isnot(None)
-                ).all()
-                
-                lowest_code = my_position_code
-                for user in users_in_dept:
-                    try:
-                        user_code = int(user.position)
-                        if user_code < lowest_code:
-                            lowest_code = user_code
-                    except (ValueError, TypeError):
-                        continue
-                
-                if my_position_code == lowest_code:
-                    can_reject = True
-            except (ValueError, TypeError):
-                pass
+    # Can reject own request if has approval permission
+    elif requester.id == current_user.id and current_user.can_approve:
+        can_reject = True
     
     if not can_reject:
         return {'success': False, 'message': 'Bạn không có quyền xử lý yêu cầu này'}, 403
@@ -1355,6 +1496,166 @@ def admin_stats():
     
     return render_template('admin_stats.html')
 
+
+@app.route('/admin/approval-hierarchy')
+@login_required
+def admin_approval_hierarchy():
+    """Admin approval hierarchy management page"""
+    if current_user.role != 'admin':
+        flash('Không có quyền truy cập', 'error')
+        return redirect(url_for('dashboard'))
+    
+    from models import Department, Position
+    
+    # Get all departments and positions
+    departments = Department.query.order_by(Department.name.asc()).all()
+    
+    # Sort positions numerically by extracting numbers from code
+    positions_raw = Position.query.all()
+    import re
+    def extract_number(code):
+        match = re.search(r'\d+', str(code))
+        return int(match.group()) if match else 0
+    
+    positions = sorted(positions_raw, key=lambda x: extract_number(x.code))
+    
+    return render_template('admin_approval_hierarchy.html', 
+                         departments=departments,
+                         positions=positions)
+
+
+@app.route('/admin/approval-hierarchy/load/<int:department_id>')
+@login_required
+def load_approval_matrix(department_id):
+    """Load approval matrix for a department"""
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    try:
+        from models import ApprovalHierarchy, Position
+        
+        # Get all approval rules for this department
+        rules = ApprovalHierarchy.query.filter_by(department_id=department_id).all()
+        
+        # Convert to matrix format
+        matrix = {}
+        for rule in rules:
+            approver_code = rule.approver_position.code if rule.approver_position else str(rule.approver_position_id)
+            approvee_code = rule.approvee_position.code if rule.approvee_position else str(rule.approvee_position_id)
+            key = f"{approver_code}-{approvee_code}"
+            matrix[key] = rule.can_approve
+        
+        return {'success': True, 'matrix': matrix}
+        
+    except Exception as e:
+        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
+
+
+@app.route('/admin/approval-hierarchy/save', methods=['POST'])
+@login_required
+def save_approval_matrix():
+    """Save approval matrix for a department"""
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    try:
+        from models import ApprovalHierarchy, Position
+        
+        data = request.get_json()
+        department_id = data.get('department_id')
+        matrix = data.get('matrix', {})
+        
+        if not department_id:
+            return {'success': False, 'message': 'Thiếu thông tin phòng ban'}, 400
+        
+        # Get all positions to map codes to IDs
+        positions = Position.query.all()
+        position_map = {pos.code: pos.id for pos in positions}
+        
+        # Delete existing rules for this department
+        ApprovalHierarchy.query.filter_by(department_id=department_id).delete()
+        
+        # Create new rules based on matrix
+        for key, can_approve in matrix.items():
+            if '-' not in key:
+                continue
+                
+            approver_code, approvee_code = key.split('-', 1)
+            
+            if approver_code not in position_map or approvee_code not in position_map:
+                continue
+            
+            # Only create rule if it's True (can approve)
+            if can_approve:
+                rule = ApprovalHierarchy(
+                    department_id=department_id,
+                    approver_position_id=position_map[approver_code],
+                    approvee_position_id=position_map[approvee_code],
+                    can_approve=True
+                )
+                db.session.add(rule)
+        
+        db.session.commit()
+        return {'success': True, 'message': 'Đã lưu cấu hình thành công'}
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
+
+
+@app.route('/admin/approval-hierarchy/copy', methods=['POST'])
+@login_required
+def copy_approval_matrix():
+    """Copy approval matrix from one department to another"""
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    try:
+        from models import ApprovalHierarchy, Position
+        
+        data = request.get_json()
+        source_dept_id = data.get('source_department_id')
+        target_dept_id = data.get('target_department_id')
+        
+        if not source_dept_id or not target_dept_id:
+            return {'success': False, 'message': 'Thiếu thông tin phòng ban'}, 400
+        
+        if source_dept_id == target_dept_id:
+            return {'success': False, 'message': 'Không thể sao chép từ chính phòng ban này'}, 400
+        
+        # Get source rules
+        source_rules = ApprovalHierarchy.query.filter_by(department_id=source_dept_id).all()
+        
+        if not source_rules:
+            return {'success': False, 'message': 'Phòng ban nguồn chưa có cấu hình nào'}, 400
+        
+        # Delete existing rules for target department
+        ApprovalHierarchy.query.filter_by(department_id=target_dept_id).delete()
+        
+        # Copy rules to target department
+        matrix = {}
+        for rule in source_rules:
+            new_rule = ApprovalHierarchy(
+                department_id=target_dept_id,
+                approver_position_id=rule.approver_position_id,
+                approvee_position_id=rule.approvee_position_id,
+                can_approve=rule.can_approve
+            )
+            db.session.add(new_rule)
+            
+            # Build matrix for response
+            approver_code = rule.approver_position.code if rule.approver_position else str(rule.approver_position_id)
+            approvee_code = rule.approvee_position.code if rule.approvee_position else str(rule.approvee_position_id)
+            key = f"{approver_code}-{approvee_code}"
+            matrix[key] = rule.can_approve
+        
+        db.session.commit()
+        return {'success': True, 'matrix': matrix, 'message': 'Đã sao chép cấu hình thành công'}
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
+
 @app.route('/admin/stats/data')
 @login_required
 def get_stats_data():
@@ -1604,11 +1905,186 @@ def delete_meal(meal_id):
     
     return {'success': True, 'message': f'Đã xóa món {dish_name}'}
 
+
+@app.route('/admin/meals/template')
+@login_required
+def download_meal_template():
+    """Download Excel template for meal import"""
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+
+    import io
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from flask import send_file
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Thực đơn'
+
+    # Header style
+    header_font = Font(bold=True, color='FFFFFF')
+    header_fill = PatternFill(fill_type='solid', fgColor='1976D2')
+    center = Alignment(horizontal='center', vertical='center')
+    thin = Side(style='thin', color='CCCCCC')
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    headers = ['Ngày (YYYY-MM-DD)', 'Loại bữa (lunch/dinner/breakfast)', 'Tên món', 'Mô tả', 'Cải thiện (TRUE/FALSE)', 'Ăn chay (TRUE/FALSE)']
+    col_widths = [22, 32, 30, 40, 24, 22]
+
+    for col, (h, w) in enumerate(zip(headers, col_widths), 1):
+        cell = ws.cell(row=1, column=col, value=h)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = center
+        cell.border = border
+        ws.column_dimensions[cell.column_letter].width = w
+
+    ws.row_dimensions[1].height = 22
+
+    # Sample rows
+    samples = [
+        ['2026-04-01', 'lunch', 'Cơm gà xối mỡ', 'Gà chiên giòn, cơm trắng', False, False],
+        ['2026-04-01', 'dinner', 'Bún bò Huế', 'Bún bò đặc biệt', True, False],
+        ['2026-04-02', 'lunch', 'Cơm chay', 'Đậu hũ, rau củ', False, True],
+    ]
+    sample_fill = PatternFill(fill_type='solid', fgColor='F5F5F5')
+    for r, row in enumerate(samples, 2):
+        for c, val in enumerate(row, 1):
+            cell = ws.cell(row=r, column=c, value=val)
+            cell.border = border
+            cell.alignment = Alignment(vertical='center')
+            if r % 2 == 0:
+                cell.fill = sample_fill
+
+    # Note sheet
+    ws2 = wb.create_sheet('Hướng dẫn')
+    notes = [
+        ('Cột', 'Giá trị hợp lệ'),
+        ('Ngày', 'Định dạng YYYY-MM-DD, ví dụ: 2026-04-01'),
+        ('Loại bữa', 'lunch | dinner | breakfast'),
+        ('Tên món', 'Bắt buộc, tối đa 200 ký tự'),
+        ('Mô tả', 'Tùy chọn'),
+        ('Cải thiện', 'TRUE hoặc FALSE'),
+        ('Ăn chay', 'TRUE hoặc FALSE'),
+    ]
+    ws2.column_dimensions['A'].width = 15
+    ws2.column_dimensions['B'].width = 45
+    for r, (a, b) in enumerate(notes, 1):
+        ws2.cell(row=r, column=1, value=a).font = Font(bold=(r == 1))
+        ws2.cell(row=r, column=2, value=b)
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+
+    return send_file(
+        buf,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='template_thuc_don.xlsx'
+    )
+
+
+@app.route('/admin/meals/import', methods=['POST'])
+@login_required
+def import_meals_excel():
+    """Import meals from Excel file"""
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+
+    import openpyxl
+    from datetime import datetime
+    from models import Menu
+
+    if 'file' not in request.files:
+        return {'success': False, 'message': 'Không có file'}, 400
+
+    file = request.files['file']
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        return {'success': False, 'message': 'Chỉ hỗ trợ file .xlsx hoặc .xls'}, 400
+
+    try:
+        wb = openpyxl.load_workbook(file, data_only=True)
+        ws = wb.active
+
+        added, skipped, errors = 0, 0, []
+        valid_meal_types = {'lunch', 'dinner', 'breakfast'}
+
+        for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), 2):
+            if not any(row):
+                continue
+
+            date_val, meal_type, dish_name, description, is_special, is_vegetarian = (list(row) + [None]*6)[:6]
+
+            # Validate
+            if not date_val or not meal_type or not dish_name:
+                errors.append(f'Dòng {row_num}: Thiếu ngày, loại bữa hoặc tên món')
+                skipped += 1
+                continue
+
+            # Parse date
+            if isinstance(date_val, str):
+                try:
+                    date_obj = datetime.strptime(date_val.strip(), '%Y-%m-%d').date()
+                except ValueError:
+                    errors.append(f'Dòng {row_num}: Ngày không đúng định dạng YYYY-MM-DD')
+                    skipped += 1
+                    continue
+            elif hasattr(date_val, 'date'):
+                date_obj = date_val.date()
+            else:
+                errors.append(f'Dòng {row_num}: Ngày không hợp lệ')
+                skipped += 1
+                continue
+
+            meal_type = str(meal_type).strip().lower()
+            if meal_type not in valid_meal_types:
+                errors.append(f'Dòng {row_num}: Loại bữa phải là lunch/dinner/breakfast')
+                skipped += 1
+                continue
+
+            menu = Menu(
+                date=date_obj,
+                meal_type=meal_type,
+                dish_name=str(dish_name).strip()[:200],
+                description=str(description).strip() if description else None,
+                is_special=bool(is_special) if is_special is not None else False,
+                is_vegetarian=bool(is_vegetarian) if is_vegetarian is not None else False,
+                is_active=True
+            )
+            db.session.add(menu)
+            added += 1
+
+        db.session.commit()
+
+        msg = f'Đã thêm {added} món'
+        if skipped:
+            msg += f', bỏ qua {skipped} dòng lỗi'
+
+        return {
+            'success': True,
+            'message': msg,
+            'added': added,
+            'skipped': skipped,
+            'errors': errors[:10]  # trả về tối đa 10 lỗi đầu
+        }
+
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': f'Lỗi xử lý file: {str(e)}'}, 500
+
+
 # ============= END MEAL MANAGEMENT ROUTES =============
 
 @app.route('/overtime', methods=['GET', 'POST'])
 @login_required
 def overtime():
+    # Check if user has permission to register overtime
+    if not current_user.can_register:
+        flash('Bạn không có quyền đăng ký tăng ca', 'error')
+        return redirect(url_for('dashboard'))
+    
     if request.method == 'POST':
         from datetime import datetime
         
@@ -1646,7 +2122,7 @@ def overtime():
             employee_id=current_user.employee_id,
             employee_name=current_user.name,
             department=current_user.department,
-            position=current_user.position,
+            position=current_user.pos.name if current_user.pos else 'Chưa xác định',
             overtime_date=overtime_date,
             start_time=start_time_obj,
             end_time=end_time_obj,
@@ -1718,32 +2194,9 @@ def self_approve_overtime_request(request_id):
     if overtime_request.status != 'pending':
         return {'success': False, 'message': 'Yêu cầu này đã được xử lý'}, 400
     
-    # Check if user is highest level in department (lowest position code)
-    if not current_user.position:
-        return {'success': False, 'message': 'Không xác định được chức vụ'}, 400
-    
-    try:
-        my_position_code = int(current_user.position)
-        # Find lowest position code in department (highest authority)
-        users_in_dept = User.query.filter(
-            User.department == current_user.department,
-            User.work_status != 'resigned',
-            User.position.isnot(None)
-        ).all()
-        
-        lowest_code = my_position_code
-        for user in users_in_dept:
-            try:
-                user_code = int(user.position)
-                if user_code < lowest_code:
-                    lowest_code = user_code
-            except (ValueError, TypeError):
-                continue
-        
-        if my_position_code != lowest_code:
-            return {'success': False, 'message': 'Chỉ người có cấp cao nhất mới có thể tự duyệt'}, 403
-    except (ValueError, TypeError):
-        return {'success': False, 'message': 'Chức vụ không hợp lệ'}, 400
+    # Check if user has approval permission
+    if not current_user.can_approve:
+        return {'success': False, 'message': 'Bạn không có quyền tự duyệt'}, 403
     
     # Approve the request
     overtime_request.status = 'approved'
@@ -1754,6 +2207,225 @@ def self_approve_overtime_request(request_id):
     db.session.commit()
     
     return {'success': True, 'message': 'Đã duyệt yêu cầu tăng ca'}
+
+# ============= LEAVE REQUEST ROUTES =============
+@app.route('/leave', methods=['GET', 'POST'])
+@login_required
+def leave():
+    # Check if user has permission to register leave
+    if not current_user.can_register:
+        flash('Bạn không có quyền đăng ký nghỉ phép', 'error')
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        from datetime import datetime
+        
+        # Get form data
+        leave_type = request.form.get('leave_type')
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+        total_days = request.form.get('total_days')
+        reason = request.form.get('reason')
+        emergency_contact = request.form.get('emergency_contact')
+        emergency_phone = request.form.get('emergency_phone')
+        
+        if not all([leave_type, start_date, end_date, total_days, reason]):
+            flash('Vui lòng điền đầy đủ thông tin', 'error')
+            return redirect(url_for('leave'))
+        
+        # Parse dates
+        try:
+            start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+            total_days_int = int(total_days)
+        except ValueError:
+            flash('Định dạng ngày không hợp lệ', 'error')
+            return redirect(url_for('leave'))
+        
+        # Validate dates
+        if start_date_obj > end_date_obj:
+            flash('Ngày bắt đầu phải trước ngày kết thúc', 'error')
+            return redirect(url_for('leave'))
+        
+        # Create leave request
+        leave_request = LeaveRequest(
+            user_id=current_user.id,
+            employee_id=current_user.employee_id,
+            employee_name=current_user.name,
+            department=current_user.dept.name if current_user.dept else 'Chưa xác định',
+            position=current_user.pos.name if current_user.pos else 'Chưa xác định',
+            leave_type=leave_type,
+            start_date=start_date_obj,
+            end_date=end_date_obj,
+            total_days=total_days_int,
+            reason=reason,
+            emergency_contact=emergency_contact if leave_type == 'sick' else None,
+            emergency_phone=emergency_phone if leave_type == 'sick' else None,
+            status='pending'
+        )
+        
+        db.session.add(leave_request)
+        db.session.commit()
+        
+        flash('Đã gửi yêu cầu nghỉ phép thành công!', 'success')
+        return redirect(url_for('leave'))
+    
+    # GET request - show form
+    # Check if user is manager for sidebar
+    is_manager = current_user.can_approve or current_user.role == 'admin'
+    return render_template('leave.html', is_manager=is_manager)
+
+
+@app.route('/leave/my-requests')
+@login_required
+def get_my_leave_requests():
+    """Get current user's leave requests"""
+    requests = LeaveRequest.query.filter_by(user_id=current_user.id).order_by(LeaveRequest.created_at.desc()).all()
+    
+    return {
+        'success': True,
+        'requests': [{
+            'id': r.id,
+            'leave_type': r.leave_type,
+            'start_date': r.start_date.strftime('%Y-%m-%d'),
+            'end_date': r.end_date.strftime('%Y-%m-%d'),
+            'total_days': r.total_days,
+            'reason': r.reason,
+            'status': r.status,
+            'manager_comment': r.manager_comment,
+            'emergency_contact': r.emergency_contact,
+            'emergency_phone': r.emergency_phone,
+            'created_at': r.created_at.strftime('%Y-%m-%d %H:%M')
+        } for r in requests]
+    }
+
+
+@app.route('/leave/<int:request_id>/cancel', methods=['POST'])
+@login_required
+def cancel_leave_request(request_id):
+    """Cancel leave request (only if pending)"""
+    leave_request = LeaveRequest.query.get_or_404(request_id)
+    
+    # Check if user owns this request
+    if leave_request.user_id != current_user.id:
+        return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    # Can only cancel pending requests
+    if leave_request.status != 'pending':
+        return {'success': False, 'message': 'Chỉ có thể hủy yêu cầu đang chờ duyệt'}, 400
+    
+    db.session.delete(leave_request)
+    db.session.commit()
+    
+    return {'success': True, 'message': 'Đã hủy yêu cầu nghỉ phép'}
+
+@app.route('/exit-entry', methods=['GET', 'POST'])
+@login_required
+def exit_entry():
+    """Exit/Entry request form - similar to leave request"""
+    if request.method == 'POST':
+        from datetime import datetime, date
+        
+        # Get form data
+        request_date = request.form.get('request_date')
+        exit_time = request.form.get('exit_time')
+        entry_time = request.form.get('entry_time')
+        reason = request.form.get('reason')
+        
+        # Validation
+        if not request_date or not reason:
+            flash('Vui lòng điền đầy đủ thông tin bắt buộc', 'error')
+            return redirect(url_for('exit_entry'))
+        
+        # Convert date string to date object
+        try:
+            request_date_obj = datetime.strptime(request_date, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Ngày không hợp lệ', 'error')
+            return redirect(url_for('exit_entry'))
+        
+        # Convert time strings to time objects
+        exit_time_obj = None
+        entry_time_obj = None
+        
+        if exit_time:
+            try:
+                exit_time_obj = datetime.strptime(exit_time, '%H:%M').time()
+            except ValueError:
+                flash('Thời gian ra không hợp lệ', 'error')
+                return redirect(url_for('exit_entry'))
+        
+        if entry_time:
+            try:
+                entry_time_obj = datetime.strptime(entry_time, '%H:%M').time()
+            except ValueError:
+                flash('Thời gian vào không hợp lệ', 'error')
+                return redirect(url_for('exit_entry'))
+        
+        # Create exit/entry request
+        exit_entry_request = ExitEntryRequest(
+            user_id=current_user.id,
+            employee_id=current_user.employee_id,
+            employee_name=current_user.name,
+            department=current_user.dept.name if current_user.dept else 'Chưa xác định',
+            position=current_user.pos.name if current_user.pos else 'Chưa xác định',
+            request_date=request_date_obj,
+            exit_time=exit_time_obj,
+            entry_time=entry_time_obj,
+            reason=reason,
+            status='pending'
+        )
+        
+        db.session.add(exit_entry_request)
+        db.session.commit()
+        
+        flash('Đã gửi đơn xin ra vào công ty thành công!', 'success')
+        return redirect(url_for('exit_entry'))
+    
+    # GET request - show form
+    is_manager = current_user.can_approve or current_user.role == 'admin'
+    
+    return render_template('exit_entry.html', is_manager=is_manager)
+
+@app.route('/exit-entry/my-requests')
+@login_required
+def my_exit_entry_requests():
+    """Get user's exit/entry requests as JSON"""
+    requests = ExitEntryRequest.query.filter_by(user_id=current_user.id).order_by(ExitEntryRequest.created_at.desc()).all()
+    
+    return {
+        'success': True,
+        'requests': [{
+            'id': r.id,
+            'request_date': r.request_date.strftime('%Y-%m-%d'),
+            'exit_time': r.exit_time.strftime('%H:%M') if r.exit_time else None,
+            'entry_time': r.entry_time.strftime('%H:%M') if r.entry_time else None,
+            'reason': r.reason,
+            'status': r.status,
+            'manager_comment': r.manager_comment,
+            'created_at': r.created_at.strftime('%Y-%m-%d %H:%M')
+        } for r in requests]
+    }
+
+@app.route('/exit-entry/<int:request_id>/cancel', methods=['POST'])
+@login_required
+def cancel_exit_entry_request(request_id):
+    """Cancel exit/entry request"""
+    exit_entry_request = ExitEntryRequest.query.get_or_404(request_id)
+    
+    # Check if user owns this request
+    if exit_entry_request.user_id != current_user.id:
+        return {'success': False, 'message': 'Không có quyền hủy yêu cầu này'}, 403
+    
+    # Check if request can be cancelled
+    if exit_entry_request.status != 'pending':
+        return {'success': False, 'message': 'Chỉ có thể hủy yêu cầu đang chờ duyệt'}, 400
+    
+    # Delete the request
+    db.session.delete(exit_entry_request)
+    db.session.commit()
+    
+    return {'success': True, 'message': 'Đã hủy yêu cầu thành công'}
 
 @app.route('/meals', methods=['GET', 'POST'])
 @login_required
@@ -2100,4 +2772,4 @@ def service_worker():
     return app.send_static_file('service-worker.js')
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5002)

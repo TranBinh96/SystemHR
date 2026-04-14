@@ -1,0 +1,28 @@
+<script>
+    // Sidebar toggle functionality
+    let sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    
+    function toggleSidebar() {
+        sidebarCollapsed = !sidebarCollapsed;
+        localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+        applySidebarState();
+    }
+    
+    function applySidebarState() {
+        const sidebar = document.getElementById('sidebar');
+        const toggleIcon = document.getElementById('toggleIcon');
+        
+        if (sidebarCollapsed) {
+            sidebar.classList.add('collapsed');
+            toggleIcon.textContent = 'chevron_right';
+        } else {
+            sidebar.classList.remove('collapsed');
+            toggleIcon.textContent = 'chevron_left';
+        }
+    }
+    
+    // Apply saved state on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        applySidebarState();
+    });
+</script>

@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký nghỉ phép - {{ t.app_name }}</title>
+    <script src="https://cdn.tailwindcss.com?v=3.4.1"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Hide scrollbar but keep scroll functionality */
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        html::-webkit-scrollbar {
+            display: none;
+        }
+        html {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900">
+    <!-- Sidebar (Desktop) -->
+    <aside class="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
+        <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-slate-900 px-6 pb-4 border-r border-slate-200 dark:border-slate-800">
+            <div class="flex h-20 shrink-0 items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center" style="background-color: #136dec;">
+                    <span class="material-symbols-outlined text-white text-2xl" style="font-variation-settings: 'FILL' 1;">badge</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900 dark:text-slate-100">OKI VIETNAM</h1>
+                    <p class="text-xs text-slate-500">HR System</p>
+                </div>
+            </div>
+            <nav class="flex flex-1 flex-col">
+                <ul role="list" class="flex flex-1 flex-col gap-y-7">
+                    <li>
+                        <!-- Bảng điều khiển -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Bảng điều khiển</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            <li>
+                                <a href="{{ url_for('dashboard') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">home</span>
+                                    Bảng điều khiển
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li>
+                        <!-- Phê duyệt -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Phê duyệt</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            {% if is_manager %}
+                            <li>
+                                <a href="{{ url_for('manager_overtime_approvals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">task_alt</span>
+                                    Phê Duyệt
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    
+                    <li>
+                        <!-- Đăng ký -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Đăng ký</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            <li>
+                                <a href="{{ url_for('overtime') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">schedule</span>
+                                    Làm thêm
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('leave') }}" class="text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold" style="background-color: rgba(19, 109, 236, 0.1);">
+                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">event_busy</span>
+                                    Nghỉ phép
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('exit_entry') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">exit_to_app</span>
+                                    Đơn ra vào
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('meals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">restaurant</span>
+                                    Suất ăn
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li>
+                        <!-- Khác -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Khác</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            <li>
+                                <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">history</span>
+                                    Lịch sử
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined">support_agent</span>
+                                    Hỗ trợ
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li class="mt-auto">
+                        <a href="{{ url_for('profile') }}" class="block p-3 bg-slate-50 dark:bg-slate-800 rounded-lg mb-3 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                            <p class="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">Xin chào</p>
+                            <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ current_user.name if current_user.is_authenticated else 'User' }}</p>
+                            <p class="text-xs text-slate-500">{{ current_user.employee_id if current_user.is_authenticated else 'N/A' }}</p>
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="group -mx-2 flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                            <span class="material-symbols-outlined">logout</span>
+                            Đăng xuất
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Main Content with left padding for sidebar on desktop -->
+    <div class="lg:pl-72">
+        <!-- Header -->
+        <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex h-16 items-center justify-between px-4">
+                <div class="flex items-center gap-3">
+                    <a href="{{ url_for('dashboard') }}" class="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </a>
+                    <h1 class="text-xl font-bold text-slate-900 dark:text-slate-100">Đăng ký nghỉ phép</h1>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="p-2 pb-24 lg:pb-6 min-h-screen w-full mx-auto">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-4 p-4 rounded-xl {% if category == 'error' %}bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400{% else %}bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <!-- Tabs -->
+            <div class="mb-6">
+                <div class="border-b border-slate-200 dark:border-slate-700">
+                    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                        <button onclick="switchTab('register')" id="tab-register" class="tab-button border-b-2 border-blue-600 py-4 px-1 text-sm font-semibold text-blue-600">
+                            <span class="material-symbols-outlined text-sm align-middle mr-1">edit_calendar</span>
+                            Đăng ký nghỉ phép
+                        </button>
+                        <button onclick="switchTab('status')" id="tab-status" class="tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300">
+                            <span class="material-symbols-outlined text-sm align-middle mr-1">fact_check</span>
+                            Yêu cầu của bạn
+                            <span id="tab-status-badge" class="hidden ml-1.5 px-2 py-0.5 bg-orange-500 text-white text-xs font-bold rounded-full">0</span>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Tab Content: Register -->
+            <div id="content-register" class="tab-content">
+                <!-- Main Form Container -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <form id="leave-form" method="POST" action="{{ url_for('leave') }}" class="p-4">
+                        
+                        <!-- Header -->
+                        <header class="flex justify-between items-center border-b-2 border-orange-500 pb-3 mb-4">
+                            <div>
+                                <h1 class="text-3xl font-black text-orange-500 italic tracking-tighter">OKI</h1>
+                                <p class="text-xs font-bold text-gray-600">CÔNG TY TNHH OKI VIỆT NAM</p>
+                            </div>
+                            <div class="text-right">
+                                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">ĐƠN XIN NGHỈ</h2>
+                                <p class="text-base font-medium text-gray-500">(休暇申請書)</p>
+                                <div class="mt-1 text-sm text-gray-500">
+                                    Ngày đề nghị (申請日): <span class="border-b border-gray-400 px-3" id="current-date"></span>
+                                </div>
+                            </div>
+                        </header>
+
+                        <!-- Row 1 - Info & Time -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- SECTION I: Employee Info -->
+                            <section class="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg">
+                                <h3 class="text-orange-500 font-bold mb-4 flex items-center">
+                                    <span class="mr-2">I. THÔNG TIN NHÂN VIÊN</span>
+                                    <span class="text-xs font-normal text-gray-500">(従業員情報)</span>
+                                </h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                            Mã nhân viên <span class="text-xs text-gray-500">(コード)</span>
+                                        </label>
+                                        <input class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100" 
+                                               value="{{ current_user.employee_id }}" readonly type="text"/>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                            Bộ phận <span class="text-xs text-gray-500">(部署)</span>
+                                        </label>
+                                        <input class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100" 
+                                               value="{{ current_user.dept.name if current_user.dept else 'Chưa xác định' }}" readonly type="text"/>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                            Họ và tên <span class="text-xs text-gray-500">(名前)</span>
+                                        </label>
+                                        <input class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100" 
+                                               value="{{ current_user.name }}" readonly type="text"/>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                            Chức vụ <span class="text-xs text-gray-500">(職務)</span>
+                                        </label>
+                                        <input class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100" 
+                                               value="{{ current_user.pos.name if current_user.pos else 'Chưa xác định' }}" readonly type="text"/>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                            Người quản lý <span class="text-xs text-gray-500">(所属管理者)</span>
+                                        </label>
+                                        <input class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-slate-600 text-gray-900 dark:text-gray-100" 
+                                               placeholder="Sẽ được phân công" readonly type="text"/>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                            Số ngày phép còn lại <span class="text-xs text-gray-500">(残年休日数)</span>
+                                        </label>
+                                        <input class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-slate-600 text-gray-900 dark:text-gray-100" 
+                                               placeholder="12" readonly type="number"/>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- SECTION II: Leave Duration -->
+                            <section class="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg">
+                                <h3 class="text-orange-500 font-bold mb-4 flex items-center">
+                                    <span class="mr-2">II. THỜI GIAN NGHỈ</span>
+                                    <span class="text-xs font-normal text-gray-500">(休暇期間)</span>
+                                </h3>
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                                Nghỉ từ (休暇取得開始) <span class="text-orange-500">*</span>
+                                            </label>
+                                            <input id="start_date" name="start_date" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:border-orange-500 focus:ring-orange-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100" 
+                                                   onchange="calculateDays()" required type="date"/>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                                Giờ bắt đầu (開始時間)
+                                            </label>
+                                            <input id="start_time" name="start_time" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:border-orange-500 focus:ring-orange-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100" 
+                                                   type="time" value="07:50"/>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                                Đến (休暇取得終了) <span class="text-orange-500">*</span>
+                                            </label>
+                                            <input id="end_date" name="end_date" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:border-orange-500 focus:ring-orange-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100" 
+                                                   onchange="calculateDays()" required type="date"/>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                                Giờ kết thúc (終了時間)
+                                            </label>
+                                            <input id="end_time" name="end_time" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:border-orange-500 focus:ring-orange-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100" 
+                                                   type="time" value="17:15"/>
+                                        </div>
+                                    </div>
+                                    <div class="pt-2 border-t border-gray-200 dark:border-gray-600">
+                                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                            Tổng cộng (合計): <span class="text-orange-500" id="total-hours">1</span> giờ (時間)
+                                        </p>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="total_days" name="total_days" value="1">
+                                <input type="hidden" id="total_hours_value" name="total_hours" value="1">
+                            </section>
+                        </div>
+
+                        <!-- Row 2 - 3 Columns Layout with equal heights -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4 items-stretch">
+                            <!-- SECTION III: Leave Type (Column 1) -->
+                            <section class="border border-gray-200 dark:border-gray-600 p-4 rounded-lg h-full flex flex-col">
+                                <h3 class="text-orange-500 font-bold mb-4 flex items-center">
+                                    <span class="mr-2">III. LOẠI NGHỈ</span>
+                                    <span class="text-xs font-normal text-gray-500">(休暇の種類)</span>
+                                </h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="space-y-2">
+                                        <p class="text-sm font-bold border-b border-gray-100 dark:border-gray-600 pb-1 mb-2 text-gray-700 dark:text-gray-300">Nghỉ có lương (有給休暇)</p>
+                                        <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
+                                            <input class="text-orange-500 focus:ring-orange-500" name="leave_type" value="annual" type="radio" checked/>
+                                            <span>Nghỉ theo kế hoạch (計画休暇)</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
+                                            <input class="text-orange-500 focus:ring-orange-500" name="leave_type" value="marriage" type="radio"/>
+                                            <span>Nghỉ kết hôn (結婚休暇)</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
+                                            <input class="text-orange-500 focus:ring-orange-500" name="leave_type" value="funeral" type="radio"/>
+                                            <span>Nghỉ chịu tang (葬儀休暇)</span>
+                                        </label>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <p class="text-sm font-bold border-b border-gray-100 dark:border-gray-600 pb-1 mb-2 text-gray-700 dark:text-gray-300">Nghỉ không lương (無給休暇)</p>
+                                        <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
+                                            <input class="text-orange-500 focus:ring-orange-500" name="leave_type" value="sick" type="radio"/>
+                                            <span>Hưởng BHXH (社会保険享受)</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
+                                            <input class="text-orange-500 focus:ring-orange-500" name="leave_type" value="maternity" type="radio"/>
+                                            <span>Nghỉ thai sản (出産休暇)</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
+                                            <input class="text-orange-500 focus:ring-orange-500" name="leave_type" value="personal" type="radio"/>
+                                            <span>Nghỉ khác (その他)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- SECTION IV: Detailed Reason (Column 2) -->
+                            <section class="border border-gray-200 dark:border-gray-600 p-4 rounded-lg h-full flex flex-col">
+                                <h3 class="text-orange-500 font-bold mb-4 flex items-center">
+                                    <span class="mr-2">IV. LÝ DO CHI TIẾT</span>
+                                    <span class="text-xs font-normal text-gray-500">(具体的な理由)</span>
+                                </h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Chọn lý do phổ biến:
+                                        </label>
+                                        <select id="common_reason" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:border-orange-500 focus:ring-orange-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100" onchange="fillReason()">
+                                            <option value="">-- Chọn lý do --</option>
+                                            <option value="Bản thân ốm (本人病気)">1. Bản thân ốm (本人病気)</option>
+                                            <option value="Con ốm (子供が病気)">2. Con ốm (子供が病気)</option>
+                                            <option value="Tai nạn (事故)">3. Tai nạn (事故)</option>
+                                            <option value="Thai nghén (つわり)">4. Thai nghén (つわり)</option>
+                                            <option value="Khám thai (定期妊娠診断)">5. Khám thai (定期妊娠診断)</option>
+                                            <option value="Về quê (田舎へ帰る)">6. Về quê (田舎へ帰る)</option>
+                                            <option value="Đi đám cưới (結婚式に行く)">7. Đi đám cưới (結婚式に行く)</option>
+                                            <option value="Ăn hỏi bản thân (結納)">8. Ăn hỏi bản thân (結納)</option>
+                                            <option value="Người thân mất (家族不幸)">9. Người thân mất (家族不幸)</option>
+                                            <option value="Cúng giỗ (法事)">10. Cúng giỗ (法事)</option>
+                                            <option value="other">11. Lý do khác (その他理由)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                            Lý do chi tiết <span class="text-orange-500">*</span>
+                                        </label>
+                                        <textarea id="reason" name="reason" rows="3" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:border-orange-500 focus:ring-orange-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100" 
+                                                  placeholder="Vui lòng nhập lý do chi tiết..." required></textarea>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- SECTION V: Notes Only (Column 3) -->
+                            <section class="border border-gray-200 dark:border-gray-600 p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 h-full flex flex-col">
+                                <h3 class="text-orange-500 font-bold mb-4 flex items-center">
+                                    <span class="material-symbols-outlined text-orange-500 mr-2">info</span>
+                                    <span class="mr-2">CHÚ Ý</span>
+                                    <span class="text-xs font-normal text-gray-500">(注意)</span>
+                                </h3>
+                                <div class="text-xs text-gray-600 dark:text-gray-400 space-y-2 flex-1">
+                                    <p><strong>1.</strong> Phải nộp đơn ít nhất là 2 ngày trước khi nghỉ cho quản lý người Việt (所属ベトナム人管理者に少なくとも2日目までに申請書を提出する事)</p>
+                                    <p><strong>2.</strong> Trong trường hợp bất khả kháng phải nộp đơn này trong ngày đi làm đầu tiên sau khi nghỉ (緊急な場合は休暇後の最初にこの申請書を提出しなければならない)</p>
+                                    <p><strong>3.</strong> Phải nộp giấy nghỉ hưởng BHXH của tháng trước trước ngày làm việc thứ 4 của tháng sau (医者の許可書は次月の4稼動日目までに人事担当者に出すこと)</p>
+                                </div>
+                            </section>
+                        </div>
+
+                        <!-- Action Buttons Section (Separate Row) -->
+                        <div class="mt-6 flex justify-center gap-4">
+                            <button class="px-8 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors" 
+                                    type="button">
+                                Hủy bỏ (キャンセル)
+                            </button>
+                            <button class="px-12 py-3 bg-orange-500 text-white rounded-md text-sm font-bold shadow-md hover:bg-orange-600 transition-colors" 
+                                    type="submit">
+                                Gửi đơn (申請する)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tab Content: Status -->
+            <div id="content-status" class="tab-content" style="display: none;">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div class="p-6">
+                        <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Yêu cầu nghỉ phép của bạn</h2>
+                        
+                        <!-- My Requests Section -->
+                        <div id="my-requests-section">
+                            <div id="my-requests-container">
+                                <!-- Requests will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div id="empty-state" class="text-center py-12 hidden">
+                            <div class="mx-auto w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                                <span class="material-symbols-outlined text-slate-400 text-4xl">event_busy</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Chưa có yêu cầu nào</h3>
+                            <p class="text-slate-500 dark:text-slate-400">Bạn chưa có yêu cầu nghỉ phép nào. Hãy tạo yêu cầu mới.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           
+        </main>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if(event.target === this) closeConfirmModal()">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+            <div class="text-center mb-6">
+                <div class="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+                    <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-4xl">warning</span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2" id="confirmTitle">Xác nhận</h3>
+                <p class="text-slate-600 dark:text-slate-400" id="confirmMessage">Bạn có chắc muốn hủy yêu cầu này?</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeConfirmModal()" class="flex-1 px-6 py-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+                    Hủy
+                </button>
+                <button onclick="confirmAction()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Bottom Navigation (Mobile Only) -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 z-40">
+        <div class="flex justify-around items-center h-20 px-4">
+            <a class="flex flex-col items-center gap-1 text-slate-400" href="{{ url_for('dashboard') }}">
+                <span class="material-symbols-outlined text-2xl">home</span>
+                <span class="text-[10px] font-bold uppercase">Trang chủ</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-slate-400" href="{{ url_for('overtime') }}">
+                <span class="material-symbols-outlined text-2xl">schedule</span>
+                <span class="text-[10px] font-bold uppercase">Tăng ca</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-green-600" href="{{ url_for('leave') }}">
+                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">event_busy</span>
+                <span class="text-[10px] font-bold uppercase">Nghỉ phép</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-slate-400" href="{{ url_for('meals') }}">
+                <span class="material-symbols-outlined text-2xl">restaurant</span>
+                <span class="text-[10px] font-bold uppercase">Suất ăn</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-slate-400" href="{{ url_for('profile') }}">
+                <span class="material-symbols-outlined text-2xl">person</span>
+                <span class="text-[10px] font-bold uppercase">Cá nhân</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        let selectedLeaveType = 'annual';
+        const isManager = {{ 'true' if is_manager else 'false' }};
+
+        // Tab switching
+        function switchTab(tabName) {
+            console.log('=== Switching to tab:', tabName, '===');
+            
+            // Hide ALL elements with tab-content class
+            const allTabs = document.querySelectorAll('.tab-content');
+            allTabs.forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('border-blue-600', 'text-blue-600');
+                button.classList.add('border-transparent', 'text-slate-500');
+            });
+            
+            // Show selected tab content
+            const selectedTab = document.getElementById('content-' + tabName);
+            if (selectedTab) {
+                selectedTab.style.display = 'block';
+            }
+            
+            // Add active class to selected tab button
+            const activeTab = document.getElementById('tab-' + tabName);
+            if (activeTab) {
+                activeTab.classList.remove('border-transparent', 'text-slate-500');
+                activeTab.classList.add('border-blue-600', 'text-blue-600');
+            }
+            
+            // Load data for status tab
+            if (tabName === 'status') {
+                loadMyLeaveRequests();
+            }
+        }
+
+        // Select leave type
+        function selectLeaveType(type) {
+            selectedLeaveType = type;
+            document.getElementById('leave_type').value = type;
+            
+            // Update button styles
+            document.querySelectorAll('.leave-type-btn').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-700', 'dark:text-blue-400');
+                btn.classList.add('border-slate-300', 'dark:border-slate-600', 'bg-white', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-slate-300');
+            });
+            
+            // Add active class to selected button
+            const activeBtn = document.querySelector(`.leave-type-btn[data-type="${type}"]`);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-slate-300', 'dark:border-slate-600', 'bg-white', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-slate-300');
+                activeBtn.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-700', 'dark:text-blue-400');
+            }
+            
+            // Show/hide emergency contact section for sick leave
+            const emergencySection = document.getElementById('emergency-section');
+            if (type === 'sick') {
+                emergencySection.classList.remove('hidden');
+                document.getElementById('emergency_contact').required = true;
+                document.getElementById('emergency_phone').required = true;
+            } else {
+                emergencySection.classList.add('hidden');
+                document.getElementById('emergency_contact').required = false;
+                document.getElementById('emergency_phone').required = false;
+            }
+        }
+        // Calculate total hours
+        function calculateDays() {
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            const startTime = document.getElementById('start_time').value;
+            const endTime = document.getElementById('end_time').value;
+            
+            if (startDate && endDate && startTime && endTime) {
+                // Create datetime objects
+                const startDateTime = new Date(`${startDate}T${startTime}`);
+                const endDateTime = new Date(`${endDate}T${endTime}`);
+                
+                if (endDateTime >= startDateTime) {
+                    // Calculate difference in milliseconds
+                    const diffMs = endDateTime - startDateTime;
+                    // Convert to hours
+                    const diffHours = diffMs / (1000 * 60 * 60);
+                    
+                    // Update display
+                    document.getElementById('total-hours').textContent = diffHours.toFixed(1);
+                    document.getElementById('total_hours_value').value = diffHours.toFixed(1);
+                    
+                    // Also calculate days for backend compatibility
+                    const workingHoursPerDay = 9.42; // 7h50 to 17h15 = 9 hours 25 minutes = 9.42 hours
+                    const diffDays = Math.ceil(diffHours / workingHoursPerDay);
+                    document.getElementById('total_days').value = diffDays;
+                } else {
+                    document.getElementById('total-hours').textContent = '0';
+                    document.getElementById('total_hours_value').value = '0';
+                    document.getElementById('total_days').value = '0';
+                }
+            }
+        }
+
+        // Add event listeners for time inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            const startTimeInput = document.getElementById('start_time');
+            const endTimeInput = document.getElementById('end_time');
+            
+            if (startTimeInput) {
+                startTimeInput.addEventListener('change', calculateDays);
+            }
+            if (endTimeInput) {
+                endTimeInput.addEventListener('change', calculateDays);
+            }
+        });
+
+        // Fill reason from dropdown
+        function fillReason() {
+            const dropdown = document.getElementById('common_reason');
+            const reasonInput = document.getElementById('reason');
+            
+            if (dropdown && reasonInput) {
+                if (dropdown.value && dropdown.value !== 'other') {
+                    reasonInput.value = dropdown.value;
+                } else if (dropdown.value === 'other') {
+                    reasonInput.value = '';
+                    reasonInput.focus();
+                }
+            }
+        }
+
+        // Load my leave requests
+        function loadMyLeaveRequests() {
+            // Only load if we're on the status tab or if elements exist
+            const statusTab = document.getElementById('content-status');
+            if (!statusTab || statusTab.style.display === 'none') {
+                return;
+            }
+            
+            fetch('/leave/my-requests')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        renderMyLeaveRequests(data.requests);
+                    }
+                })
+                .catch(err => console.error('Error loading requests:', err));
+        }
+
+        // Render leave requests
+        function renderMyLeaveRequests(requests) {
+            const container = document.getElementById('my-requests-container');
+            const myRequestsSection = document.getElementById('my-requests-section');
+            const tabBadge = document.getElementById('tab-status-badge');
+            
+            // Check if elements exist before using them
+            if (myRequestsSection) {
+                if (requests.length === 0) {
+                    myRequestsSection.classList.add('hidden');
+                } else {
+                    myRequestsSection.classList.remove('hidden');
+                }
+            }
+            
+            // Count pending requests
+            const pendingCount = requests.filter(r => r.status === 'pending').length;
+            
+            // Update badge if it exists
+            if (tabBadge) {
+                if (pendingCount > 0) {
+                    tabBadge.textContent = pendingCount;
+                    tabBadge.classList.remove('hidden');
+                } else {
+                    tabBadge.classList.add('hidden');
+                }
+            }
+            
+            // Only render if container exists
+            if (!container) {
+                console.log('No container found for leave requests');
+                return;
+            }
+            
+            // Build table HTML
+            let tableHTML = `
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Loại nghỉ</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Thời gian</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Số ngày</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Lý do</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Trạng thái</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+            `;
+            
+            requests.forEach(r => {
+                let statusBadge = '';
+                let rowBg = '';
+                let actionButton = '';
+                let leaveTypeText = '';
+                
+                // Leave type display
+                switch(r.leave_type) {
+                    case 'annual': leaveTypeText = 'Nghỉ phép năm'; break;
+                    case 'sick': leaveTypeText = 'Nghỉ ốm'; break;
+                    case 'personal': leaveTypeText = 'Nghỉ việc riêng'; break;
+                    case 'maternity': leaveTypeText = 'Nghỉ thai sản'; break;
+                    default: leaveTypeText = r.leave_type;
+                }
+                
+                if (r.status === 'pending') {
+                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"><span class="material-symbols-outlined text-xs">schedule</span>Đang chờ</span>';
+                    rowBg = 'bg-amber-50/30 dark:bg-amber-900/5';
+                    actionButton = `<button onclick="cancelLeaveRequest(${r.id})" class="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-semibold">Hủy</button>`;
+                } else if (r.status === 'approved') {
+                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"><span class="material-symbols-outlined text-xs" style="font-variation-settings: \'FILL\' 1;">check_circle</span>Đã duyệt</span>';
+                    rowBg = 'bg-green-50/30 dark:bg-green-900/5';
+                    actionButton = '<span class="text-xs text-slate-400">—</span>';
+                } else {
+                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"><span class="material-symbols-outlined text-xs" style="font-variation-settings: \'FILL\' 1;">cancel</span>Từ chối</span>';
+                    rowBg = 'bg-red-50/30 dark:bg-red-900/5';
+                    actionButton = '<span class="text-xs text-slate-400">—</span>';
+                }
+
+                tableHTML += `
+                    <tr class="${rowBg} hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <td class="px-4 py-3">
+                            <p class="text-sm text-slate-700 dark:text-slate-300 font-medium">${leaveTypeText}</p>
+                        </td>
+                        <td class="px-4 py-3">
+                            <p class="text-sm text-slate-700 dark:text-slate-300">${formatDate(r.start_date)} - ${formatDate(r.end_date)}</p>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg text-sm font-bold">
+                                <span class="material-symbols-outlined text-xs">calendar_month</span>
+                                ${r.total_days} ngày
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <p class="text-sm text-slate-700 dark:text-slate-300 line-clamp-2" title="${r.reason}">${r.reason}</p>
+                            ${r.manager_comment ? `
+                                <p class="text-xs text-blue-600 dark:text-blue-400 mt-1 italic" title="${r.manager_comment}">💬 ${r.manager_comment}</p>
+                            ` : ''}
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            ${statusBadge}
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            ${actionButton}
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = '<div class="hidden lg:block">' + tableHTML + '</div>';
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        // Modal confirmation
+        let pendingCancelId = null;
+        
+        function showConfirmModal(title, message, callback) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            document.getElementById('confirmModal').classList.remove('hidden');
+            pendingCancelId = callback;
+        }
+        
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+            pendingCancelId = null;
+        }
+        
+        function confirmAction() {
+            if (pendingCancelId) {
+                pendingCancelId();
+            }
+            closeConfirmModal();
+        }
+        
+        function cancelLeaveRequest(id) {
+            showConfirmModal(
+                'Xác nhận hủy',
+                'Bạn có chắc muốn hủy yêu cầu nghỉ phép này?',
+                () => {
+                    fetch(`/leave/${id}/cancel`, {
+                        method: 'POST'
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadMyLeaveRequests();
+                        } else {
+                            showConfirmModal('Lỗi', data.message, null);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        showConfirmModal('Lỗi', 'Có lỗi xảy ra', null);
+                    });
+                }
+            );
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== Leave Page Loaded ===');
+            
+            // Set current date for application date
+            const currentDateElement = document.getElementById('current-date');
+            if (currentDateElement) {
+                const today = new Date();
+                const day = today.getDate().toString().padStart(2, '0');
+                const month = (today.getMonth() + 1).toString().padStart(2, '0');
+                const year = today.getFullYear();
+                currentDateElement.textContent = `${day}/${month}/${year}`;
+            }
+            
+            // Set default dates
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
+            
+            const startDateInput = document.getElementById('start_date');
+            const endDateInput = document.getElementById('end_date');
+            
+            if (startDateInput) startDateInput.value = tomorrow.toISOString().split('T')[0];
+            if (endDateInput) endDateInput.value = tomorrow.toISOString().split('T')[0];
+            
+            calculateDays();
+            
+            // Only load requests if status tab exists
+            const statusTab = document.getElementById('content-status');
+            if (statusTab) {
+                loadMyLeaveRequests();
+            }
+            
+            // Ensure register tab is shown and status tab is hidden on load
+            const registerTab = document.getElementById('content-register');
+            
+            if (registerTab) {
+                registerTab.style.display = 'block';
+            }
+            
+            if (statusTab) {
+                statusTab.style.display = 'none';
+            }
+        });
+
+        // Form submission
+        document.getElementById('leave-form').addEventListener('submit', function(e) {
+            const leaveType = document.getElementById('leave_type').value;
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            const reason = document.getElementById('reason').value.trim();
+            
+            if (!startDate || !endDate || !reason) {
+                e.preventDefault();
+                alert('Vui lòng điền đầy đủ thông tin');
+                return;
+            }
+            
+            if (leaveType === 'sick') {
+                const emergencyContact = document.getElementById('emergency_contact').value.trim();
+                const emergencyPhone = document.getElementById('emergency_phone').value.trim();
+                
+                if (!emergencyContact || !emergencyPhone) {
+                    e.preventDefault();
+                    alert('Vui lòng điền thông tin liên hệ khẩn cấp cho nghỉ ốm');
+                    return;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

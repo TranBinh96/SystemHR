@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý chức vụ - OKI VIETNAM HR</title>
+    <title>Quản lý phòng ban - OKI VIETNAM HR</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -78,7 +78,7 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900">
     <div class="flex h-screen">
-        <!-- Sidebar -->
+        {% include 'includes/admin_sidebar.html' %}
         <aside class="hidden lg:flex lg:flex-shrink-0">
             <div class="flex w-72 flex-col">
                 <div class="flex min-h-0 flex-1 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
@@ -101,7 +101,7 @@
                             <div>
                                 <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-3 px-3">BẢNG ĐIỀU KHIỂN</div>
                                 <div class="space-y-1">
-                                    <a href="{{ url_for('admin_dashboard') }}" class="text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium">
+                                    <a href="{{ url_for('admin_dashboard') }}" class="text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold transition-colors">
                                         <span class="material-symbols-outlined text-slate-500">dashboard</span>
                                         Bảng điều khiển
                                     </a>
@@ -116,12 +116,12 @@
                                         <span class="material-symbols-outlined text-slate-500">people</span>
                                         Người dùng
                                     </a>
-                                    <a href="{{ url_for('admin_departments') }}" class="text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold transition-colors">
-                                        <span class="material-symbols-outlined text-slate-500">corporate_fare</span>
+                                    <a href="{{ url_for('admin_departments') }}" class="text-blue-600 bg-blue-50 dark:bg-blue-900/20 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium border-r-2 border-blue-500">
+                                        <span class="material-symbols-outlined text-blue-600">corporate_fare</span>
                                         Phòng ban
                                     </a>
-                                    <a href="{{ url_for('admin_positions') }}" class="text-blue-600 bg-blue-50 dark:bg-blue-900/20 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium border-r-2 border-blue-500">
-                                        <span class="material-symbols-outlined text-blue-600">badge</span>
+                                    <a href="{{ url_for('admin_positions') }}" class="text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold transition-colors">
+                                        <span class="material-symbols-outlined text-slate-500">badge</span>
                                         Chức vụ
                                     </a>
                                     <a href="{{ url_for('admin_approval_hierarchy') }}" class="text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold transition-colors">
@@ -165,6 +165,7 @@
                 </div>
             </div>
         </aside>
+
         <!-- Main content -->
         <div class="flex flex-1 flex-col overflow-hidden">
             <!-- Header -->
@@ -178,12 +179,12 @@
                 <div class="hidden lg:block bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Quản lý chức vụ</h1>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Quản lý thông tin các chức vụ trong công ty</p>
+                            <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Quản lý phòng ban</h1>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Quản lý thông tin các phòng ban trong công ty</p>
                         </div>
                         <button onclick="openAddModal()" class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
                             <span class="material-symbols-outlined text-sm mr-2">add</span>
-                            Thêm chức vụ
+                            Thêm phòng ban
                         </button>
                     </div>
                 </div>
@@ -193,16 +194,16 @@
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                                <span class="material-symbols-outlined text-white text-lg" style="font-variation-settings: 'FILL' 1;">badge</span>
+                                <span class="material-symbols-outlined text-white text-lg" style="font-variation-settings: 'FILL' 1;">corporate_fare</span>
                             </div>
                             <div>
-                                <h1 class="text-xl font-bold text-slate-900 dark:text-slate-100">Quản lý chức vụ</h1>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">Quản lý thông tin các chức vụ trong công ty</p>
+                                <h1 class="text-xl font-bold text-slate-900 dark:text-slate-100">Quản lý phòng ban</h1>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Quản lý thông tin các phòng ban trong công ty</p>
                             </div>
                         </div>
                         <button onclick="openAddModal()" class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 whitespace-nowrap">
                             <span class="material-symbols-outlined text-sm mr-1">add</span>
-                            Thêm chức vụ
+                            Thêm phòng ban
                         </button>
                     </div>
                     
@@ -211,53 +212,51 @@
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <span class="material-symbols-outlined text-slate-400 text-lg">search</span>
                         </div>
-                        <input type="text" id="mobileSearchInput" placeholder="Tìm kiếm chức vụ..." 
+                        <input type="text" id="mobileSearchInput" placeholder="Tìm kiếm phòng ban..." 
                                class="w-full pl-12 pr-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 placeholder-slate-400 text-base"
-                               oninput="filterPositions()">
-                    </div>
-                </div>
-
-                <!-- Desktop Filter and Search Controls (hidden on mobile) -->
-                <div class="hidden lg:block p-6 pb-0">
-                    <div class="bg-white dark:bg-slate-800 shadow-sm rounded-2xl border border-slate-200 dark:border-slate-700 mb-6 p-6 glass-effect">
-                        <div class="flex flex-col sm:flex-row gap-6 items-center justify-between">
-                            <div class="flex flex-col sm:flex-row gap-4 items-center flex-1">
-                                <!-- Search Input -->
-                                <div class="relative flex-1 max-w-md group">
-                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <span class="material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors">search</span>
-                                    </div>
-                                    <input type="text" id="searchInput" placeholder="Tìm kiếm theo mã hoặc tên chức vụ..." 
-                                           class="w-full pl-12 pr-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 placeholder-slate-400"
-                                           oninput="filterPositions()">
-                                </div>
-                                
-                                <!-- Items per page -->
-                                <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl px-4 py-2">
-                                    <span class="material-symbols-outlined text-slate-500 text-sm">visibility</span>
-                                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Hiển thị:</label>
-                                    <select id="itemsPerPage" onchange="changeItemsPerPage()" 
-                                            class="px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary text-sm font-medium">
-                                        <option value="5" selected>5</option>
-                                        <option value="10">10</option>
-                                        <option value="20">20</option>
-                                        <option value="50">50</option>
-                                    </select>
-                                    <span class="text-sm text-slate-500 dark:text-slate-400">mục/trang</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Results Info -->
-                            <div class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-slate-700 dark:to-slate-600 px-4 py-2 rounded-xl">
-                                <span class="material-symbols-outlined text-blue-600 text-sm">info</span>
-                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300" id="resultsInfo">Hiển thị 1-10 của 10 chức vụ</span>
-                            </div>
-                        </div>
+                               oninput="filterDepartments()">
                     </div>
                 </div>
 
                 <!-- Table Container -->
                 <div class="lg:px-6">
+                <!-- Desktop Filter and Search Controls (hidden on mobile) -->
+                <div class="hidden lg:block bg-white dark:bg-slate-800 shadow-sm rounded-2xl border border-slate-200 dark:border-slate-700 mb-6 p-6 glass-effect">
+                    <div class="flex flex-col sm:flex-row gap-6 items-center justify-between">
+                        <div class="flex flex-col sm:flex-row gap-4 items-center flex-1">
+                            <!-- Search Input -->
+                            <div class="relative flex-1 max-w-md group">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <span class="material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors">search</span>
+                                </div>
+                                <input type="text" id="searchInput" placeholder="Tìm kiếm theo mã hoặc tên phòng ban..." 
+                                       class="w-full pl-12 pr-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all duration-200 placeholder-slate-400"
+                                       oninput="filterDepartments()">
+                            </div>
+                            
+                            <!-- Items per page -->
+                            <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl px-4 py-2">
+                                <span class="material-symbols-outlined text-slate-500 text-sm">visibility</span>
+                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Hiển thị:</label>
+                                <select id="itemsPerPage" onchange="changeItemsPerPage()" 
+                                        class="px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary text-sm font-medium">
+                                    <option value="5" selected>5</option>
+                                    <option value="10">10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                </select>
+                                <span class="text-sm text-slate-500 dark:text-slate-400">mục/trang</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Results Info -->
+                        <div class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-700 dark:to-slate-600 px-4 py-2 rounded-xl">
+                            <span class="material-symbols-outlined text-primary text-sm">info</span>
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300" id="resultsInfo">Hiển thị 1-10 của 10 phòng ban</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700">
                     <!-- Desktop Table View -->
                     <div class="hidden md:block overflow-x-auto">
@@ -273,7 +272,7 @@
                                     <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                                         <div class="flex items-center gap-2">
                                             <span class="material-symbols-outlined text-sm">badge</span>
-                                            Tên chức vụ
+                                            Tên phòng ban
                                         </div>
                                     </th>
                                     <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
@@ -330,104 +329,196 @@
                         </div>
                     </div>
                 </div>
-                </div>
             </main>
         </div>
     </div>
 
-    <script>
-        // Load positions data from server database
-        window.positionsData = [];
-        
-        // Load data via AJAX
-        fetch('/admin/positions/list')
-            .then(response => response.json())
-            .then(data => {
-                console.log('API response:', data);
-                // Handle different response formats
-                if (Array.isArray(data)) {
-                    window.positionsData = data;
-                } else if (data.positions && Array.isArray(data.positions)) {
-                    window.positionsData = data.positions;
-                } else if (data.success && Array.isArray(data.data)) {
-                    window.positionsData = data.data;
-                } else {
-                    console.error('Unexpected API response format:', data);
-                    window.positionsData = [];
-                }
+    <!-- Add Department Modal -->
+    <div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+        <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full mx-auto transform transition-all">
+            <!-- Modal Header -->
+            <div class="p-6 pb-4 border-b border-slate-200 dark:border-slate-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg">
+                        <span class="material-symbols-outlined text-white text-lg" style="font-variation-settings: 'FILL' 1;">add_business</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Thêm phòng ban mới</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Tạo phòng ban mới cho công ty</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6">
+                <form id="addForm" class="space-y-4">
+                    <!-- Department Code & Name Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Department Code -->
+                        <div class="group">
+                            <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                <span class="material-symbols-outlined text-primary text-sm">tag</span>
+                                Mã phòng ban
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="text" 
+                                       id="addCode" 
+                                       required 
+                                       class="w-full px-3 py-2.5 pl-10 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 placeholder-slate-400"
+                                       placeholder="Ví dụ: NV, TP, GD..."
+                                       maxlength="10">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm">badge</span>
+                            </div>
+                        </div>
+
+                        <!-- Department Name -->
+                        <div class="group">
+                            <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                <span class="material-symbols-outlined text-primary text-sm">corporate_fare</span>
+                                Tên phòng ban
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="text" 
+                                       id="addName" 
+                                       required 
+                                       class="w-full px-3 py-2.5 pl-10 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 placeholder-slate-400"
+                                       placeholder="Ví dụ: Nhân viên, Trưởng phòng..."
+                                       maxlength="100">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm">business</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Department Description -->
+                    <div class="group">
+                        <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            <span class="material-symbols-outlined text-primary text-sm">description</span>
+                            Mô tả
+                        </label>
+                        <div class="relative">
+                            <textarea id="addDescription" 
+                                      class="w-full px-3 py-2.5 pl-10 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 resize-none placeholder-slate-400" 
+                                      rows="3"
+                                      placeholder="Mô tả về chức năng và nhiệm vụ của phòng ban..."
+                                      maxlength="500"></textarea>
+                            <span class="material-symbols-outlined absolute left-3 top-3 text-slate-400 text-sm">edit_note</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Mô tả chi tiết về phòng ban (tùy chọn)</p>
+                            <span class="text-xs text-slate-400" id="descriptionCounter">0/500</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="px-6 pb-6 pt-2">
+                <div class="flex items-center gap-3">
+                    <button type="button" 
+                            onclick="closeAddModal()" 
+                            class="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg transition-all duration-200">
+                        <span class="material-symbols-outlined text-sm mr-2">cancel</span>
+                        Hủy bỏ
+                    </button>
+                    <button type="submit" 
+                            form="addForm"
+                            class="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-primary to-blue-600 hover:from-primary-dark hover:to-blue-700 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                        <span class="material-symbols-outlined text-sm mr-2">add_business</span>
+                        Tạo phòng ban
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+        <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full mx-auto transform transition-all">
+            <!-- Modal Header -->
+            <div class="p-6 pb-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-xl">warning</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Xác nhận xóa</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Hành động này không thể hoàn tác</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="px-6 pb-6">
+                <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6">
+                    <p class="text-sm text-slate-700 dark:text-slate-300">
+                        Bạn có chắc chắn muốn xóa phòng ban <span class="font-bold text-red-600 dark:text-red-400" id="deleteDepartmentName"></span>?
+                    </p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                        Tất cả dữ liệu liên quan đến phòng ban này sẽ bị xóa vĩnh viễn.
+                    </p>
+                </div>
                 
-                // Reinitialize after data loaded
-                if (typeof initializePositions === 'function') {
-                    initializePositions();
-                }
-            })
-            .catch(error => {
-                console.error('Error loading positions:', error);
-                window.positionsData = [];
-                // Still initialize with empty data
-                if (typeof initializePositions === 'function') {
-                    initializePositions();
-                }
-            });
-    </script>
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-3">
+                    <button onclick="closeDeleteModal()" 
+                            class="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-xl transition-all duration-200">
+                        <span class="material-symbols-outlined text-sm mr-2">cancel</span>
+                        Hủy bỏ
+                    </button>
+                    <button onclick="confirmDelete()" 
+                            class="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                        <span class="material-symbols-outlined text-sm mr-2">delete</span>
+                        Xóa phòng ban
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Store original values for cancel functionality
         let originalValues = {};
         
         // Pagination and filtering variables
-        let allPositions = [];
-        let filteredPositions = [];
+        let allDepartments = [];
+        let filteredDepartments = [];
         let currentPage = 1;
         let itemsPerPage = 5;
 
-        // Initialize positions data from server
-        function initializePositions() {
-            // Load positions data from server
-            allPositions = Array.isArray(window.positionsData) ? window.positionsData : [];
+        // Initialize departments data from server
+        function initializeDepartments() {
+            allDepartments = [
+                {% for dept, manager_name in departments %}
+                {
+                    id: {{ dept.id }},
+                    code: {{ dept.code|tojson }},
+                    name: {{ dept.name|tojson }},
+                    description: {{ (dept.description or '')|tojson }}
+                }{{ "," if not loop.last }}
+                {% endfor %}
+            ];
             
-            console.log('Loaded positions:', allPositions);
+            console.log('Initialized departments:', allDepartments);
             
-            filteredPositions = [...allPositions];
-            
-            // Load employee counts for each position
-            loadEmployeeCounts();
-            
+            filteredDepartments = [...allDepartments];
             renderTable();
             updatePagination();
         }
 
-        // Load employee counts for positions
-        function loadEmployeeCounts() {
-            fetch('/admin/positions/employee-counts')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Update employee counts in position data
-                        allPositions.forEach(pos => {
-                            pos.employee_count = data.counts[pos.id] || 0;
-                        });
-                        filteredPositions = [...allPositions];
-                        renderTable();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading employee counts:', error);
-                });
-        }
-
-        function filterPositions() {
+        function filterDepartments() {
             const searchTerm = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase() : '';
             const mobileSearchTerm = document.getElementById('mobileSearchInput') ? document.getElementById('mobileSearchInput').value.toLowerCase() : '';
             const finalSearchTerm = searchTerm || mobileSearchTerm;
             
             if (finalSearchTerm === '') {
-                filteredPositions = [...allPositions];
+                filteredDepartments = [...allDepartments];
             } else {
-                filteredPositions = allPositions.filter(pos => 
-                    pos.code.toLowerCase().includes(finalSearchTerm) ||
-                    pos.name.toLowerCase().includes(finalSearchTerm) ||
-                    (pos.description && pos.description.toLowerCase().includes(finalSearchTerm))
+                filteredDepartments = allDepartments.filter(dept => 
+                    dept.code.toLowerCase().includes(finalSearchTerm) ||
+                    dept.name.toLowerCase().includes(finalSearchTerm) ||
+                    (dept.description && dept.description.toLowerCase().includes(finalSearchTerm))
                 );
             }
             
@@ -448,7 +539,7 @@
             const mobileContainer = document.getElementById('mobileCardContainer');
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
-            const pageItems = filteredPositions.slice(startIndex, endIndex);
+            const pageItems = filteredDepartments.slice(startIndex, endIndex);
 
             // Clear both containers
             if (desktopTbody) desktopTbody.innerHTML = '';
@@ -462,7 +553,7 @@
                             <td colspan="4" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
                                 <div class="flex flex-col items-center">
                                     <span class="material-symbols-outlined text-4xl mb-2">search_off</span>
-                                    <p>Không tìm thấy chức vụ nào</p>
+                                    <p>Không tìm thấy phòng ban nào</p>
                                 </div>
                             </td>
                         </tr>
@@ -476,9 +567,9 @@
                             <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-2xl flex items-center justify-center">
                                 <span class="material-symbols-outlined text-4xl text-slate-400 dark:text-slate-500">search_off</span>
                             </div>
-                            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Không tìm thấy chức vụ</h3>
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Không tìm thấy phòng ban</h3>
                             <p class="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                                Thử thay đổi từ khóa tìm kiếm hoặc xóa bộ lọc để xem tất cả chức vụ
+                                Thử thay đổi từ khóa tìm kiếm hoặc xóa bộ lọc để xem tất cả phòng ban
                             </p>
                         </div>
                     `;
@@ -486,18 +577,17 @@
                 return;
             }
 
-            // Render positions
-            pageItems.forEach(pos => {
+            pageItems.forEach(dept => {
                 // Render desktop table row
                 if (desktopTbody) {
                     const row = document.createElement('tr');
                     row.className = 'hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-slate-700 dark:hover:to-slate-600 transition-all duration-200 group';
-                    row.id = `row-${pos.id}`;
+                    row.id = `row-${dept.id}`;
                     
-                    // Generate avatar initials from position name
-                    const initials = pos.name.split(' ').map(word => word.charAt(0)).join('').substring(0, 2).toUpperCase();
+                    // Generate avatar initials from department name
+                    const initials = dept.name.split(' ').map(word => word.charAt(0)).join('').substring(0, 2).toUpperCase();
                     
-                    // Generate different colors for each position (same as mobile)
+                    // Generate different colors for each department (same as mobile)
                     const colors = [
                         { bg: 'from-orange-100 to-orange-200', text: 'text-orange-600' },
                         { bg: 'from-blue-100 to-blue-200', text: 'text-blue-600' },
@@ -511,69 +601,69 @@
                         { bg: 'from-cyan-100 to-cyan-200', text: 'text-cyan-600' }
                     ];
                     
-                    const colorIndex = pos.id % colors.length;
+                    const colorIndex = dept.id % colors.length;
                     const selectedColor = colors[colorIndex];
                     
                     row.innerHTML = `
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="view-mode" id="code-view-${pos.id}">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-500/10 to-blue-600/10 text-blue-600 border border-blue-500/20">
-                                    ${pos.code}
+                            <div class="view-mode" id="code-view-${dept.id}">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-primary/10 to-blue-500/10 text-primary border border-primary/20">
+                                    ${dept.code}
                                 </span>
                             </div>
-                            <input type="text" class="edit-mode hidden w-full px-3 py-2 border-2 border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed" 
-                                   id="code-edit-${pos.id}" value="${pos.code}" readonly disabled>
+                            <input type="text" class="edit-mode hidden w-full px-3 py-2 border-2 border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all duration-200" 
+                                   id="code-edit-${dept.id}" value="${dept.code}">
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="view-mode" id="name-view-${pos.id}">
+                            <div class="view-mode" id="name-view-${dept.id}">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${selectedColor.bg} flex items-center justify-center">
                                         <span class="${selectedColor.text} font-bold text-sm">${initials}</span>
                                     </div>
                                     <div>
-                                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">${pos.name}</div>
-                                        <div class="text-xs text-slate-500 dark:text-slate-400">Chức vụ ${pos.code}</div>
+                                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">${dept.name}</div>
+                                        <div class="text-xs text-slate-500 dark:text-slate-400">Phòng ${dept.code}</div>
                                     </div>
                                 </div>
                             </div>
                             <input type="text" class="edit-mode hidden w-full px-3 py-2 border-2 border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all duration-200" 
-                                   id="name-edit-${pos.id}" value="${pos.name}">
+                                   id="name-edit-${dept.id}" value="${dept.name}">
                         </td>
                         <td class="px-6 py-4">
-                            <div class="view-mode" id="desc-view-${pos.id}">
+                            <div class="view-mode" id="desc-view-${dept.id}">
                                 <div class="flex items-start gap-2">
                                     <span class="material-symbols-outlined text-slate-400 text-sm mt-0.5">description</span>
                                     <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xs">
-                                        ${pos.description || 'Chưa có mô tả cho chức vụ này'}
+                                        ${dept.description || 'Chưa có mô tả cho phòng ban này'}
                                     </p>
                                 </div>
                             </div>
                             <textarea class="edit-mode hidden w-full px-3 py-2 border-2 border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all duration-200 resize-none" 
-                                      id="desc-edit-${pos.id}" rows="2">${pos.description || ''}</textarea>
+                                      id="desc-edit-${dept.id}" rows="2">${dept.description || ''}</textarea>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="view-mode flex items-center gap-2" id="actions-view-${pos.id}">
-                                <button onclick="enableEdit(${pos.id})" 
+                            <div class="view-mode flex items-center gap-2" id="actions-view-${dept.id}">
+                                <button onclick="enableEdit(${dept.id})" 
                                         class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:text-white bg-indigo-50 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-indigo-600 border border-indigo-200 hover:border-indigo-500 rounded-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-200" 
                                         title="Chỉnh sửa">
                                     <span class="material-symbols-outlined text-sm mr-1">edit</span>
                                     Sửa
                                 </button>
-                                <button onclick="deletePosition(${pos.id}, '${pos.name}')" 
+                                <button onclick="showDeleteModal(${dept.id}, '${dept.name}')" 
                                         class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-white bg-red-50 hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 border border-red-200 hover:border-red-500 rounded-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-200" 
                                         title="Xóa">
                                     <span class="material-symbols-outlined text-sm mr-1">delete</span>
                                     Xóa
                                 </button>
                             </div>
-                            <div class="edit-mode hidden flex items-center gap-2" id="actions-edit-${pos.id}">
-                                <button onclick="saveEdit(${pos.id})" 
+                            <div class="edit-mode hidden flex items-center gap-2" id="actions-edit-${dept.id}">
+                                <button onclick="saveEdit(${dept.id})" 
                                         class="inline-flex items-center px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200" 
                                         title="Lưu">
                                     <span class="material-symbols-outlined text-sm mr-1">save</span>
                                     Lưu
                                 </button>
-                                <button onclick="cancelEdit(${pos.id})" 
+                                <button onclick="cancelEdit(${dept.id})" 
                                         class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-200" 
                                         title="Hủy">
                                     <span class="material-symbols-outlined text-sm mr-1">cancel</span>
@@ -590,12 +680,12 @@
                 if (mobileContainer) {
                     const card = document.createElement('div');
                     card.className = 'group relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden';
-                    card.id = `card-${pos.id}`;
+                    card.id = `card-${dept.id}`;
                     
-                    // Generate avatar initials from position name
-                    const initials = pos.name.split(' ').map(word => word.charAt(0)).join('').substring(0, 2).toUpperCase();
+                    // Generate avatar initials from department name
+                    const initials = dept.name.split(' ').map(word => word.charAt(0)).join('').substring(0, 2).toUpperCase();
                     
-                    // Generate different colors for each position
+                    // Generate different colors for each department
                     const colors = [
                         { bg: 'from-orange-100 to-orange-200', text: 'text-orange-600' },
                         { bg: 'from-blue-100 to-blue-200', text: 'text-blue-600' },
@@ -609,12 +699,12 @@
                         { bg: 'from-cyan-100 to-cyan-200', text: 'text-cyan-600' }
                     ];
                     
-                    const colorIndex = pos.id % colors.length;
+                    const colorIndex = dept.id % colors.length;
                     const selectedColor = colors[colorIndex];
                     
                     card.innerHTML = `
                         <!-- View Mode -->
-                        <div class="view-mode" id="card-view-${pos.id}">
+                        <div class="view-mode" id="card-view-${dept.id}">
                             <div class="p-4">
                                 <!-- Header with Avatar, Info and Status -->
                                 <div class="flex items-start justify-between mb-4">
@@ -624,13 +714,13 @@
                                             <span class="${selectedColor.text} font-bold text-lg">${initials}</span>
                                         </div>
                                         
-                                        <!-- Position Info -->
+                                        <!-- Department Info -->
                                         <div class="flex-1">
                                             <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">
-                                                ${pos.name}
+                                                ${dept.name}
                                             </h3>
                                             <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                                Mã: ${pos.code}${pos.description ? ' • ' + pos.description : ''}
+                                                Mã: ${dept.code}${dept.description ? ' • ' + dept.description : ''}
                                             </p>
                                         </div>
                                     </div>
@@ -644,12 +734,12 @@
                                 
                                 <!-- Action Buttons -->
                                 <div class="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-                                    <button onclick="enableEditMobile(${pos.id})" 
+                                    <button onclick="enableEditMobile(${dept.id})" 
                                             class="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-xl transition-all duration-200">
                                         <span class="material-symbols-outlined text-sm mr-2">edit</span>
                                         Chỉnh sửa
                                     </button>
-                                    <button onclick="deletePosition(${pos.id}, '${pos.name}')" 
+                                    <button onclick="showDeleteModal(${dept.id}, '${dept.name}')" 
                                             class="w-12 h-10 inline-flex items-center justify-center text-red-600 hover:text-white bg-red-50 hover:bg-red-500 dark:bg-red-900/20 dark:hover:bg-red-600 rounded-xl transition-all duration-200">
                                         <span class="material-symbols-outlined text-sm">delete</span>
                                     </button>
@@ -658,7 +748,7 @@
                         </div>
 
                         <!-- Edit Mode -->
-                        <div class="edit-mode hidden" id="card-edit-${pos.id}">
+                        <div class="edit-mode hidden" id="card-edit-${dept.id}">
                             <div class="p-4">
                                 <!-- Edit Header -->
                                 <div class="flex items-center gap-3 mb-6 pb-3 border-b border-slate-200 dark:border-slate-700">
@@ -666,8 +756,8 @@
                                         <span class="material-symbols-outlined text-white text-lg">edit</span>
                                     </div>
                                     <div>
-                                        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Chỉnh sửa chức vụ</h3>
-                                        <p class="text-sm text-slate-500 dark:text-slate-400">Cập nhật thông tin chức vụ</p>
+                                        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Chỉnh sửa phòng ban</h3>
+                                        <p class="text-sm text-slate-500 dark:text-slate-400">Cập nhật thông tin phòng ban</p>
                                     </div>
                                 </div>
                                 
@@ -676,25 +766,24 @@
                                     <div class="group">
                                         <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                                             <span class="material-symbols-outlined text-sm mr-1 align-middle">tag</span>
-                                            Mã chức vụ
-                                        </label>
-                                        <input type="text" 
-                                               class="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-sm bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed" 
-                                               id="card-code-edit-${pos.id}" 
-                                               value="${pos.code}"
-                                               placeholder="Mã chức vụ không thể thay đổi"
-                                               readonly disabled>>
-                                    </div>
-                                    <div class="group">
-                                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                            <span class="material-symbols-outlined text-sm mr-1 align-middle">badge</span>
-                                            Tên chức vụ
+                                            Mã phòng ban
                                         </label>
                                         <input type="text" 
                                                class="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-200" 
-                                               id="card-name-edit-${pos.id}" 
-                                               value="${pos.name}"
-                                               placeholder="Nhập tên chức vụ...">
+                                               id="card-code-edit-${dept.id}" 
+                                               value="${dept.code}"
+                                               placeholder="Nhập mã phòng ban...">
+                                    </div>
+                                    <div class="group">
+                                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                            <span class="material-symbols-outlined text-sm mr-1 align-middle">corporate_fare</span>
+                                            Tên phòng ban
+                                        </label>
+                                        <input type="text" 
+                                               class="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-200" 
+                                               id="card-name-edit-${dept.id}" 
+                                               value="${dept.name}"
+                                               placeholder="Nhập tên phòng ban...">
                                     </div>
                                     <div class="group">
                                         <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
@@ -702,20 +791,20 @@
                                             Mô tả
                                         </label>
                                         <textarea class="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-200 resize-none" 
-                                                  id="card-desc-edit-${pos.id}" 
+                                                  id="card-desc-edit-${dept.id}" 
                                                   rows="3"
-                                                  placeholder="Nhập mô tả chức vụ...">${pos.description || ''}</textarea>
+                                                  placeholder="Nhập mô tả phòng ban...">${dept.description || ''}</textarea>
                                     </div>
                                 </div>
                                 
                                 <!-- Action Footer -->
                                 <div class="flex items-center gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
-                                    <button onclick="saveEditMobile(${pos.id})" 
+                                    <button onclick="saveEditMobile(${dept.id})" 
                                             class="flex-1 inline-flex items-center justify-center px-4 py-3 text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
                                         <span class="material-symbols-outlined text-sm mr-2">save</span>
                                         Lưu thay đổi
                                     </button>
-                                    <button onclick="cancelEditMobile(${pos.id})" 
+                                    <button onclick="cancelEditMobile(${dept.id})" 
                                             class="inline-flex items-center justify-center px-4 py-3 text-sm font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-xl shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-200">
                                         <span class="material-symbols-outlined text-sm mr-2">cancel</span>
                                         Hủy
@@ -732,24 +821,25 @@
             // Update results info
             updateResultsInfo();
         }
+
         function updateResultsInfo() {
-            const total = filteredPositions.length;
+            const total = filteredDepartments.length;
             const startIndex = (currentPage - 1) * itemsPerPage + 1;
             const endIndex = Math.min(currentPage * itemsPerPage, total);
             
             document.getElementById('resultsInfo').textContent = 
-                `Hiển thị ${startIndex}-${endIndex} của ${total} chức vụ`;
+                `Hiển thị ${startIndex}-${endIndex} của ${total} phòng ban`;
         }
 
         function updatePagination() {
-            const totalPages = Math.ceil(filteredPositions.length / itemsPerPage);
+            const totalPages = Math.ceil(filteredDepartments.length / itemsPerPage);
             const startItem = (currentPage - 1) * itemsPerPage + 1;
-            const endItem = Math.min(currentPage * itemsPerPage, filteredPositions.length);
+            const endItem = Math.min(currentPage * itemsPerPage, filteredDepartments.length);
             
             // Update pagination info
             document.getElementById('startItem').textContent = startItem;
             document.getElementById('endItem').textContent = endItem;
-            document.getElementById('totalItems').textContent = filteredPositions.length;
+            document.getElementById('totalItems').textContent = filteredDepartments.length;
             
             // Update mobile pagination buttons
             const prevMobile = document.getElementById('prevPageMobile');
@@ -830,11 +920,24 @@
         }
 
         function goToPage(page) {
-            const totalPages = Math.ceil(filteredPositions.length / itemsPerPage);
+            const totalPages = Math.ceil(filteredDepartments.length / itemsPerPage);
             if (page >= 1 && page <= totalPages) {
                 currentPage = page;
                 renderTable();
                 updatePagination();
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                goToPage(currentPage - 1);
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredDepartments.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                goToPage(currentPage + 1);
             }
         }
 
@@ -853,63 +956,61 @@
         function updateDescriptionCounter() {
             const textarea = document.getElementById('addDescription');
             const counter = document.getElementById('descriptionCounter');
-            if (textarea && counter) {
-                const length = textarea.value.length;
-                counter.textContent = `${length}/500`;
-                
-                if (length > 450) {
-                    counter.classList.add('text-red-500');
-                    counter.classList.remove('text-slate-400');
-                } else {
-                    counter.classList.remove('text-red-500');
-                    counter.classList.add('text-slate-400');
-                }
+            const length = textarea.value.length;
+            counter.textContent = `${length}/500`;
+            
+            if (length > 450) {
+                counter.classList.add('text-red-500');
+                counter.classList.remove('text-slate-400');
+            } else {
+                counter.classList.remove('text-red-500');
+                counter.classList.add('text-slate-400');
             }
         }
 
-        function editPosition(id) {
-            enableEdit(id);
-        }
-
         function enableEdit(id) {
-            // Store original values
-            const position = allPositions.find(p => p.id === id);
-            if (!position) return;
+            // Convert id to number for comparison
+            const numId = parseInt(id);
             
-            originalValues[id] = {
-                code: position.code,
-                name: position.name,
-                description: position.description || ''
+            // Find the department data from allDepartments array
+            const dept = allDepartments.find(d => d.id === numId);
+            if (!dept) return;
+            
+            // Store original values
+            originalValues[numId] = {
+                code: dept.code,
+                name: dept.name,
+                description: dept.description || ''
             };
 
             // Hide view mode, show edit mode
-            document.querySelectorAll(`#row-${id} .view-mode`).forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll(`#row-${id} .edit-mode`).forEach(el => el.classList.remove('hidden'));
+            document.querySelectorAll(`#row-${numId} .view-mode`).forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll(`#row-${numId} .edit-mode`).forEach(el => el.classList.remove('hidden'));
 
-            // Focus on name input instead of code (since code is disabled)
-            document.getElementById(`name-edit-${numId}`).focus();
+            // Focus on first input
+            document.getElementById(`code-edit-${numId}`).focus();
         }
 
         function enableEditMobile(id) {
             console.log('enableEditMobile called with id:', id, typeof id);
-            console.log('allPositions:', allPositions);
             
             // Convert id to number for comparison
             const numId = parseInt(id);
             
-            // Store original values for mobile
-            const position = allPositions.find(p => p.id === numId);
-            if (!position) {
-                console.error('Position not found:', numId, 'Available positions:', allPositions);
+            // Find the department data from allDepartments array
+            const dept = allDepartments.find(d => d.id === numId);
+            if (!dept) {
+                console.error('Department not found:', numId, 'Available departments:', allDepartments);
                 return;
             }
             
-            console.log('Found position:', position);
+            console.log('Found department:', dept);
             
+            // Store original values for mobile
             originalValues[numId] = {
-                code: position.code,
-                name: position.name,
-                description: position.description || ''
+                code: dept.code,
+                name: dept.name,
+                description: dept.description || ''
             };
 
             // Get the elements
@@ -930,13 +1031,13 @@
             
             console.log('View mode hidden, edit mode shown');
 
-            // Focus on name input instead of code (since code is disabled)
-            const nameInput = document.getElementById(`card-name-edit-${numId}`);
-            if (nameInput) {
-                nameInput.focus();
-                console.log('Focused on name input');
+            // Focus on first input
+            const firstInput = document.getElementById(`card-code-edit-${numId}`);
+            if (firstInput) {
+                firstInput.focus();
+                console.log('Focused on first input');
             } else {
-                console.error('Could not find name input');
+                console.error('Could not find first input');
             }
         }
 
@@ -973,14 +1074,12 @@
         }
 
         function saveEdit(id) {
-            // Use original code value since code field is disabled
-            const position = allPositions.find(p => p.id === parseInt(id));
-            const code = position ? position.code : '';
+            const code = document.getElementById(`code-edit-${id}`).value.trim();
             const name = document.getElementById(`name-edit-${id}`).value.trim();
             const description = document.getElementById(`desc-edit-${id}`).value.trim();
 
             if (!code || !name) {
-                alert('Mã và tên chức vụ không được để trống');
+                alert('Mã và tên phòng ban không được để trống');
                 return;
             }
 
@@ -988,14 +1087,12 @@
         }
 
         function saveEditMobile(id) {
-            // Use original code value since code field is disabled
-            const position = allPositions.find(p => p.id === parseInt(id));
-            const code = position ? position.code : '';
+            const code = document.getElementById(`card-code-edit-${id}`).value.trim();
             const name = document.getElementById(`card-name-edit-${id}`).value.trim();
             const description = document.getElementById(`card-desc-edit-${id}`).value.trim();
 
             if (!code || !name) {
-                alert('Mã và tên chức vụ không được để trống');
+                alert('Mã và tên phòng ban không được để trống');
                 return;
             }
 
@@ -1009,7 +1106,7 @@
                 description: description
             };
 
-            fetch(`/admin/positions/${id}/edit`, {
+            fetch(`/admin/departments/${id}/edit`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1020,11 +1117,20 @@
             .then(data => {
                 if (data.success) {
                     // Update local data
-                    const posIndex = allPositions.findIndex(p => p.id === id);
-                    if (posIndex !== -1) {
-                        allPositions[posIndex] = { id, code, name, description };
+                    const deptIndex = allDepartments.findIndex(d => d.id === id);
+                    if (deptIndex !== -1) {
+                        allDepartments[deptIndex] = { id, code, name, description };
                     }
                     
+                    // Update desktop view
+                    const codeView = document.getElementById(`code-view-${id}`);
+                    const nameView = document.getElementById(`name-view-${id}`);
+                    const descView = document.getElementById(`desc-view-${id}`);
+                    
+                    if (codeView) codeView.textContent = code;
+                    if (nameView) nameView.textContent = name;
+                    if (descView) descView.textContent = description || 'Không có mô tả';
+
                     // Hide edit mode, show view mode for desktop
                     document.querySelectorAll(`#row-${id} .edit-mode`).forEach(el => el.classList.add('hidden'));
                     document.querySelectorAll(`#row-${id} .view-mode`).forEach(el => el.classList.remove('hidden'));
@@ -1039,7 +1145,7 @@
                     delete originalValues[id];
 
                     // Refresh filtered data and re-render
-                    filterPositions();
+                    filterDepartments();
 
                     // Show success message
                     showNotification(data.message, 'success');
@@ -1057,10 +1163,10 @@
         let deleteTargetId = null;
         let deleteTargetName = null;
 
-        function deletePosition(id, name) {
+        function showDeleteModal(id, name) {
             deleteTargetId = id;
             deleteTargetName = name;
-            document.getElementById('deletePositionName').textContent = name;
+            document.getElementById('deleteDepartmentName').textContent = name;
             document.getElementById('deleteModal').classList.remove('hidden');
         }
 
@@ -1072,36 +1178,36 @@
 
         function confirmDelete() {
             if (deleteTargetId && deleteTargetName) {
-                // Call delete API
-                fetch(`/admin/positions/${deleteTargetId}/delete`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Remove from local data
-                        allPositions = allPositions.filter(p => p.id !== deleteTargetId);
-                        filteredPositions = filteredPositions.filter(p => p.id !== deleteTargetId);
-                        
-                        // Re-render table
-                        renderTable();
-                        updatePagination();
-                        
-                        showNotification(data.message, 'success');
-                    } else {
-                        showNotification(data.message, 'error');
-                    }
-                })
-                .catch(error => {
-                    showNotification('Có lỗi xảy ra khi xóa', 'error');
-                    console.error('Error:', error);
-                });
-                
+                deleteDepartment(deleteTargetId, deleteTargetName);
                 closeDeleteModal();
             }
+        }
+
+        function deleteDepartment(id, name) {
+            fetch(`/admin/departments/${id}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove from local data
+                    allDepartments = allDepartments.filter(d => d.id !== id);
+                    
+                    // Refresh filtered data and re-render
+                    filterDepartments();
+                    
+                    showNotification(data.message, 'success');
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Có lỗi xảy ra khi xóa', 'error');
+                console.error('Error:', error);
+            });
         }
 
         function showNotification(message, type = 'info') {
@@ -1121,18 +1227,83 @@
             }, 3000);
         }
 
-        function previousPage() {
-            if (currentPage > 1) {
-                goToPage(currentPage - 1);
+        // Add form submission
+        document.getElementById('addForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Form submitted!'); // Debug log
+            
+            // Clear previous errors
+            clearFormErrors();
+            
+            const code = document.getElementById('addCode').value.trim();
+            const name = document.getElementById('addName').value.trim();
+            const description = document.getElementById('addDescription').value.trim();
+            
+            console.log('Form data:', { code, name, description }); // Debug log
+            
+            // Validation
+            let hasErrors = false;
+            
+            if (!code) {
+                showFieldError('addCode', 'Mã phòng ban không được để trống');
+                hasErrors = true;
+            } else if (code.length < 2) {
+                showFieldError('addCode', 'Mã phòng ban phải có ít nhất 2 ký tự');
+                hasErrors = true;
             }
-        }
+            
+            if (!name) {
+                showFieldError('addName', 'Tên phòng ban không được để trống');
+                hasErrors = true;
+            } else if (name.length < 3) {
+                showFieldError('addName', 'Tên phòng ban phải có ít nhất 3 ký tự');
+                hasErrors = true;
+            }
+            
+            if (hasErrors) {
+                return;
+            }
+            
+            const data = {
+                code: code.toUpperCase(),
+                name: name,
+                description: description
+            };
 
-        function nextPage() {
-            const totalPages = Math.ceil(filteredPositions.length / itemsPerPage);
-            if (currentPage < totalPages) {
-                goToPage(currentPage + 1);
-            }
-        }
+            // Disable submit button
+            const submitBtn = document.querySelector('button[form="addForm"][type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="material-symbols-outlined text-sm mr-2 animate-spin">progress_activity</span>Đang tạo...';
+
+            fetch('/admin/departments/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    closeAddModal();
+                    // Reload page to show new department
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Có lỗi xảy ra khi tạo phòng ban', 'error');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
 
         function showFieldError(fieldId, message) {
             const field = document.getElementById(fieldId);
@@ -1216,117 +1387,26 @@
             }
         });
 
+        // Note: Removed click outside to close modals for better UX
+        // Users should explicitly click Cancel or Close buttons
+
+        // Note: Removed click outside to close modal for better UX
+        // Users should explicitly click Cancel or Close button
+
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Don't initialize immediately - wait for AJAX data to load
-            // initializePositions() will be called after data is loaded
-            console.log('Page loaded, waiting for positions data...');
+            initializeDepartments();
             
             // Add event listeners for real-time validation
-            const addCodeField = document.getElementById('addCode');
-            const addNameField = document.getElementById('addName');
-            const addDescField = document.getElementById('addDescription');
-            const addForm = document.getElementById('addForm');
-            
-            if (addCodeField) {
-                addCodeField.addEventListener('input', function() {
-                    clearFieldError('addCode');
-                });
-            }
-            
-            if (addNameField) {
-                addNameField.addEventListener('input', function() {
-                    clearFieldError('addName');
-                });
-            }
-            
-            if (addDescField) {
-                addDescField.addEventListener('input', function() {
-                    updateDescriptionCounter();
-                });
-            }
-            
-            // Add form submission handler
-            if (addForm) {
-                addForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    console.log('Form submitted!'); // Debug log
-                    
-                    // Clear previous errors
-                    clearFormErrors();
-                    
-                    const code = document.getElementById('addCode').value.trim();
-                    const name = document.getElementById('addName').value.trim();
-                    const description = document.getElementById('addDescription').value.trim();
-                    
-                    console.log('Form data:', { code, name, description }); // Debug log
-                    
-                    // Validation
-                    let hasErrors = false;
-                    
-                    if (!code) {
-                        showFieldError('addCode', 'Mã chức vụ không được để trống');
-                        hasErrors = true;
-                    } else if (code.length < 1) {
-                        showFieldError('addCode', 'Mã chức vụ phải có ít nhất 1 ký tự');
-                        hasErrors = true;
-                    }
-                    
-                    if (!name) {
-                        showFieldError('addName', 'Tên chức vụ không được để trống');
-                        hasErrors = true;
-                    } else if (name.length < 2) {
-                        showFieldError('addName', 'Tên chức vụ phải có ít nhất 2 ký tự');
-                        hasErrors = true;
-                    }
-                    
-                    if (hasErrors) {
-                        return;
-                    }
-                    
-                    const data = {
-                        code: code.toUpperCase(),
-                        name: name,
-                        description: description
-                    };
-
-                    // Disable submit button
-                    const submitBtn = document.querySelector('button[type="submit"][form="addForm"]');
-                    if (submitBtn) {
-                        const originalText = submitBtn.innerHTML;
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<span class="material-symbols-outlined text-sm mr-2 animate-spin">progress_activity</span>Đang tạo...';
-
-                        fetch('/admin/positions/add', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(data)
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                showNotification(data.message, 'success');
-                                closeAddModal();
-                                // Reload page to show new position
-                                setTimeout(() => location.reload(), 1000);
-                            } else {
-                                showNotification(data.message, 'error');
-                            }
-                        })
-                        .catch(error => {
-                            showNotification('Có lỗi xảy ra khi tạo chức vụ', 'error');
-                            console.error('Error:', error);
-                        })
-                        .finally(() => {
-                            // Re-enable submit button
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = originalText;
-                        });
-                    }
-                });
-            }
+            document.getElementById('addCode').addEventListener('input', function() {
+                clearFieldError('addCode');
+            });
+            document.getElementById('addName').addEventListener('input', function() {
+                clearFieldError('addName');
+            });
+            document.getElementById('addDescription').addEventListener('input', function() {
+                updateDescriptionCounter();
+            });
         });
     </script>
 
@@ -1341,12 +1421,12 @@
                 <span class="material-symbols-outlined text-2xl">group</span>
                 <span class="text-[10px] font-bold uppercase tracking-tighter">Người Dùng</span>
             </a>
-            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_departments') }}">
-                <span class="material-symbols-outlined text-2xl">corporate_fare</span>
+            <a class="flex flex-col items-center gap-1 text-primary" href="{{ url_for('admin_departments') }}">
+                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">corporate_fare</span>
                 <span class="text-[10px] font-bold uppercase tracking-tighter">Phòng Ban</span>
             </a>
-            <a class="flex flex-col items-center gap-1 text-primary" href="{{ url_for('admin_positions') }}">
-                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">badge</span>
+            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_positions') }}">
+                <span class="material-symbols-outlined text-2xl">badge</span>
                 <span class="text-[10px] font-bold uppercase tracking-tighter">Chức Vụ</span>
             </a>
             <a class="flex flex-col items-center gap-1 text-red-500 dark:text-red-400" href="{{ url_for('logout') }}">
@@ -1357,146 +1437,3 @@
     </nav>
 </body>
 </html>
-    <!-- Add Position Modal -->
-    <div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-        <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full mx-auto transform transition-all">
-            <!-- Modal Header -->
-            <div class="p-6 pb-4 border-b border-slate-200 dark:border-slate-700">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                        <span class="material-symbols-outlined text-white text-lg">add_business</span>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Thêm chức vụ mới</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Tạo chức vụ mới cho công ty</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Modal Body -->
-            <div class="p-6">
-                <form id="addForm" class="space-y-4">
-                    <!-- Position Code & Name Row -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Position Code -->
-                        <div class="group">
-                            <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                <span class="material-symbols-outlined text-primary text-sm">tag</span>
-                                Mã chức vụ
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <div class="relative">
-                                <input type="text" 
-                                       id="addCode" 
-                                       required 
-                                       class="w-full px-3 py-2.5 pl-10 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 placeholder-slate-400"
-                                       placeholder="Ví dụ: NV, TP, GD..."
-                                       maxlength="10">
-                                <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm">badge</span>
-                            </div>
-                        </div>
-
-                        <!-- Position Name -->
-                        <div class="group">
-                            <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                <span class="material-symbols-outlined text-primary text-sm">badge</span>
-                                Tên chức vụ
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <div class="relative">
-                                <input type="text" 
-                                       id="addName" 
-                                       required 
-                                       class="w-full px-3 py-2.5 pl-10 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 placeholder-slate-400"
-                                       placeholder="Ví dụ: Nhân viên, Trưởng phòng..."
-                                       maxlength="100">
-                                <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm">business</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Position Description -->
-                    <div class="group">
-                        <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            <span class="material-symbols-outlined text-primary text-sm">description</span>
-                            Mô tả
-                        </label>
-                        <div class="relative">
-                            <textarea id="addDescription" 
-                                      class="w-full px-3 py-2.5 pl-10 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 resize-none placeholder-slate-400" 
-                                      rows="3"
-                                      placeholder="Mô tả về trách nhiệm và quyền hạn của chức vụ..."
-                                      maxlength="500"></textarea>
-                            <span class="material-symbols-outlined absolute left-3 top-3 text-slate-400 text-sm">edit_note</span>
-                        </div>
-                        <div class="flex justify-between items-center mt-1">
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Mô tả chi tiết về chức vụ (tùy chọn)</p>
-                            <span class="text-xs text-slate-400" id="descriptionCounter">0/500</span>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            
-            <!-- Modal Footer -->
-            <div class="px-6 pb-6 pt-2">
-                <div class="flex items-center gap-3">
-                    <button type="button" 
-                            onclick="closeAddModal()" 
-                            class="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg transition-all duration-200">
-                        <span class="material-symbols-outlined text-sm mr-2">cancel</span>
-                        Hủy bỏ
-                    </button>
-                    <button type="submit" 
-                            form="addForm"
-                            class="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-                        <span class="material-symbols-outlined text-sm mr-2">add_business</span>
-                        Tạo chức vụ
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-        <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full mx-auto transform transition-all">
-            <!-- Modal Header -->
-            <div class="p-6 pb-4">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-xl">warning</span>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Xác nhận xóa</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Hành động này không thể hoàn tác</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Modal Body -->
-            <div class="px-6 pb-6">
-                <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6">
-                    <p class="text-sm text-slate-700 dark:text-slate-300">
-                        Bạn có chắc chắn muốn xóa chức vụ <span class="font-bold text-red-600 dark:text-red-400" id="deletePositionName"></span>?
-                    </p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                        Tất cả dữ liệu liên quan đến chức vụ này sẽ bị xóa vĩnh viễn.
-                    </p>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="flex items-center gap-3">
-                    <button onclick="closeDeleteModal()" 
-                            class="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-xl transition-all duration-200">
-                        <span class="material-symbols-outlined text-sm mr-2">cancel</span>
-                        Hủy bỏ
-                    </button>
-                    <button onclick="confirmDelete()" 
-                            class="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-                        <span class="material-symbols-outlined text-sm mr-2">delete</span>
-                        Xóa chức vụ
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>

@@ -1,10 +1,10 @@
-import configparser
-import os
+"""
+Simple translation function for the application
+"""
 
 def get_translation(lang='vi'):
-    config = configparser.ConfigParser()
-    ini_path = os.path.join(os.path.dirname(__file__), 'translations.ini')
-    config.read(ini_path, encoding='utf-8')
-    if lang in config:
-        return dict(config[lang])
-    return dict(config['vi'])
+    """
+    Returns a simple translation dictionary
+    Currently just returns empty dict as translations are handled in templates
+    """
+    return {}

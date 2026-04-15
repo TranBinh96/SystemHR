@@ -150,33 +150,34 @@
                     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                         <div class="p-6 border-b border-slate-100 dark:border-slate-800">
                             <div class="flex flex-col gap-4">
-                                <div class="flex flex-wrap items-center gap-3 justify-between">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                     <div>
                                         <h3 class="text-lg font-bold text-slate-900 dark:text-white">Danh sách đăng ký chi tiết</h3>
                                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Xem chi tiết đăng ký suất ăn</p>
                                     </div>
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <div class="flex items-center gap-1.5">
-                                            <span class="text-xs font-semibold text-slate-500 whitespace-nowrap">Từ ngày</span>
-                                            <input type="date" id="filterDateFrom" onchange="applyGlobalFilter()" class="px-2.5 py-1.5 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                                        </div>
-                                        <div class="flex items-center gap-1.5">
-                                            <span class="text-xs font-semibold text-slate-500 whitespace-nowrap">Đến ngày</span>
-                                            <input type="date" id="filterDateTo" onchange="applyGlobalFilter()" class="px-2.5 py-1.5 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                                        </div>
-                                        <div class="relative min-w-[200px]">
-                                            <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-base">search</span>
-                                            <input type="text" id="globalSearch" placeholder="Tìm tên, mã NV..." oninput="applyGlobalFilter()" class="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                                        </div>
-                                        <button onclick="clearFilters()" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                                            <span class="material-symbols-outlined text-sm">close</span>
-                                            Xóa lọc
-                                        </button>
-                                        <button onclick="exportToExcel()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                                            <span class="material-symbols-outlined text-base">download</span>
-                                            Xuất Excel
-                                        </button>
+                                    <button onclick="exportToExcel()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors self-start sm:self-auto">
+                                        <span class="material-symbols-outlined text-base">download</span>
+                                        Xuất Excel
+                                    </button>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-semibold text-slate-500 whitespace-nowrap">Từ ngày</span>
+                                        <input type="date" id="filterDateFrom" onchange="applyGlobalFilter()" class="px-2.5 py-1.5 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                                     </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-semibold text-slate-500 whitespace-nowrap">Đến ngày</span>
+                                        <input type="date" id="filterDateTo" onchange="applyGlobalFilter()" class="px-2.5 py-1.5 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    </div>
+                                    <div class="h-6 w-px bg-slate-200 dark:bg-slate-600 hidden sm:block"></div>
+                                    <div class="relative flex-1 min-w-36">
+                                        <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-base">search</span>
+                                        <input type="text" id="globalSearch" placeholder="Tìm tên, mã NV..." oninput="applyGlobalFilter()" class="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    </div>
+                                    <button onclick="clearFilters()" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                                        <span class="material-symbols-outlined text-sm">close</span>
+                                        Xóa lọc
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -223,10 +224,10 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 1);
-            document.getElementById('filterDateFrom').value = tomorrow.toISOString().split('T')[0];
-            document.getElementById('filterDateTo').value = tomorrow.toISOString().split('T')[0];
+            const sevenDaysAgo = new Date(today);
+            sevenDaysAgo.setDate(today.getDate() - 7);
+            document.getElementById('filterDateFrom').value = sevenDaysAgo.toISOString().split('T')[0];
+            document.getElementById('filterDateTo').value = today.toISOString().split('T')[0];
             loadStatistics();
         });
 
@@ -431,7 +432,7 @@
                     'Họ và tên': r.user_name,
                     'Phòng ban': r.department,
                     'Ngày': r.date,
-                    'Loại suất ăn': r.is_special ? 'Cải thiện' : 'Bình thường' ,
+                    'Loại suất ăn': r.is_special ? 'Cải thiện' : 'Bình thường',
                     'Tên món': r.meal_name
                 };
             });

@@ -59,7 +59,7 @@
         }
     </script>
 </head>
-<body class="bg-background-light dark:bg-background-dark">
+<body class="bg-white">
     <div class="min-h-screen">
         <!-- Sidebar (Desktop) -->
         <aside class="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
@@ -107,35 +107,18 @@
                             <!-- Đăng ký -->
                             <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Đăng ký</div>
                             <ul role="list" class="-mx-2 space-y-1">
+                                {% if current_user.can_register or current_user.can_approve %}
                                 <li>
                                     <a href="{{ url_for('overtime') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
                                         <span class="material-symbols-outlined">schedule</span>
                                         Làm thêm
                                     </a>
                                 </li>
+                                {% endif %}
                                 <li>
                                     <a href="{{ url_for('meals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
                                         <span class="material-symbols-outlined">restaurant</span>
                                         {{ t.meals }}
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        
-                        <li>
-                            <!-- Khác -->
-                            <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Khác</div>
-                            <ul role="list" class="-mx-2 space-y-1">
-                                <li>
-                                    <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                        <span class="material-symbols-outlined">history</span>
-                                        {{ t.history }}
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                        <span class="material-symbols-outlined">support_agent</span>
-                                        {{ t.support }}
                                     </a>
                                 </li>
                             </ul>
@@ -231,6 +214,7 @@
                     <div class="mb-6">
                         <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-3">Đăng Ký</h3>
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            {% if current_user.can_register or current_user.can_approve %}
                             <a href="{{ url_for('overtime') }}" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all flex-shrink-0">
@@ -242,6 +226,7 @@
                                     </div>
                                 </div>
                             </a>
+                            {% endif %}
 
                             <a href="{{ url_for('meals') }}" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
                                 <div class="flex items-center gap-3">
@@ -281,35 +266,7 @@
                         </div>
                     </div>
 
-                    <!-- Khác Section -->
-                    <div>
-                        <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-3">Khác</h3>
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                            <a href="#" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all flex-shrink-0">
-                                        <span class="material-symbols-outlined text-primary group-hover:text-white text-xl" style="font-variation-settings: 'FILL' 1;">history</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Lịch Sử</h3>
-                                        <p class="text-xs text-slate-600 dark:text-slate-400">Xem lịch sử hoạt động</p>
-                                    </div>
-                                </div>
-                            </a>
 
-                            <a href="#" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all flex-shrink-0">
-                                        <span class="material-symbols-outlined text-primary group-hover:text-white text-xl" style="font-variation-settings: 'FILL' 1;">support_agent</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Hỗ Trợ</h3>
-                                        <p class="text-xs text-slate-600 dark:text-slate-400">Liên hệ hỗ trợ</p>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
                 </div>
             </main>
         </div>
@@ -325,10 +282,12 @@
                     <span class="material-symbols-outlined text-2xl">lunch_dining</span>
                     <span class="text-[10px] font-bold uppercase tracking-tighter">{{ t.meal_tab }}</span>
                 </a>
+                {% if current_user.can_register or current_user.can_approve %}
                 <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('overtime') }}">
                     <span class="material-symbols-outlined text-2xl">history</span>
                     <span class="text-[10px] font-bold uppercase tracking-tighter">{{ t.overtime_tab }}</span>
                 </a>
+                {% endif %}
                 <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('profile') }}">
                     <span class="material-symbols-outlined text-2xl">person</span>
                     <span class="text-[10px] font-bold uppercase tracking-tighter">{{ t.profile }}</span>

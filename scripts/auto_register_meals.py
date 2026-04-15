@@ -24,11 +24,10 @@ def auto_register_meals_for_date(target_date):
     with app.app_context():
         print(f"\n=== Tự động đăng ký suất ăn cho ngày {target_date.strftime('%d/%m/%Y')} ===\n")
         
-        # Lấy tất cả user đang làm việc và có quyền đăng ký
+        # Lấy tất cả user đang hoạt động (active và đang làm việc)
         active_users = User.query.filter(
             User.is_active == True,
-            User.work_status.in_(['working', 'business_trip']),
-            User.can_register == True
+            User.work_status == 'working'
         ).all()
         
         print(f"Tìm thấy {len(active_users)} user đang hoạt động")

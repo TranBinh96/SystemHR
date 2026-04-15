@@ -10,6 +10,19 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+        @keyframes slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .animate-slide-in {
+            animation: slide-in 0.3s ease-out;
+        }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900">
@@ -84,25 +97,6 @@
                         </ul>
                     </li>
                     
-                    <li>
-                        <!-- Khác -->
-                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Khác</div>
-                        <ul role="list" class="-mx-2 space-y-1">
-                            <li>
-                                <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                    <span class="material-symbols-outlined">history</span>
-                                    Lịch sử
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
-                                    <span class="material-symbols-outlined">support_agent</span>
-                                    Hỗ trợ
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    
                     <li class="mt-auto">
                         <a href="{{ url_for('profile') }}" class="block p-3 bg-slate-50 dark:bg-slate-800 rounded-lg mb-3 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                             <p class="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">Xin chào</p>
@@ -135,9 +129,6 @@
 
         <!-- Main Content -->
         <main class="p-4 pb-24 lg:pb-6 min-h-screen max-w-6xl mx-auto">
-            <!-- Flash Messages -->
-            <div id="flash-messages"></div>
-
             <!-- Summary Cards with Gradient -->
             <div class="grid grid-cols-3 gap-2 md:gap-3 mb-6">
                 <div onclick="filterByStatus('pending')" class="relative overflow-hidden rounded-lg md:rounded-xl p-3 md:p-6 bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg cursor-pointer hover:scale-105 transition-transform">
@@ -241,6 +232,27 @@
                 <button onclick="approveRequest()" 
                         class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                     Duyệt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reason Detail Modal -->
+    <div id="reason-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onclick="closeReasonModal()">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full" onclick="event.stopPropagation()">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Lý do tăng ca</h3>
+                <button onclick="closeReasonModal()" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                    <span class="material-symbols-outlined text-slate-500">close</span>
+                </button>
+            </div>
+            <div class="p-6">
+                <p id="reason-content" class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap"></p>
+            </div>
+            <div class="p-6 border-t border-slate-200 dark:border-slate-700">
+                <button onclick="closeReasonModal()" 
+                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Đóng
                 </button>
             </div>
         </div>
@@ -444,19 +456,28 @@
                                     <p class="font-semibold text-slate-900">${formatDate(r.overtime_date)}</p>
                                 </div>
                                 <div>
-                                    <p class="text-xs text-slate-500 mb-1">Thời gian</p>
-                                    <p class="font-semibold text-slate-900">${r.start_time} - ${r.end_time}</p>
+                                    <p class="text-xs text-slate-500 mb-1">Số người</p>
+                                    ${r.status === 'pending' ? `
+                                        <input type="number" 
+                                               value="${r.total_hours}" 
+                                               min="1" 
+                                               max="9999"
+                                               onchange="updatePeopleCount(${r.id}, this.value)"
+                                               class="w-20 px-2 py-1 text-center border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-bold text-blue-700">
+                                    ` : `
+                                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm font-bold">
+                                            <span class="material-symbols-outlined text-xs">group</span>
+                                            ${r.total_hours} người
+                                        </span>
+                                    `}
                                 </div>
-                                <div>
-                                    <p class="text-xs text-slate-500 mb-1">Tổng giờ</p>
-                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-bold">
-                                        <span class="material-symbols-outlined text-xs">timer</span>
-                                        ${r.total_hours}h
-                                    </span>
-                                </div>
-                                <div>
+                                <div class="col-span-2">
                                     <p class="text-xs text-slate-500 mb-1">Lý do</p>
-                                    <p class="text-sm text-slate-700 line-clamp-2">${r.reason}</p>
+                                    <p class="text-sm text-slate-700 cursor-pointer hover:text-blue-600" 
+                                       onclick="showReasonModal('${escapedReason}')"
+                                       title="Click để xem chi tiết">
+                                        ${r.reason.length > 20 ? r.reason.substring(0, 20) + '...' : r.reason}
+                                    </p>
                                 </div>
                             </div>
                             
@@ -479,8 +500,7 @@
                                     </th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Nhân viên</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Ngày</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Thời gian</th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Tổng giờ</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Số người</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Lý do</th>
                                     <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Trạng thái</th>
                                     <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Thao tác</th>
@@ -547,17 +567,27 @@
                             <td class="px-4 py-3">
                                 <p class="text-sm text-slate-700 dark:text-slate-300 font-medium">${formatDate(r.overtime_date)}</p>
                             </td>
-                            <td class="px-4 py-3">
-                                <p class="text-sm text-slate-700 dark:text-slate-300">${r.start_time} - ${r.end_time}</p>
-                            </td>
                             <td class="px-4 py-3 text-center">
-                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-sm font-bold">
-                                    <span class="material-symbols-outlined text-xs">timer</span>
-                                    ${r.total_hours}h
-                                </span>
+                                ${r.status === 'pending' ? `
+                                    <input type="number" 
+                                           value="${r.total_hours}" 
+                                           min="1" 
+                                           max="9999"
+                                           onchange="updatePeopleCount(${r.id}, this.value)"
+                                           class="w-20 px-2 py-1 text-center border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-bold text-blue-700">
+                                ` : `
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg text-sm font-bold">
+                                        <span class="material-symbols-outlined text-xs">group</span>
+                                        ${r.total_hours} người
+                                    </span>
+                                `}
                             </td>
                             <td class="px-4 py-3">
-                                <p class="text-sm text-slate-700 dark:text-slate-300 line-clamp-2" title="${escapedReason}">${r.reason}</p>
+                                <p class="text-sm text-slate-700 dark:text-slate-300 cursor-pointer hover:text-blue-600" 
+                                   onclick="showReasonModal('${escapedReason}')" 
+                                   title="Click để xem chi tiết">
+                                    ${r.reason.length > 20 ? r.reason.substring(0, 20) + '...' : r.reason}
+                                </p>
                             </td>
                             <td class="px-4 py-3 text-center">
                                 ${statusBadge}
@@ -625,6 +655,32 @@
             });
         }
 
+        function updatePeopleCount(id, newCount) {
+            if (!newCount || newCount < 1) {
+                loadRequests();
+                return;
+            }
+
+            fetch(`/manager/overtime-requests/${id}/update-count`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({total_hours: newCount})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Cập nhật thành công - không hiển thị thông báo
+                    loadRequests();
+                } else {
+                    loadRequests();
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                loadRequests();
+            });
+        }
+
         function formatDate(dateStr) {
             const date = new Date(dateStr);
             const day = date.getDate();
@@ -642,15 +698,51 @@
             return `${day}/${month} ${hours}:${minutes}`;
         }
 
+        function showReasonModal(reason) {
+            const modal = document.getElementById('reason-modal');
+            const content = document.getElementById('reason-content');
+            content.textContent = reason;
+            modal.classList.remove('hidden');
+        }
+
+        function closeReasonModal() {
+            const modal = document.getElementById('reason-modal');
+            modal.classList.add('hidden');
+        }
+
         function showFlash(message, type) {
-            const container = document.getElementById('flash-messages');
-            const bgColor = type === 'error' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200';
-            container.innerHTML = `
-                <div class="mb-4 p-4 rounded-lg border ${bgColor}">
-                    ${message}
-                </div>
+            // Create toast container if not exists
+            let toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toast-container';
+                toastContainer.className = 'fixed top-4 right-4 z-50 space-y-2';
+                document.body.appendChild(toastContainer);
+            }
+
+            // Create toast element
+            const toast = document.createElement('div');
+            const bgColor = type === 'error' ? 'bg-red-500' : 'bg-green-500';
+            const icon = type === 'error' ? 'error' : 'check_circle';
+            
+            toast.className = `${bgColor} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] animate-slide-in`;
+            toast.innerHTML = `
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">${icon}</span>
+                <span class="flex-1 font-medium">${message}</span>
+                <button onclick="this.parentElement.remove()" class="hover:bg-white/20 rounded p-1">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
             `;
-            setTimeout(() => container.innerHTML = '', 3000);
+            
+            toastContainer.appendChild(toast);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
     </script>
 

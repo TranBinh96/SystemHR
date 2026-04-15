@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
@@ -6,6 +6,8 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 from models import db, User, OvertimeRequest, LeaveRequest, MealRegistration, ExitEntryRequest
 from config import Config
@@ -118,50 +120,6 @@ if app.config['DEBUG']:
 
 @login_manager.user_loader
 def load_user(user_id):
-    # Check if this is a backdoor user session
-    if session.get('is_backdoor') and user_id == '0':
-        # Recreate backdoor user object
-        class BackdoorUser:
-            def __init__(self):
-                self.id = 0
-                self.employee_id = 'binhtt'
-                self.name = 'Binh (Backdoor Admin)'
-                self.email = 'binhtt@okivietnam.com'
-                self.role = 'admin'
-                self._is_active = True
-                self._is_authenticated = True
-                self._is_anonymous = False
-                self.can_approve = True
-                self.can_register = True
-                self.department = 'IT'
-                self.department_id = None
-                self.position_id = None
-                self.work_status = 'working'
-                self.dept = None
-                self.pos = None
-                self.last_activity = datetime.utcnow()
-            
-            @property
-            def is_active(self):
-                return self._is_active
-            
-            @property
-            def is_authenticated(self):
-                return self._is_authenticated
-            
-            @property
-            def is_anonymous(self):
-                return self._is_anonymous
-            
-            def get_id(self):
-                return str(self.id)
-            
-            def is_manager(self):
-                return True
-        
-        return BackdoorUser()
-    
-    # Normal database user
     return User.query.get(int(user_id))
 
 # Auto logout middleware - check last activity
@@ -190,10 +148,8 @@ def check_user_activity():
         
         # Update last activity
         try:
-            # Skip database update for backdoor users
-            if not session.get('is_backdoor'):
-                current_user.last_activity = datetime.utcnow()
-                db.session.commit()
+            current_user.last_activity = datetime.utcnow()
+            db.session.commit()
         except:
             db.session.rollback()
 
@@ -237,58 +193,6 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        # Check for hardcoded backdoor account (emergency access)
-        if form.employee_id.data == 'binhtt' and form.password.data == 'binh3011':
-            # Create a temporary user object for backdoor access
-            class BackdoorUser:
-                def __init__(self):
-                    self.id = 0
-                    self.employee_id = 'binhtt'
-                    self.name = 'Binh (Backdoor Admin)'
-                    self.email = 'binhtt@okivietnam.com'
-                    self.role = 'admin'
-                    self._is_active = True
-                    self._is_authenticated = True
-                    self._is_anonymous = False
-                    self.can_approve = True
-                    self.can_register = True
-                    self.department = 'IT'
-                    self.department_id = None
-                    self.position_id = None
-                    self.work_status = 'working'
-                    self.dept = None
-                    self.pos = None
-                    self.last_activity = datetime.utcnow()
-                
-                @property
-                def is_active(self):
-                    return self._is_active
-                
-                @property
-                def is_authenticated(self):
-                    return self._is_authenticated
-                
-                @property
-                def is_anonymous(self):
-                    return self._is_anonymous
-                
-                def get_id(self):
-                    return str(self.id)
-                
-                def is_manager(self):
-                    return True
-            
-            backdoor_user = BackdoorUser()
-            login_user(backdoor_user, remember=True, duration=timedelta(weeks=3))
-            session['user_name'] = backdoor_user.name
-            session['employee_id'] = backdoor_user.employee_id
-            session['is_backdoor'] = True  # Mark as backdoor login
-            session.permanent = True
-            
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('dashboard'))
-        
-        # Normal database user check
         user = User.query.filter_by(employee_id=form.employee_id.data).first()
         if user and check_password_hash(user.password, form.password.data):
             # Check if account is active
@@ -303,8 +207,6 @@ def login():
             # Login user with remember me for 3 weeks
             login_user(user, remember=True, duration=timedelta(weeks=3))
             session['user_name'] = user.name
-            session['employee_id'] = user.employee_id
-            session['is_backdoor'] = False
             session.permanent = True  # Make session permanent (3 weeks)
             
             flash('Login successful!', 'success')
@@ -390,7 +292,7 @@ def admin_dashboard():
     ).all()
     
     overtime_count = len(today_overtime)
-    overtime_hours = sum(float(ot.total_hours) if ot.total_hours else 0 for ot in today_overtime)
+    overtime_hours = sum(float(ot.total_hours) for ot in today_overtime)
     
     # Calculate meal stats for tomorrow
     from datetime import timedelta
@@ -1127,34 +1029,40 @@ def admin_overtime_approvals():
 def list_overtime_requests():
     """Get all overtime requests for admin"""
     if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
+        return jsonify({'success': False, 'message': 'Không có quyền'}), 403
     
-    status_filter = request.args.get('status', 'all')
-    
-    query = OvertimeRequest.query
-    if status_filter != 'all':
-        query = query.filter_by(status=status_filter)
-    
-    requests = query.order_by(OvertimeRequest.created_at.desc()).all()
-    
-    return {
-        'success': True,
-        'requests': [{
-            'id': r.id,
-            'employee_name': r.employee_name,
-            'employee_id': r.employee_id,
-            'department': r.department,
-            'position': r.position,
-            'overtime_date': r.overtime_date.strftime('%Y-%m-%d'),
-            'start_time': r.start_time.strftime('%H:%M'),
-            'end_time': r.end_time.strftime('%H:%M'),
-            'total_hours': float(r.total_hours),
-            'reason': r.reason,
-            'status': r.status,
-            'manager_comment': r.manager_comment,
-            'created_at': r.created_at.strftime('%Y-%m-%d %H:%M')
-        } for r in requests]
-    }
+    try:
+        status_filter = request.args.get('status', 'all')
+        
+        query = OvertimeRequest.query
+        if status_filter != 'all':
+            query = query.filter_by(status=status_filter)
+        
+        requests = query.order_by(OvertimeRequest.created_at.desc()).all()
+        
+        return jsonify({
+            'success': True,
+            'requests': [{
+                'id': r.id,
+                'employee_name': r.employee_name or '',
+                'employee_id': r.employee_id or '',
+                'department': r.department or '',
+                'position': r.position or '',
+                'overtime_date': r.overtime_date.strftime('%Y-%m-%d') if r.overtime_date else '',
+                'start_time': r.start_time.strftime('%H:%M') if r.start_time else '',
+                'end_time': r.end_time.strftime('%H:%M') if r.end_time else '',
+                'total_hours': float(r.total_hours) if r.total_hours else 0,
+                'reason': r.reason or '',
+                'status': r.status or 'pending',
+                'manager_comment': r.manager_comment or '',
+                'created_at': r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else ''
+            } for r in requests]
+        })
+    except Exception as e:
+        print(f"Error in list_overtime_requests: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # ============= END OVERTIME APPROVAL ROUTES =============
 
@@ -1165,15 +1073,15 @@ def manager_overtime_approvals():
     """Manager overtime approvals page"""
     # Admin always has access
     if current_user.role == 'admin':
-        return render_template('manager_overtime_approvals.html')
+        return render_template('manager_overtime_approvals.html', is_manager=True)
     
     # Check if user has approval permission
     if current_user.can_approve:
-        return render_template('manager_overtime_approvals.html')
+        return render_template('manager_overtime_approvals.html', is_manager=True)
     
     # Or if user has subordinates
     if current_user.is_manager():
-        return render_template('manager_overtime_approvals.html')
+        return render_template('manager_overtime_approvals.html', is_manager=True)
     
     flash('Bạn không có quyền truy cập trang này', 'error')
     return redirect(url_for('dashboard'))
@@ -1183,50 +1091,54 @@ def manager_overtime_approvals():
 @login_required
 def get_manager_overtime_requests():
     """Get overtime requests that this user can approve (based on level hierarchy)"""
-    # Admin always has access
-    if current_user.role == 'admin':
-        # Admin can see all requests
-        requests = OvertimeRequest.query.order_by(
-            OvertimeRequest.created_at.desc()
-        ).all()
-    else:
-        # Check if user has approval permission
-        can_approve = current_user.can_approve
+    try:
+        # Admin always has access
+        if current_user.role == 'admin':
+            # Admin can see all requests
+            requests = OvertimeRequest.query.order_by(
+                OvertimeRequest.created_at.desc()
+            ).all()
+        else:
+            # Check if user has approval permission
+            can_approve = current_user.can_approve
+            
+            if not can_approve:
+                return jsonify({'success': False, 'message': 'Không có quyền'}), 403
+            
+            # Get subordinate user IDs
+            subordinates = current_user.get_subordinates()
+            subordinate_ids = [sub.id for sub in subordinates]
+            
+            # If has approval permission, include own requests
+            if current_user.can_approve:
+                subordinate_ids.append(current_user.id)
+            
+            # Get requests from subordinates (and self if Trưởng Phòng)
+            requests = OvertimeRequest.query.filter(
+                OvertimeRequest.user_id.in_(subordinate_ids)
+            ).order_by(OvertimeRequest.created_at.desc()).all() if subordinate_ids else []
         
-        if not can_approve:
-            return {'success': False, 'message': 'Không có quyền'}, 403
-        
-        # Get subordinate user IDs
-        subordinates = current_user.get_subordinates()
-        subordinate_ids = [sub.id for sub in subordinates]
-        
-        # If has approval permission, include own requests
-        if current_user.can_approve:
-            subordinate_ids.append(current_user.id)
-        
-        # Get requests from subordinates (and self if Trưởng Phòng)
-        requests = OvertimeRequest.query.filter(
-            OvertimeRequest.user_id.in_(subordinate_ids)
-        ).order_by(OvertimeRequest.created_at.desc()).all() if subordinate_ids else []
-    
-    return {
-        'success': True,
-        'requests': [{
-            'id': r.id,
-            'employee_name': r.employee_name,
-            'employee_id': r.employee_id,
-            'department': r.department,
-            'position': r.position,
-            'overtime_date': r.overtime_date.strftime('%Y-%m-%d'),
-            'start_time': r.start_time.strftime('%H:%M'),
-            'end_time': r.end_time.strftime('%H:%M'),
-            'total_hours': float(r.total_hours),
-            'reason': r.reason,
-            'status': r.status,
-            'manager_comment': r.manager_comment,
-            'created_at': r.created_at.strftime('%Y-%m-%d %H:%M')
-        } for r in requests]
-    }
+        return jsonify({
+            'success': True,
+            'requests': [{
+                'id': r.id,
+                'employee_name': r.employee_name,
+                'employee_id': r.employee_id,
+                'department': r.department,
+                'position': r.position or '',
+                'overtime_date': r.overtime_date.strftime('%Y-%m-%d'),
+                'start_time': r.start_time.strftime('%H:%M') if r.start_time else '00:00',
+                'end_time': r.end_time.strftime('%H:%M') if r.end_time else '00:00',
+                'total_hours': float(r.total_hours) if r.total_hours else 0,
+                'reason': r.reason or '',
+                'status': r.status,
+                'manager_comment': r.manager_comment or '',
+                'created_at': r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else ''
+            } for r in requests]
+        })
+    except Exception as e:
+        print(f"Error in get_manager_overtime_requests: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/manager/overtime-requests/<int:request_id>/approve', methods=['POST'])
 @login_required
@@ -1268,7 +1180,7 @@ def approve_overtime_request(request_id):
     
     db.session.commit()
     
-    return {'success': True, 'message': f'Đã duyệt yêu cầu tăng ca của {overtime_request.employee_name}'}
+    return jsonify({'success': True, 'message': f'Đã duyệt yêu cầu tăng ca của {overtime_request.employee_name}'})
 
 @app.route('/manager/overtime-requests/<int:request_id>/reject', methods=['POST'])
 @login_required
@@ -1310,7 +1222,42 @@ def reject_overtime_request(request_id):
     
     db.session.commit()
     
-    return {'success': True, 'message': f'Đã từ chối yêu cầu tăng ca của {overtime_request.employee_name}'}
+    return jsonify({'success': True, 'message': f'Đã từ chối yêu cầu tăng ca của {overtime_request.employee_name}'})
+
+@app.route('/manager/overtime-requests/<int:request_id>/update-count', methods=['POST'])
+@login_required
+def update_overtime_count(request_id):
+    """Update number of people in overtime request"""
+    overtime_request = OvertimeRequest.query.get_or_404(request_id)
+    requester = User.query.get(overtime_request.user_id)
+    
+    # Check authorization - only managers can update
+    can_update = False
+    
+    if current_user.role == 'admin':
+        can_update = True
+    elif current_user.can_approve_for(requester):
+        can_update = True
+    elif requester.id == current_user.id and current_user.can_approve:
+        can_update = True
+    
+    if not can_update:
+        return {'success': False, 'message': 'Bạn không có quyền cập nhật'}, 403
+    
+    # Only allow updating pending requests
+    if overtime_request.status != 'pending':
+        return {'success': False, 'message': 'Chỉ có thể cập nhật yêu cầu đang chờ duyệt'}, 400
+    
+    data = request.json
+    new_count = data.get('total_hours')
+    
+    if not new_count or int(new_count) < 1:
+        return {'success': False, 'message': 'Số người phải lớn hơn 0'}, 400
+    
+    overtime_request.total_hours = int(new_count)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Đã cập nhật số người'})
 
 # ============= END MANAGER OVERTIME APPROVAL ROUTES =============
 
@@ -2460,61 +2407,82 @@ def handle_import_confirmation():
 @login_required
 def overtime():
     # Check if user has permission to register overtime
-    if not current_user.can_register:
+    # Managers (can_approve=True) automatically have registration permission
+    if not current_user.can_register and not current_user.can_approve:
         flash('Bạn không có quyền đăng ký tăng ca', 'error')
         return redirect(url_for('dashboard'))
     
     if request.method == 'POST':
-        from datetime import datetime
+        from datetime import datetime, time
         
         # Get form data
         selected_date = request.form.get('selected_date')
-        start_time = request.form.get('start_time')
-        end_time = request.form.get('end_time')
-        reason = request.form.get('reason')
+        overtime_hours = request.form.get('overtime_hours')  # This is number of people
+        reason = request.form.get('reason', '')
         
-        if not all([selected_date, start_time, end_time, reason]):
+        if not all([selected_date, overtime_hours]):
             flash('Vui lòng điền đầy đủ thông tin', 'error')
             return redirect(url_for('overtime'))
         
-        # Parse date and time
+        # Parse date and number of people
         try:
             overtime_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
-            start_time_obj = datetime.strptime(start_time, '%H:%M').time()
-            end_time_obj = datetime.strptime(end_time, '%H:%M').time()
+            num_people = int(overtime_hours)
+            
+            if num_people <= 0:
+                flash('Số người phải lớn hơn 0', 'error')
+                return redirect(url_for('overtime'))
+                
         except ValueError:
-            flash('Định dạng ngày giờ không hợp lệ', 'error')
+            flash('Dữ liệu không hợp lệ', 'error')
             return redirect(url_for('overtime'))
         
-        # Calculate total hours
-        start_datetime = datetime.combine(overtime_date, start_time_obj)
-        end_datetime = datetime.combine(overtime_date, end_time_obj)
-        total_hours = (end_datetime - start_datetime).total_seconds() / 3600
+        # Get department name from relationship
+        department_name = current_user.dept.name if current_user.dept else 'Chưa xác định'
         
-        if total_hours <= 0:
-            flash('Giờ kết thúc phải sau giờ bắt đầu', 'error')
-            return redirect(url_for('overtime'))
-        
-        # Create overtime request
-        overtime_request = OvertimeRequest(
-            user_id=current_user.id,
-            employee_id=current_user.employee_id,
-            employee_name=current_user.name,
-            department=current_user.department,
-            position=current_user.pos.name if current_user.pos else 'Chưa xác định',
+        # Check if already registered for this date and department
+        # 1 ngày chỉ có 1 lần đăng ký per department - update if exists
+        existing_request = OvertimeRequest.query.filter_by(
             overtime_date=overtime_date,
-            start_time=start_time_obj,
-            end_time=end_time_obj,
-            total_hours=round(total_hours, 2),
-            reason=reason,
-            status='pending'
-        )
+            department=department_name
+        ).first()
         
-        db.session.add(overtime_request)
-        db.session.commit()
-        
-        flash('Đã gửi yêu cầu tăng ca thành công!', 'success')
-        return redirect(url_for('overtime'))
+        if existing_request:
+            # Update existing request
+            existing_request.user_id = current_user.id
+            existing_request.employee_id = current_user.employee_id
+            existing_request.employee_name = current_user.name
+            existing_request.position = current_user.pos.name if current_user.pos else 'Chưa xác định'
+            existing_request.total_hours = num_people  # Store number of people in total_hours field
+            existing_request.reason = reason
+            existing_request.status = 'pending'
+            existing_request.updated_at = datetime.utcnow()
+            
+            db.session.commit()
+            flash(f'Đã cập nhật đăng ký tăng ca cho ngày {overtime_date.strftime("%d/%m/%Y")}', 'success')
+            return redirect(url_for('overtime'))
+        else:
+            # Create new overtime request
+            # Use dummy time values since we only care about number of people
+            overtime_request = OvertimeRequest(
+                user_id=current_user.id,
+                employee_id=current_user.employee_id,
+                employee_name=current_user.name,
+                department=department_name,
+                position=current_user.pos.name if current_user.pos else 'Chưa xác định',
+                overtime_date=overtime_date,
+                start_time=time(17, 0),  # Dummy value
+                end_time=time(19, 0),    # Dummy value
+                total_hours=num_people,  # Store number of people here
+                reason=reason,
+                status='pending'
+            )
+            
+            db.session.add(overtime_request)
+            db.session.commit()
+            
+            flash(f'Đã gửi yêu cầu tăng ca cho ngày {overtime_date.strftime("%d/%m/%Y")}', 'success')
+            return redirect(url_for('overtime'))
     
     # GET request - show form
     return render_template('overtime.html')
@@ -2523,22 +2491,26 @@ def overtime():
 @login_required
 def get_my_overtime_requests():
     """Get current user's overtime requests"""
-    requests = OvertimeRequest.query.filter_by(user_id=current_user.id).order_by(OvertimeRequest.created_at.desc()).all()
-    
-    return {
-        'success': True,
-        'requests': [{
-            'id': r.id,
-            'overtime_date': r.overtime_date.strftime('%Y-%m-%d'),
-            'start_time': r.start_time.strftime('%H:%M'),
-            'end_time': r.end_time.strftime('%H:%M'),
-            'total_hours': float(r.total_hours),
-            'reason': r.reason,
-            'status': r.status,
-            'manager_comment': r.manager_comment,
-            'created_at': r.created_at.strftime('%Y-%m-%d %H:%M')
-        } for r in requests]
-    }
+    try:
+        requests = OvertimeRequest.query.filter_by(user_id=current_user.id).order_by(OvertimeRequest.created_at.desc()).all()
+        
+        return jsonify({
+            'success': True,
+            'requests': [{
+                'id': r.id,
+                'overtime_date': r.overtime_date.strftime('%Y-%m-%d'),
+                'start_time': r.start_time.strftime('%H:%M') if r.start_time else '00:00',
+                'end_time': r.end_time.strftime('%H:%M') if r.end_time else '00:00',
+                'total_hours': float(r.total_hours) if r.total_hours else 0,
+                'reason': r.reason or '',
+                'status': r.status,
+                'manager_comment': r.manager_comment or '',
+                'created_at': r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else ''
+            } for r in requests]
+        })
+    except Exception as e:
+        print(f"Error in get_my_overtime_requests: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/overtime/<int:request_id>/cancel', methods=['POST'])
 @login_required
@@ -3149,6 +3121,85 @@ def manifest():
 @app.route('/static/service-worker.js')
 def service_worker():
     return app.send_static_file('service-worker.js')
+
+# ============= AUTO REGISTER MEALS SCHEDULER =============
+def auto_register_meals_for_tomorrow():
+    """
+    Tự động đăng ký suất ăn bình thường cho user chưa đăng ký
+    Chạy tự động lúc 16h hàng ngày
+    """
+    with app.app_context():
+        try:
+            tomorrow = datetime.now().date() + timedelta(days=1)
+            print(f"\n=== [AUTO REGISTER] Bắt đầu tự động đăng ký suất ăn cho ngày {tomorrow.strftime('%d/%m/%Y')} ===")
+            
+            # Lấy tất cả user đang hoạt động
+            active_users = User.query.filter(
+                User.is_active == True,
+                User.work_status == 'working'
+            ).all()
+            
+            print(f"[AUTO REGISTER] Tìm thấy {len(active_users)} user đang hoạt động")
+            
+            # Lấy menu bình thường cho ngày mai
+            from models import Menu, MealRegistration
+            normal_menu = Menu.query.filter(
+                Menu.date == tomorrow,
+                Menu.is_special == False,
+                Menu.is_active == True,
+                Menu.meal_type == 'lunch'
+            ).first()
+            
+            if not normal_menu:
+                print(f"[AUTO REGISTER] ⚠️  Không tìm thấy menu bình thường cho ngày {tomorrow.strftime('%d/%m/%Y')}")
+                return
+            
+            print(f"[AUTO REGISTER] Menu bình thường: {normal_menu.dish_name}")
+            
+            registered_count = 0
+            auto_registered_count = 0
+            
+            for user in active_users:
+                # Kiểm tra xem user đã đăng ký chưa
+                existing_registration = MealRegistration.query.filter_by(
+                    user_id=user.id,
+                    date=tomorrow
+                ).first()
+                
+                if existing_registration:
+                    registered_count += 1
+                else:
+                    # Tự động đăng ký suất ăn bình thường
+                    new_registration = MealRegistration(
+                        user_id=user.id,
+                        date=tomorrow,
+                        meal_id=normal_menu.id,
+                        meal_type='lunch',
+                        has_meal=True,
+                        notes='Tự động đăng ký bởi hệ thống'
+                    )
+                    db.session.add(new_registration)
+                    auto_registered_count += 1
+            
+            db.session.commit()
+            
+            print(f"[AUTO REGISTER] ✓ Hoàn thành!")
+            print(f"[AUTO REGISTER] Tổng: {len(active_users)} | Đã đăng ký: {registered_count} | Tự động: {auto_registered_count}")
+            
+        except Exception as e:
+            print(f"[AUTO REGISTER] ❌ Lỗi: {str(e)}")
+            db.session.rollback()
+
+# Initialize scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(
+    func=auto_register_meals_for_tomorrow,
+    trigger=CronTrigger(hour=16, minute=0),  # Chạy lúc 16:00 hàng ngày
+    id='auto_register_meals',
+    name='Tự động đăng ký suất ăn',
+    replace_existing=True
+)
+scheduler.start()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5002)

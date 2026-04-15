@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetRight="-4dp">
+    <layer-list>
+        <!-- Background -->
+        <item>
+            <shape android:shape="rectangle">
+                <solid android:color="#E8F5E9" />
+                <corners android:radius="12dp" />
+            </shape>
+        </item>
+        <!-- Right border -->
+        <item android:gravity="right">
+            <shape android:shape="rectangle">
+                <solid android:color="@color/culinary_primary" />
+                <size android:width="4dp" />
+            </shape>
+        </item>
+    </layer-list>
+</inset>

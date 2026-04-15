@@ -472,7 +472,7 @@
                                     <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
                                 </select>
                             </div>
-                            <button onclick="openEditModal({{ user.id }}, '{{ user.employee_id }}', '{{ user.name }}', '{{ user.dept.name if user.dept else user.department or '' }}', '{{ user.position_id or '' }}', '{{ user.role }}', {{ user.is_active|int }}, '{{ user.avatar_url|default('') }}', {{ user.can_approve|int }}, {{ user.can_register|int }}, '{{ user.work_status|default('working') }}')" 
+                            <button onclick="openEditModal({{ user.id }}, '{{ user.employee_id }}', '{{ user.name }}', '{{ user.dept.name if user.dept else user.department or '' }}', '{{ user.position_id or '' }}', '{{ user.role }}', {{ user.is_active|int }}, '{{ user.avatar_url|default('') }}', {{ user.can_approve|int }}, {{ user.can_register|int }}, '{{ user.work_status|default('working') }}', {{ user.overtime_approver_id or 'null' }})" 
                                     class="mt-5 p-3 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400"
                                     title="Sửa">
                                 <span class="material-symbols-outlined">edit</span>
@@ -736,7 +736,7 @@
                                     <option value="0">Không có quyền phê duyệt</option>
                                 </select>
                             </div>
-                            
+
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                                     Quyền đăng ký
@@ -762,20 +762,8 @@
                             </div>
                         </div>
 
-                        <!-- Row 4: Trạng thái + Mật khẩu -->
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                    Quyền
-                                </label>
-                                <select id="editRole" 
-                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                        onchange="checkFormChanges()">
-                                    <option value="user">User</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-
+                        <!-- Row 4: Trạng thái -->
+                        <div class="grid grid-cols-1 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                                     Trạng thái
@@ -967,7 +955,7 @@
             }, 3000);
         }
 
-        window.openEditModal = function(userId, employeeId, name, department, position, role, isActive, avatarUrl, canApprove, canRegister, workStatus) {
+        window.openEditModal = function(userId, employeeId, name, department, position, role, isActive, avatarUrl, canApprove, canRegister, workStatus, overtimeApproverId) {
             
             try {
                 document.getElementById('editUserId').value = userId;
@@ -1027,7 +1015,7 @@
                         canRegisterSelect.value = canRegister ? '1' : '0';
                     }
                     
-                }, 100); // Reduced timeout since no async loading needed
+                }, 300); // Increased timeout to wait for API response
                 
                 // Store original values for comparison
                 window.originalEditValues = {
@@ -1165,6 +1153,63 @@
         function populatePositionList() {
             // Position dropdown is now populated from server-side template
             // No need for dynamic population since we use server-side template for positions
+        }
+
+        function populateOvertimeApprovers(selectedValue) {
+            // Fetch users with can_approve = True in the same department
+            console.log('=== populateOvertimeApprovers called ===');
+            console.log('Selected value to restore:', selectedValue);
+            
+            // Get current user's department
+            const departmentSelect = document.getElementById('editDepartment');
+            const currentDepartment = departmentSelect ? departmentSelect.value : '';
+            
+            console.log('Current department:', currentDepartment);
+            
+            // Build API URL with department filter
+            let apiUrl = '/api/users?can_approve=1';
+            if (currentDepartment) {
+                apiUrl += `&department=${encodeURIComponent(currentDepartment)}`;
+            }
+            
+            console.log('API URL:', apiUrl);
+            
+            fetch(apiUrl)
+                .then(res => res.json())
+                .then(data => {
+                    console.log('API response:', data);
+                    const select = document.getElementById('editOvertimeApproverId');
+                    if (!select) {
+                        console.error('editOvertimeApproverId select not found!');
+                        return;
+                    }
+                    
+                    // Keep the default option
+                    select.innerHTML = '<option value="">-- Chưa chỉ định --</option>';
+                    
+                    // Add approvers
+                    if (data.success && data.users) {
+                        console.log(`Found ${data.users.length} approvers in department`);
+                        data.users.forEach(user => {
+                            const option = document.createElement('option');
+                            option.value = user.id;
+                            option.textContent = `${user.name} (${user.employee_id})`;
+                            select.appendChild(option);
+                        });
+                        
+                        // Set the selected value AFTER options are loaded
+                        if (selectedValue) {
+                            select.value = selectedValue;
+                            console.log('Set selected value to:', selectedValue);
+                            console.log('Dropdown value after set:', select.value);
+                        }
+                    } else {
+                        console.error('No users found or API error');
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading approvers:', err);
+                });
         }
 
         window.checkFormChanges = function() {
@@ -1450,6 +1495,10 @@
                     can_approve: document.getElementById('editCanApprove').value === '1',
                     can_register: document.getElementById('editCanRegister').value === '1'
                 };
+                
+                console.log('=== Saving user data ===');
+                console.log('overtime_approver_id value:', document.getElementById('editOvertimeApproverId').value);
+                console.log('Full data:', data);
                 
                 const password = document.getElementById('editPassword').value;
                 if (password) {

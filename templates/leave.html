@@ -81,6 +81,7 @@
                         <!-- Đăng ký -->
                         <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Đăng ký</div>
                         <ul role="list" class="-mx-2 space-y-1">
+                            {% if can_register_overtime %}
                             <li>
                                 <a href="{{ url_for('overtime') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
                                     <span class="material-symbols-outlined">schedule</span>
@@ -99,6 +100,7 @@
                                     Đơn ra vào
                                 </a>
                             </li>
+                            {% endif %}
                             <li>
                                 <a href="{{ url_for('meals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
                                     <span class="material-symbols-outlined">restaurant</span>
@@ -474,6 +476,7 @@
                 <span class="material-symbols-outlined text-2xl">home</span>
                 <span class="text-[10px] font-bold uppercase">Trang chủ</span>
             </a>
+            {% if can_register_overtime %}
             <a class="flex flex-col items-center gap-1 text-slate-400" href="{{ url_for('overtime') }}">
                 <span class="material-symbols-outlined text-2xl">schedule</span>
                 <span class="text-[10px] font-bold uppercase">Tăng ca</span>
@@ -482,6 +485,7 @@
                 <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">event_busy</span>
                 <span class="text-[10px] font-bold uppercase">Nghỉ phép</span>
             </a>
+            {% endif %}
             <a class="flex flex-col items-center gap-1 text-slate-400" href="{{ url_for('meals') }}">
                 <span class="material-symbols-outlined text-2xl">restaurant</span>
                 <span class="text-[10px] font-bold uppercase">Suất ăn</span>

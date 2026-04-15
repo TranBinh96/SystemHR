@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Culinary Concierge Color Palette -->
+    <color name="culinary_primary">#006E37</color>
+    <color name="culinary_primary_light">#75F39C</color>
+    <color name="culinary_primary_container">#75F39C</color>
+    <color name="culinary_on_primary">#E8FFE8</color>
+    
+    <color name="culinary_secondary">#49636F</color>
+    <color name="culinary_secondary_container">#CBE7F5</color>
+    <color name="culinary_on_secondary">#F2FAFF</color>
+    
+    <color name="culinary_tertiary">#596432</color>
+    <color name="culinary_tertiary_container">#F0FDBD</color>
+    <color name="culinary_on_tertiary">#F3FFC3</color>
+    
+    <color name="culinary_surface">#F8F9FB</color>
+    <color name="culinary_surface_container">#EAEFF2</color>
+    <color name="culinary_surface_container_low">#F0F4F7</color>
+    <color name="culinary_surface_container_high">#E3E9ED</color>
+    <color name="culinary_surface_container_highest">#DCE4E8</color>
+    <color name="culinary_on_surface">#2C3437</color>
+    <color name="culinary_on_surface_variant">#596064</color>
+    
+    <color name="culinary_error">#A83836</color>
+    <color name="culinary_on_error">#FFF7F6</color>
+    
+    <color name="culinary_outline">#747C80</color>
+    <color name="culinary_outline_variant">#ACB3B7</color>
+    
+    <!-- Scanner specific colors -->
+    <color name="scanner_frame">#75F39C</color>
+    <color name="scanner_overlay">#80000000</color>
+    <color name="status_active">#27AE60</color>
+</resources>

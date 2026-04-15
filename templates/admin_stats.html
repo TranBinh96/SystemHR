@@ -139,9 +139,8 @@
                         </div>
                     </div>
                     <div class="flex bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <button onclick="changePeriod('today')" id="btn-today" class="px-4 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 rounded">Hôm nay</button>
-                        <button onclick="changePeriod('tomorrow')" id="btn-tomorrow" class="px-4 py-1.5 text-xs font-bold rounded bg-green-600 text-white">Ngày mai</button>
-                        <button onclick="changePeriod('week')" id="btn-week" class="px-4 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 rounded">Tuần</button>
+                        <button onclick="changePeriod('tomorrow')" id="btn-tomorrow" class="px-4 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 rounded">Ngày mai</button>
+                        <button onclick="changePeriod('week')" id="btn-week" class="px-4 py-1.5 text-xs font-bold rounded bg-green-600 text-white">Tuần</button>
                         <button onclick="changePeriod('month')" id="btn-month" class="px-4 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 rounded">Tháng</button>
                     </div>
                 </div>
@@ -181,24 +180,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="overflow-x-auto">
-                            <div id="dayGroupsContainer" class="overflow-y-auto" style="max-height: 520px; scrollbar-width: none;">
-                                <style>#dayGroupsContainer::-webkit-scrollbar { display: none; }</style>
-                                <table class="w-full text-sm">
-                                    <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
-                                        <tr>
-                                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50 dark:bg-slate-800/50">Ngày</th>
-                                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50 dark:bg-slate-800/50">Nhân viên</th>
-                                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50 dark:bg-slate-800/50">Mã NV</th>
-                                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50 dark:bg-slate-800/50">Phòng ban</th>
-                                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50 dark:bg-slate-800/50">Món ăn</th>
-                                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50 dark:bg-slate-800/50">Loại</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-700">
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div id="dayGroupsContainer" class="divide-y divide-slate-100 dark:divide-slate-800 overflow-y-auto" style="height: 520px; scrollbar-width: none;">
+                            <style>#dayGroupsContainer::-webkit-scrollbar { display: none; }</style>
                         </div>
                         <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
                             <span class="text-xs text-slate-500 font-medium" id="pagination-info">Đang tải...</span>
@@ -232,7 +215,7 @@
     </nav>
 
     <script>
-        let currentPeriod = 'tomorrow';
+        let currentPeriod = 'week';
         let currentPage = 1;
         const itemsPerPage = 10;
         let allRegistrations = [];
@@ -240,10 +223,10 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 1);
-            document.getElementById('filterDateFrom').value = tomorrow.toISOString().split('T')[0];
-            document.getElementById('filterDateTo').value = tomorrow.toISOString().split('T')[0];
+            const sevenDaysAgo = new Date(today);
+            sevenDaysAgo.setDate(today.getDate() - 7);
+            document.getElementById('filterDateFrom').value = sevenDaysAgo.toISOString().split('T')[0];
+            document.getElementById('filterDateTo').value = today.toISOString().split('T')[0];
             loadStatistics();
         });
 
@@ -256,30 +239,6 @@
             const active = document.getElementById('btn-' + period);
             active.classList.remove('text-slate-500','dark:text-slate-400');
             active.classList.add('bg-green-600','text-white','rounded');
-            
-            // Cập nhật date filter dựa trên period
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 1);
-            
-            if (period === 'today') {
-                document.getElementById('filterDateFrom').value = today.toISOString().split('T')[0];
-                document.getElementById('filterDateTo').value = today.toISOString().split('T')[0];
-            } else if (period === 'tomorrow') {
-                document.getElementById('filterDateFrom').value = tomorrow.toISOString().split('T')[0];
-                document.getElementById('filterDateTo').value = tomorrow.toISOString().split('T')[0];
-            } else if (period === 'week') {
-                const sevenDaysAgo = new Date(today);
-                sevenDaysAgo.setDate(today.getDate() - 7);
-                document.getElementById('filterDateFrom').value = sevenDaysAgo.toISOString().split('T')[0];
-                document.getElementById('filterDateTo').value = tomorrow.toISOString().split('T')[0];
-            } else if (period === 'month') {
-                const thirtyDaysAgo = new Date(today);
-                thirtyDaysAgo.setDate(today.getDate() - 30);
-                document.getElementById('filterDateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
-                document.getElementById('filterDateTo').value = tomorrow.toISOString().split('T')[0];
-            }
-            
             currentPage = 1;
             loadStatistics();
         }
@@ -289,6 +248,7 @@
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data.success) {
+                        updateSummaryCards(data.summary);
                         allRegistrations = data.registrations;
                         applyGlobalFilter();
                     }
@@ -296,36 +256,9 @@
         }
 
         function updateSummaryCards(s) {
-            // Lọc theo khoảng ngày và mã nhân viên
-            const dateFrom = document.getElementById('filterDateFrom').value;
-            const dateTo = document.getElementById('filterDateTo').value;
-            
-            const filtered = allRegistrations.filter(function(r) {
-                // Lọc theo mã nhân viên: chỉ lấy mã bắt đầu bằng "10" hoặc "20"
-                if (!r.employee_id.startsWith('10') && !r.employee_id.startsWith('20')) {
-                    return false;
-                }
-                
-                // Lọc theo khoảng ngày
-                if (dateFrom || dateTo) {
-                    const dateParts = r.date.split('/');
-                    if (dateParts.length === 3) {
-                        const rDateFormatted = dateParts[2] + '-' + dateParts[1].padStart(2, '0') + '-' + dateParts[0].padStart(2, '0');
-                        if (dateFrom && rDateFormatted < dateFrom) return false;
-                        if (dateTo && rDateFormatted > dateTo) return false;
-                    }
-                }
-                
-                return true;
-            });
-            
-            const total = filtered.length;
-            const normal = filtered.filter(function(r) { return !r.is_special; }).length;
-            const special = filtered.filter(function(r) { return r.is_special; }).length;
-            
-            document.getElementById('total-meals').textContent = total;
-            document.getElementById('normal-meals').textContent = normal;
-            document.getElementById('special-meals').textContent = special;
+            document.getElementById('total-meals').textContent = s.total;
+            document.getElementById('normal-meals').textContent = s.normal;
+            document.getElementById('special-meals').textContent = s.special;
         }
 
         function applyGlobalFilter() {
@@ -334,11 +267,6 @@
             const dateTo = document.getElementById('filterDateTo').value;
 
             filteredRegistrations = allRegistrations.filter(function(r) {
-                // Lọc theo mã nhân viên: chỉ lấy mã bắt đầu bằng "10" hoặc "20"
-                if (!r.employee_id.startsWith('10') && !r.employee_id.startsWith('20')) {
-                    return false;
-                }
-                
                 if (q && !r.user_name.toLowerCase().includes(q) &&
                     !r.employee_id.toLowerCase().includes(q) &&
                     !(r.department || '').toLowerCase().includes(q)) return false;
@@ -354,7 +282,6 @@
                 return true;
             });
             currentPage = 1;
-            updateSummaryCards();
             renderDayGroups();
         }
 
@@ -395,15 +322,15 @@
 
             const start = (currentPage - 1) * itemsPerPage;
             const pageGroups = groups.slice(start, start + itemsPerPage);
-            const tbody = document.getElementById('tableBody');
+            const container = document.getElementById('dayGroupsContainer');
 
             if (pageGroups.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-20"><div class="flex flex-col items-center justify-center text-slate-400"><span class="material-symbols-outlined text-5xl mb-3">event_busy</span><p class="text-sm font-medium">Không có dữ liệu đăng ký</p></div></td></tr>';
+                container.innerHTML = '<div class="flex flex-col items-center justify-center py-20 text-slate-400"><span class="material-symbols-outlined text-5xl mb-3">event_busy</span><p class="text-sm font-medium">Không có dữ liệu đăng ký</p></div>';
                 updatePagination(total);
                 return;
             }
 
-            let tableHTML = '';
+            let tableHTML = '<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 dark:bg-slate-800/50"><tr><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Ngày</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Nhân viên</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Mã NV</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Phòng ban</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Món ăn</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Loại</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-700">';
 
             pageGroups.forEach(function(g) {
                 const dateParts = g.date.split('/');
@@ -418,7 +345,9 @@
                 }
                 
                 g.items.forEach(function(r, index) {
-                    tableHTML += '<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">';
+                    // Thêm class border-top cho dòng đầu tiên của mỗi ngày
+                    const borderClass = index === 0 ? 'border-t-2 border-slate-300 dark:border-slate-600' : '';
+                    tableHTML += '<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 ' + borderClass + '">';
                     
                     if (index === 0) {
                         tableHTML += '<td rowspan="' + g.items.length + '" class="px-4 py-3 border-r border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30"><div class="flex flex-col items-center"><div class="w-12 h-12 rounded-lg bg-gradient-to-br from-green-400 to-emerald-600 flex flex-col items-center justify-center text-white shadow-sm mb-2"><span class="text-xs font-bold">' + dayName + '</span><span class="text-lg font-black leading-none">' + dayNumber + '</span></div><div class="text-xs text-slate-500 text-center"><div>' + g.date + '</div><div class="mt-1"><span class="text-slate-600 dark:text-slate-400">' + (g.normal + g.special) + ' suất</span></div></div></div></td>';
@@ -434,12 +363,10 @@
                     tableHTML += '<td class="px-4 py-3"><span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ' + mealTypeClass + '"><span class="w-2 h-2 rounded-full ' + dotClass + '"></span>' + r.meal_type + '</span></td>';
                     tableHTML += '</tr>';
                 });
-                
-                // Thêm dòng phân cách màu xanh sau mỗi nhóm ngày
-                tableHTML += '<tr class="border-0"><td colspan="6" class="p-0"><div class="h-1 bg-green-500 dark:bg-green-400"></div></td></tr>';
             });
 
-            tbody.innerHTML = tableHTML;
+            tableHTML += '</tbody></table></div></div>';
+            container.innerHTML = tableHTML;
             updatePagination(total);
         }
 

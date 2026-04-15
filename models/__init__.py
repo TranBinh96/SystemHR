@@ -58,11 +58,8 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)
     
     # Permission fields
-    can_approve = db.Column(db.Boolean, default=False)  # Quyền phê duyệt overtime (Manager)
-    can_register = db.Column(db.Boolean, default=True)  # Quyền đăng ký suất ăn
-    
-    # Overtime approver (chỉ dành cho user thường, manager tự phê duyệt)
-    overtime_approver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    can_approve = db.Column(db.Boolean, default=False)  # Quyền phê duyệt overtime
+    can_register = db.Column(db.Boolean, default=True)  # Quyền đăng ký overtime
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_activity = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -74,7 +71,6 @@ class User(UserMixin, db.Model):
                                        lazy=True)
     meal_registrations = db.relationship('MealRegistration', backref='user', lazy=True)
     pos = db.relationship('Position', backref='users', lazy=True)
-    overtime_approver = db.relationship('User', remote_side=[id], backref='overtime_subordinates', foreign_keys=[overtime_approver_id])
     
     def __repr__(self):
         return f'<User {self.employee_id} - Position ID {self.position_id}>'
@@ -157,13 +153,10 @@ class OvertimeRequest(db.Model):
     
     # Overtime info
     overtime_date = db.Column(db.Date, nullable=False)
-    number_of_people = db.Column(db.Integer, nullable=False, default=1)  # Số người đăng ký
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+    total_hours = db.Column(db.Numeric(4, 2), nullable=False)
     reason = db.Column(db.Text, nullable=False)
-    
-    # Legacy fields (kept for backward compatibility, nullable)
-    start_time = db.Column(db.Time, nullable=True)
-    end_time = db.Column(db.Time, nullable=True)
-    total_hours = db.Column(db.Numeric(4, 2), nullable=True)
     
     # Approval status
     status = db.Column(db.String(20), default='pending')  # pending, approved, rejected

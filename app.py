@@ -207,6 +207,7 @@ def login():
             session['user_name'] = user.name
             session.permanent = True  # Make session permanent (3 weeks)
             
+            flash('Login successful!', 'success')
             next_page = request.args.get('next')
             return redirect(next_page or url_for('dashboard'))
         else:
@@ -264,16 +265,7 @@ def dashboard():
     # Check if user can approve (has can_approve permission)
     is_manager = current_user.can_approve
     
-    # Check if user can register (for both overtime and meals)
-    # Manager can always register, or user must have can_register=True
-    can_register_overtime = current_user.can_approve or current_user.can_register
-    can_register_meals = current_user.can_approve or current_user.can_register
-    
-    return render_template('dashboard.html', 
-                         user=current_user.name, 
-                         is_manager=is_manager, 
-                         can_register_overtime=can_register_overtime,
-                         can_register_meals=can_register_meals)
+    return render_template('dashboard.html', user=current_user.name, is_manager=is_manager)
 
 @app.route('/admin/dashboard')
 @login_required
@@ -298,7 +290,7 @@ def admin_dashboard():
     ).all()
     
     overtime_count = len(today_overtime)
-    overtime_hours = sum(float(ot.total_hours) if ot.total_hours else 0 for ot in today_overtime)
+    overtime_hours = sum(float(ot.total_hours) for ot in today_overtime)
     
     # Calculate meal stats for tomorrow
     from datetime import timedelta
@@ -541,12 +533,6 @@ def edit_user(user_id):
             user.can_approve = data['can_approve'] in ['true', 'True', True, 1, '1']
         if 'can_register' in data:
             user.can_register = data['can_register'] in ['true', 'True', True, 1, '1']
-        if 'overtime_approver_id' in data:
-            approver_id = data['overtime_approver_id']
-            if approver_id and approver_id != '' and approver_id != 'null':
-                user.overtime_approver_id = int(approver_id)
-            else:
-                user.overtime_approver_id = None
         if 'citizen_id' in data:
             user.citizen_id = data['citizen_id'] if data['citizen_id'] else None
         if 'hometown' in data:
@@ -591,47 +577,6 @@ def edit_user(user_id):
         print(f"Error in edit_user: {e}")
         import traceback
         traceback.print_exc()
-        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
-
-
-@app.route('/api/users', methods=['GET'])
-@login_required
-def api_get_users():
-    """API to get users list with filters"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    try:
-        # Get filter parameters
-        can_approve = request.args.get('can_approve')
-        department = request.args.get('department')
-        
-        # Build query
-        query = User.query.filter_by(is_active=True)
-        
-        if can_approve == '1':
-            query = query.filter_by(can_approve=True)
-        
-        # Filter by department if provided
-        if department:
-            # Join with Department table to filter by name
-            query = query.join(Department).filter(Department.name == department)
-        
-        users = query.order_by(User.name).all()
-        
-        return {
-            'success': True,
-            'users': [{
-                'id': u.id,
-                'employee_id': u.employee_id,
-                'name': u.name,
-                'department': u.dept.name if u.dept else '',
-                'can_approve': u.can_approve
-            } for u in users]
-        }
-    
-    except Exception as e:
-        print(f"Error in api_get_users: {e}")
         return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
 
 
@@ -1101,9 +1046,9 @@ def list_overtime_requests():
             'department': r.department,
             'position': r.position,
             'overtime_date': r.overtime_date.strftime('%Y-%m-%d'),
-            'start_time': r.start_time.strftime('%H:%M') if r.start_time else '17:00',
-            'end_time': r.end_time.strftime('%H:%M') if r.end_time else '19:00',
-            'total_hours': float(r.total_hours) if r.total_hours else 2.0,
+            'start_time': r.start_time.strftime('%H:%M'),
+            'end_time': r.end_time.strftime('%H:%M'),
+            'total_hours': float(r.total_hours),
             'reason': r.reason,
             'status': r.status,
             'manager_comment': r.manager_comment,
@@ -1118,20 +1063,17 @@ def list_overtime_requests():
 @login_required
 def manager_overtime_approvals():
     """Manager overtime approvals page"""
-    is_manager = current_user.can_approve
-    can_register_overtime = current_user.can_approve or current_user.can_register
-    
     # Admin always has access
     if current_user.role == 'admin':
-        return render_template('manager_overtime_approvals.html', is_manager=is_manager, can_register_overtime=can_register_overtime)
+        return render_template('manager_overtime_approvals.html')
     
     # Check if user has approval permission
     if current_user.can_approve:
-        return render_template('manager_overtime_approvals.html', is_manager=is_manager, can_register_overtime=can_register_overtime)
+        return render_template('manager_overtime_approvals.html')
     
     # Or if user has subordinates
     if current_user.is_manager():
-        return render_template('manager_overtime_approvals.html', is_manager=is_manager, can_register_overtime=can_register_overtime)
+        return render_template('manager_overtime_approvals.html')
     
     flash('Bạn không có quyền truy cập trang này', 'error')
     return redirect(url_for('dashboard'))
@@ -1140,7 +1082,7 @@ def manager_overtime_approvals():
 @app.route('/manager/overtime-requests')
 @login_required
 def get_manager_overtime_requests():
-    """Get overtime requests that this user can approve"""
+    """Get overtime requests that this user can approve (based on level hierarchy)"""
     # Admin always has access
     if current_user.role == 'admin':
         # Admin can see all requests
@@ -1148,10 +1090,24 @@ def get_manager_overtime_requests():
             OvertimeRequest.created_at.desc()
         ).all()
     else:
-        # Get requests where current user is the approver
+        # Check if user has approval permission
+        can_approve = current_user.can_approve
+        
+        if not can_approve:
+            return {'success': False, 'message': 'Không có quyền'}, 403
+        
+        # Get subordinate user IDs
+        subordinates = current_user.get_subordinates()
+        subordinate_ids = [sub.id for sub in subordinates]
+        
+        # If has approval permission, include own requests
+        if current_user.can_approve:
+            subordinate_ids.append(current_user.id)
+        
+        # Get requests from subordinates (and self if Trưởng Phòng)
         requests = OvertimeRequest.query.filter(
-            OvertimeRequest.manager_id == current_user.id
-        ).order_by(OvertimeRequest.created_at.desc()).all()
+            OvertimeRequest.user_id.in_(subordinate_ids)
+        ).order_by(OvertimeRequest.created_at.desc()).all() if subordinate_ids else []
     
     return {
         'success': True,
@@ -1162,53 +1118,15 @@ def get_manager_overtime_requests():
             'department': r.department,
             'position': r.position,
             'overtime_date': r.overtime_date.strftime('%Y-%m-%d'),
-            'number_of_people': r.number_of_people,
+            'start_time': r.start_time.strftime('%H:%M'),
+            'end_time': r.end_time.strftime('%H:%M'),
+            'total_hours': float(r.total_hours),
             'reason': r.reason,
             'status': r.status,
             'manager_comment': r.manager_comment,
-            'created_at': r.created_at.strftime('%Y-%m-%d %H:%M'),
-            # Legacy fields for backward compatibility
-            'start_time': r.start_time.strftime('%H:%M') if r.start_time else '17:00',
-            'end_time': r.end_time.strftime('%H:%M') if r.end_time else '19:00',
-            'total_hours': float(r.total_hours) if r.total_hours else 2.0
+            'created_at': r.created_at.strftime('%Y-%m-%d %H:%M')
         } for r in requests]
     }
-
-
-@app.route('/manager/overtime-requests/<int:request_id>/update', methods=['POST'])
-@login_required
-def update_overtime_request(request_id):
-    """Update overtime request before approval"""
-    overtime_request = OvertimeRequest.query.get_or_404(request_id)
-    
-    # Check authorization - only assigned approver or admin can update
-    if current_user.role != 'admin' and overtime_request.manager_id != current_user.id:
-        return {'success': False, 'message': 'Bạn không có quyền sửa yêu cầu này'}, 403
-    
-    # Check if still pending
-    if overtime_request.status != 'pending':
-        return {'success': False, 'message': 'Chỉ có thể sửa yêu cầu đang chờ duyệt'}, 400
-    
-    data = request.json
-    number_of_people = data.get('number_of_people')
-    notes = data.get('notes')
-    
-    # Update fields
-    if number_of_people is not None:
-        try:
-            num = int(number_of_people)
-            if num < 1:
-                return {'success': False, 'message': 'Số người phải lớn hơn 0'}, 400
-            overtime_request.number_of_people = num
-        except ValueError:
-            return {'success': False, 'message': 'Số người không hợp lệ'}, 400
-    
-    if notes is not None:
-        overtime_request.reason = notes
-    
-    db.session.commit()
-    
-    return {'success': True, 'message': 'Đã cập nhật thông tin'}
 
 @app.route('/manager/overtime-requests/<int:request_id>/approve', methods=['POST'])
 @login_required
@@ -1348,7 +1266,7 @@ def get_overtime_reports_data():
     ).all()
     
     # Calculate summary
-    total_hours = sum(float(r.total_hours) if r.total_hours else 0 for r in requests)
+    total_hours = sum(float(r.total_hours) for r in requests)
     unique_employees = len(set(r.employee_id for r in requests))
     total_requests = len(requests)
     avg_hours = total_hours / unique_employees if unique_employees > 0 else 0
@@ -1358,7 +1276,7 @@ def get_overtime_reports_data():
     for r in requests:
         if r.department not in dept_data:
             dept_data[r.department] = 0
-        dept_data[r.department] += float(r.total_hours) if r.total_hours else 0
+        dept_data[r.department] += float(r.total_hours)
     
     by_department = [
         {'department': dept, 'total_hours': hours}
@@ -1372,7 +1290,7 @@ def get_overtime_reports_data():
         current_date = start_date
         while current_date <= end_date:
             day_requests = [r for r in requests if r.overtime_date == current_date]
-            day_hours = sum(float(r.total_hours) if r.total_hours else 0 for r in day_requests)
+            day_hours = sum(float(r.total_hours) for r in day_requests)
             trend_data.append({
                 'label': f'{current_date.day}/{current_date.month}',
                 'total_hours': day_hours
@@ -1382,7 +1300,7 @@ def get_overtime_reports_data():
         # Monthly trend
         for month in range(start_month, end_month + 1):
             month_requests = [r for r in requests if r.overtime_date.month == month]
-            month_hours = sum(float(r.total_hours) if r.total_hours else 0 for r in month_requests)
+            month_hours = sum(float(r.total_hours) for r in month_requests)
             trend_data.append({
                 'label': f'T{month}',
                 'total_hours': month_hours
@@ -1393,7 +1311,7 @@ def get_overtime_reports_data():
             q_start_month = (q - 1) * 3 + 1
             q_end_month = q_start_month + 2
             q_requests = [r for r in requests if q_start_month <= r.overtime_date.month <= q_end_month]
-            q_hours = sum(float(r.total_hours) if r.total_hours else 0 for r in q_requests)
+            q_hours = sum(float(r.total_hours) for r in q_requests)
             trend_data.append({
                 'label': f'Q{q}',
                 'total_hours': q_hours
@@ -1411,7 +1329,7 @@ def get_overtime_reports_data():
                 'total_hours': 0,
                 'request_count': 0
             }
-        emp_data[key]['total_hours'] += float(r.total_hours) if r.total_hours else 0
+        emp_data[key]['total_hours'] += float(r.total_hours)
         emp_data[key]['request_count'] += 1
     
     top_employees = sorted(emp_data.values(), key=lambda x: x['total_hours'], reverse=True)[:10]
@@ -1507,9 +1425,9 @@ def export_overtime_reports():
         ws.cell(row=idx+3, column=3, value=req.employee_name)
         ws.cell(row=idx+3, column=4, value=req.department)
         ws.cell(row=idx+3, column=5, value=req.overtime_date.strftime('%d/%m/%Y'))
-        ws.cell(row=idx+3, column=6, value=req.start_time.strftime('%H:%M') if req.start_time else '17:00')
-        ws.cell(row=idx+3, column=7, value=req.end_time.strftime('%H:%M') if req.end_time else '19:00')
-        ws.cell(row=idx+3, column=8, value=float(req.total_hours) if req.total_hours else 0)
+        ws.cell(row=idx+3, column=6, value=req.start_time.strftime('%H:%M'))
+        ws.cell(row=idx+3, column=7, value=req.end_time.strftime('%H:%M'))
+        ws.cell(row=idx+3, column=8, value=float(req.total_hours))
     
     # Adjust column widths
     ws.column_dimensions['A'].width = 5
@@ -2441,161 +2359,91 @@ def handle_import_confirmation():
 @app.route('/overtime', methods=['GET', 'POST'])
 @login_required
 def overtime():
-    # Logic đơn giản:
-    # - Manager (can_approve=True): Tự đăng ký và tự phê duyệt
-    # - User thường: Cần có can_register=True để đăng ký
-    
-    # Kiểm tra quyền đăng ký overtime
-    has_permission = current_user.can_approve or current_user.can_register
-    
-    if not has_permission:
-        # Render template with permission denied message
-        is_manager = current_user.can_approve
-        can_register_overtime = has_permission
-        return render_template('overtime.html', has_permission=False, is_manager=is_manager, can_register_overtime=can_register_overtime)
+    # Check if user has permission to register overtime
+    if not current_user.can_register:
+        flash('Bạn không có quyền đăng ký tăng ca', 'error')
+        return redirect(url_for('dashboard'))
     
     if request.method == 'POST':
         from datetime import datetime
         
         # Get form data
         selected_date = request.form.get('selected_date')
-        number_of_people = request.form.get('number_of_people')
-        notes = request.form.get('notes', '')  # Optional
+        start_time = request.form.get('start_time')
+        end_time = request.form.get('end_time')
+        reason = request.form.get('reason')
         
-        if not all([selected_date, number_of_people]):
+        if not all([selected_date, start_time, end_time, reason]):
             flash('Vui lòng điền đầy đủ thông tin', 'error')
             return redirect(url_for('overtime'))
         
-        # Parse date
+        # Parse date and time
         try:
             overtime_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
-            num_people = int(number_of_people)
-            
-            if num_people < 1:
-                flash('Số người phải lớn hơn 0', 'error')
-                return redirect(url_for('overtime'))
-                
+            start_time_obj = datetime.strptime(start_time, '%H:%M').time()
+            end_time_obj = datetime.strptime(end_time, '%H:%M').time()
         except ValueError:
-            flash('Định dạng dữ liệu không hợp lệ', 'error')
+            flash('Định dạng ngày giờ không hợp lệ', 'error')
             return redirect(url_for('overtime'))
         
-        # Get department name
-        department_name = current_user.dept.name if current_user.dept else 'Chưa xác định'
+        # Calculate total hours
+        start_datetime = datetime.combine(overtime_date, start_time_obj)
+        end_datetime = datetime.combine(overtime_date, end_time_obj)
+        total_hours = (end_datetime - start_datetime).total_seconds() / 3600
         
-        # Check if already exists for this date and department
-        existing_request = OvertimeRequest.query.filter_by(
+        if total_hours <= 0:
+            flash('Giờ kết thúc phải sau giờ bắt đầu', 'error')
+            return redirect(url_for('overtime'))
+        
+        # Create overtime request
+        overtime_request = OvertimeRequest(
+            user_id=current_user.id,
+            employee_id=current_user.employee_id,
+            employee_name=current_user.name,
+            department=current_user.department,
+            position=current_user.pos.name if current_user.pos else 'Chưa xác định',
             overtime_date=overtime_date,
-            department=department_name
-        ).first()
+            start_time=start_time_obj,
+            end_time=end_time_obj,
+            total_hours=round(total_hours, 2),
+            reason=reason,
+            status='pending'
+        )
         
-        # Determine status and approver based on user role
-        if current_user.can_approve:
-            # Manager: Tự phê duyệt
-            status = 'approved'
-            manager_id = current_user.id
-            manager_comment = 'Tự phê duyệt (Manager)'
-            manager_approved_at = datetime.utcnow()
-        else:
-            # User thường: Cần người phê duyệt
-            if not current_user.overtime_approver_id:
-                flash('Chưa có người phê duyệt được chỉ định. Vui lòng liên hệ admin.', 'error')
-                return redirect(url_for('overtime'))
-            
-            status = 'pending'
-            manager_id = current_user.overtime_approver_id
-            manager_comment = None
-            manager_approved_at = None
-        
-        if existing_request:
-            # Update existing request
-            existing_request.user_id = current_user.id
-            existing_request.employee_id = current_user.employee_id
-            existing_request.employee_name = current_user.name
-            existing_request.position = current_user.pos.name if current_user.pos else 'Chưa xác định'
-            existing_request.number_of_people = num_people
-            existing_request.reason = notes if notes else 'Đăng ký tăng ca'
-            existing_request.status = status
-            existing_request.manager_id = manager_id
-            existing_request.manager_comment = manager_comment
-            existing_request.manager_approved_at = manager_approved_at
-            existing_request.created_at = datetime.utcnow()
-        else:
-            # Create new overtime request
-            overtime_request = OvertimeRequest(
-                user_id=current_user.id,
-                employee_id=current_user.employee_id,
-                employee_name=current_user.name,
-                department=department_name,
-                position=current_user.pos.name if current_user.pos else 'Chưa xác định',
-                overtime_date=overtime_date,
-                number_of_people=num_people,
-                reason=notes if notes else 'Đăng ký tăng ca',
-                status=status,
-                manager_id=manager_id,
-                manager_comment=manager_comment,
-                manager_approved_at=manager_approved_at
-            )
-            db.session.add(overtime_request)
-        
+        db.session.add(overtime_request)
         db.session.commit()
         
+        flash('Đã gửi yêu cầu tăng ca thành công!', 'success')
         return redirect(url_for('overtime'))
     
     # GET request - show form
-    is_manager = current_user.can_approve
-    can_register_overtime = has_permission
-    return render_template('overtime.html', has_permission=True, is_manager=is_manager, can_register_overtime=can_register_overtime)
+    return render_template('overtime.html')
 
 @app.route('/overtime/my-requests')
 @login_required
 def get_my_overtime_requests():
-    """Get current user's overtime requests with pagination"""
-    # Kiểm tra quyền đăng ký overtime
-    if not current_user.can_approve and not current_user.can_register:
-        return {'success': False, 'message': 'Bạn chưa có quyền đăng ký tăng ca'}, 403
-    
-    # Get pagination parameters
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 7, type=int)  # Default 7 days
-    
-    # Query with pagination
-    pagination = OvertimeRequest.query.filter_by(user_id=current_user.id)\
-        .order_by(OvertimeRequest.overtime_date.desc(), OvertimeRequest.created_at.desc())\
-        .paginate(page=page, per_page=per_page, error_out=False)
+    """Get current user's overtime requests"""
+    requests = OvertimeRequest.query.filter_by(user_id=current_user.id).order_by(OvertimeRequest.created_at.desc()).all()
     
     return {
         'success': True,
         'requests': [{
             'id': r.id,
             'overtime_date': r.overtime_date.strftime('%Y-%m-%d'),
-            'number_of_people': r.number_of_people,
+            'start_time': r.start_time.strftime('%H:%M'),
+            'end_time': r.end_time.strftime('%H:%M'),
+            'total_hours': float(r.total_hours),
             'reason': r.reason,
             'status': r.status,
             'manager_comment': r.manager_comment,
-            'created_at': r.created_at.strftime('%Y-%m-%d %H:%M'),
-            # Legacy fields for backward compatibility
-            'start_time': r.start_time.strftime('%H:%M') if r.start_time else '17:00',
-            'end_time': r.end_time.strftime('%H:%M') if r.end_time else '19:00',
-            'total_hours': float(r.total_hours) if r.total_hours else 2.0
-        } for r in pagination.items],
-        'pagination': {
-            'page': pagination.page,
-            'per_page': pagination.per_page,
-            'total': pagination.total,
-            'pages': pagination.pages,
-            'has_next': pagination.has_next,
-            'has_prev': pagination.has_prev
-        }
+            'created_at': r.created_at.strftime('%Y-%m-%d %H:%M')
+        } for r in requests]
     }
 
 @app.route('/overtime/<int:request_id>/cancel', methods=['POST'])
 @login_required
 def cancel_overtime_request(request_id):
     """Cancel overtime request (only if pending)"""
-    # Kiểm tra quyền đăng ký overtime
-    if not current_user.can_approve and not current_user.can_register:
-        return {'success': False, 'message': 'Bạn chưa có quyền đăng ký tăng ca'}, 403
-    
     overtime_request = OvertimeRequest.query.get_or_404(request_id)
     
     # Check if user owns this request
@@ -2644,10 +2492,7 @@ def self_approve_overtime_request(request_id):
 @login_required
 def leave():
     # Check if user has permission to register leave
-    # Manager (can_approve) or user with can_register permission
-    has_permission = current_user.can_approve or current_user.can_register
-    
-    if not has_permission:
+    if not current_user.can_register:
         flash('Bạn không có quyền đăng ký nghỉ phép', 'error')
         return redirect(url_for('dashboard'))
     
@@ -2701,13 +2546,13 @@ def leave():
         db.session.add(leave_request)
         db.session.commit()
         
+        flash('Đã gửi yêu cầu nghỉ phép thành công!', 'success')
         return redirect(url_for('leave'))
     
     # GET request - show form
     # Check if user is manager for sidebar
     is_manager = current_user.can_approve or current_user.role == 'admin'
-    can_register_overtime = current_user.can_approve or current_user.can_register
-    return render_template('leave.html', is_manager=is_manager, can_register_overtime=can_register_overtime)
+    return render_template('leave.html', is_manager=is_manager)
 
 
 @app.route('/leave/my-requests')
@@ -2757,14 +2602,6 @@ def cancel_leave_request(request_id):
 @login_required
 def exit_entry():
     """Exit/Entry request form - similar to leave request"""
-    # Check if user has permission to register exit/entry
-    # Manager (can_approve) or user with can_register permission
-    has_permission = current_user.can_approve or current_user.can_register
-    
-    if not has_permission:
-        flash('Bạn không có quyền đăng ký đơn ra vào', 'error')
-        return redirect(url_for('dashboard'))
-    
     if request.method == 'POST':
         from datetime import datetime, date
         
@@ -2821,13 +2658,13 @@ def exit_entry():
         db.session.add(exit_entry_request)
         db.session.commit()
         
+        flash('Đã gửi đơn xin ra vào công ty thành công!', 'success')
         return redirect(url_for('exit_entry'))
     
     # GET request - show form
     is_manager = current_user.can_approve or current_user.role == 'admin'
-    can_register_overtime = current_user.can_approve or current_user.can_register
     
-    return render_template('exit_entry.html', is_manager=is_manager, can_register_overtime=can_register_overtime)
+    return render_template('exit_entry.html', is_manager=is_manager)
 
 @app.route('/exit-entry/my-requests')
 @login_required
@@ -2903,6 +2740,7 @@ def meals():
             db.session.add(meal_registration)
         
         db.session.commit()
+        flash('Đăng ký suất ăn thành công!', 'success')
         return redirect(url_for('meals'))
     
     # Get current week (Monday to Sunday)
@@ -2923,14 +2761,9 @@ def meals():
     # Get user's meal registrations
     registrations = MealRegistration.query.filter_by(user_id=current_user.id).order_by(MealRegistration.date.desc()).all()
     
-    is_manager = current_user.can_approve
-    can_register_overtime = current_user.can_approve or current_user.can_register
-    
     return render_template('meals.html', 
                          days_of_week=days_of_week,
-                         registrations=registrations,
-                         is_manager=is_manager,
-                         can_register_overtime=can_register_overtime)
+                         registrations=registrations)
 
 @app.route('/meals/menu/<date>')
 @login_required
@@ -3157,16 +2990,11 @@ def profile():
     if today_meal and today_meal.menu:
         has_special_meal_today = today_meal.menu.is_special
     
-    is_manager = current_user.can_approve
-    can_register_overtime = current_user.can_approve or current_user.can_register
-    
     return render_template('profile.html', 
                          user=current_user,
                          total_overtime_hours=float(total_overtime_hours),
                          total_meals=total_meals,
                          has_special_meal_today=has_special_meal_today,
-                         is_manager=is_manager,
-                         can_register_overtime=can_register_overtime,
                          now=datetime.now(),
                          timedelta=timedelta)
 

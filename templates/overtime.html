@@ -66,7 +66,6 @@
                         <!-- Đăng ký -->
                         <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Đăng ký</div>
                         <ul role="list" class="-mx-2 space-y-1">
-                            {% if can_register_overtime %}
                             <li>
                                 <a href="{{ url_for('overtime') }}" class="text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold" style="background-color: rgba(19, 109, 236, 0.1);">
                                     <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">schedule</span>
@@ -79,7 +78,6 @@
                                     Nghỉ phép
                                 </a>
                             </li>
-                            {% endif %}
                             <li>
                                 <a href="{{ url_for('meals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
                                     <span class="material-symbols-outlined">restaurant</span>
@@ -151,24 +149,6 @@
                 {% endif %}
             {% endwith %}
 
-            {% if not has_permission %}
-            <!-- Permission Denied Message -->
-            <div class="flex flex-col items-center justify-center py-16 px-4">
-                <div class="w-24 h-24 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-6">
-                    <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-5xl">block</span>
-                </div>
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">Bạn không có quyền đăng ký tăng ca</h2>
-                <p class="text-slate-600 dark:text-slate-400 text-center mb-6 max-w-md">
-                    Bạn chưa được cấp quyền đăng ký tăng ca. Vui lòng liên hệ với quản trị viên (Admin) hoặc quản lý của bạn để được hỗ trợ.
-                </p>
-                <div class="flex gap-3">
-                    <a href="{{ url_for('dashboard') }}" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors flex items-center gap-2">
-                        <span class="material-symbols-outlined text-sm">arrow_back</span>
-                        Quay lại trang chủ
-                    </a>
-                </div>
-            </div>
-            {% else %}
             <!-- Tabs -->
             <div class="mb-6">
                 <div class="border-b border-slate-200 dark:border-slate-700">
@@ -203,27 +183,149 @@
             <form id="overtime-form" method="POST" action="{{ url_for('overtime') }}" class="space-y-8 mt-8">
                 <input type="hidden" id="selected_date" name="selected_date" value="">
                 
-                <!-- Section: Number of People -->
-                <div class="flex items-center gap-3">
-                    <h3 class="text-slate-900 dark:text-slate-100 text-base font-bold">Số người đăng ký</h3>
-                    <input type="number" 
-                           id="number_of_people" 
-                           name="number_of_people" 
-                           min="1" 
-                           max="999" 
-                           value="1" 
-                           required
-                           class="w-[100px] px-3 py-2 rounded-xl bg-white dark:bg-slate-700 border-2 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-lg font-bold text-slate-900 dark:text-slate-100 outline-none text-center">
-                    <span class="text-sm text-slate-500 dark:text-slate-400">người</span>
+                <!-- Section: Time Selection -->
+                <div>
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-slate-900 dark:text-slate-100 text-base font-bold">Thời gian tăng ca</h3>
+                        <div class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold">
+                            Tổng: <span id="total-hours">2.0</span> giờ
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-2xl">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Khung giờ tăng ca</label>
+                            <div class="grid grid-cols-8 gap-3">
+                                <button type="button" onclick="selectOvertimeHours(0.5)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="0.5">
+                                    <div class="text-sm leading-tight">0.5h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">30 phút</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(1)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="1">
+                                    <div class="text-sm leading-tight">1h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">1 giờ</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(1.5)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="1.5">
+                                    <div class="text-sm leading-tight">1.5h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">1h 30p</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(2)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="2">
+                                    <div class="text-sm leading-tight">2h</div>
+                                    <div class="text-[10px] leading-tight mt-0.5">2 giờ</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(2.5)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="2.5">
+                                    <div class="text-sm leading-tight">2.5h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">2h 30p</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(3)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="3">
+                                    <div class="text-sm leading-tight">3h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">3 giờ</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(3.5)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="3.5">
+                                    <div class="text-sm leading-tight">3.5h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">3h 30p</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(4)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="4">
+                                    <div class="text-sm leading-tight">4h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">4 giờ</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(4.5)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="4.5">
+                                    <div class="text-sm leading-tight">4.5h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">4h 30p</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(5)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="5">
+                                    <div class="text-sm leading-tight">5h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">5 giờ</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(5.5)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="5.5">
+                                    <div class="text-sm leading-tight">5.5h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">5h 30p</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(6)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="6">
+                                    <div class="text-sm leading-tight">6h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">6 giờ</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(6.5)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="6.5">
+                                    <div class="text-sm leading-tight">6.5h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">6h 30p</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(7)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="7">
+                                    <div class="text-sm leading-tight">7h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">7 giờ</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(7.5)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="7.5">
+                                    <div class="text-sm leading-tight">7.5h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">7h 30p</div>
+                                </button>
+                                <button type="button" onclick="selectOvertimeHours(8)" 
+                                        class="overtime-btn px-2 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-center font-semibold flex flex-col items-center justify-center min-h-[60px]"
+                                        data-hours="8">
+                                    <div class="text-sm leading-tight">8h</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">8 giờ</div>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden fields -->
+                        <input type="hidden" id="overtime_hours" name="overtime_hours" value="2" required>
+                        <input type="hidden" id="start_time" name="start_time" value="17:00">
+                        <input type="hidden" id="end_time" name="end_time" value="19:00">
+                    </div>
                 </div>
 
-                <!-- Section: Detailed Notes -->
+                <!-- Section: Reasons Quick Select -->
                 <div>
-                    <h3 class="text-slate-900 dark:text-slate-100 text-base font-bold mb-4">Ghi chú cụ thể</h3>
-                    <textarea id="notes" name="notes" rows="4"
-                              class="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-sm text-slate-700 dark:text-slate-200 outline-none resize-none"
-                              placeholder="Nhập chi tiết công việc, dự án hoặc lý do cụ thể..."></textarea>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Tùy chọn: Thêm thông tin chi tiết về công việc làm thêm giờ</p>
+                    <h3 class="text-slate-900 dark:text-slate-100 text-base font-bold mb-4">Lý do tăng ca</h3>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button type="button" onclick="selectReason('Gấp dự án')" class="reason-btn px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                            Gấp dự án
+                        </button>
+                        <button type="button" onclick="selectReason('Bù tiến độ')" class="reason-btn px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                            Bù tiến độ
+                        </button>
+                        <button type="button" onclick="selectReason('Trực hệ thống')" class="reason-btn px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                            Trực hệ thống
+                        </button>
+                        <button type="button" onclick="selectReason('Họp khách hàng')" class="reason-btn px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                            Họp khách hàng
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Detailed Notes -->
+                <div>
+                    <h3 class="text-slate-900 dark:text-slate-100 text-base font-bold mb-4">Ghi chú chi tiết</h3>
+                    <textarea id="reason" name="reason" rows="4"
+                              class="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-sm text-slate-700 dark:text-slate-200 outline-none resize-none"
+                              placeholder="Nhập chi tiết công việc thực hiện..." required></textarea>
                 </div>
 
                 <!-- Action Button -->
@@ -254,7 +356,6 @@
 
             </div>
             <!-- End Tab Content: Status -->
-            {% endif %}
     </div>
 
     <!-- Confirmation Modal -->
@@ -289,12 +390,10 @@
                 <span class="material-symbols-outlined text-2xl">restaurant</span>
                 <span class="text-[10px] font-bold uppercase">Suất ăn</span>
             </a>
-            {% if can_register_overtime %}
             <a class="flex flex-col items-center gap-1 text-green-600" href="{{ url_for('overtime') }}">
                 <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">schedule</span>
                 <span class="text-[10px] font-bold uppercase">Tăng ca</span>
             </a>
-            {% endif %}
             <a class="flex flex-col items-center gap-1 text-slate-400" href="{{ url_for('profile') }}">
                 <span class="material-symbols-outlined text-2xl">person</span>
                 <span class="text-[10px] font-bold uppercase">Cá nhân</span>
@@ -425,6 +524,9 @@
             element.querySelectorAll('p')[0].className = 'text-slate-300 dark:text-slate-900 text-[10px] font-medium';
             element.querySelectorAll('p')[1].className = 'text-white dark:text-slate-900 text-lg font-bold';
             element.querySelector('div').className = 'size-1.5 rounded-full bg-white dark:bg-slate-900 mt-1';
+            
+            // Recalculate start/end time based on existing requests for this date
+            updateTotalHours();
         }
 
         function selectReason(reason) {
@@ -441,37 +543,97 @@
             });
         }
 
+        function selectOvertimeHours(hours) {
+            // Update hidden field value
+            document.getElementById('overtime_hours').value = hours;
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.overtime-btn').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-700', 'dark:text-blue-400');
+                btn.classList.add('border-slate-300', 'dark:border-slate-600', 'bg-white', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-slate-300');
+                // Reset text color for description
+                const descDiv = btn.querySelector('div:last-child');
+                if (descDiv) {
+                    descDiv.classList.remove('text-blue-600', 'dark:text-blue-400');
+                    descDiv.classList.add('text-slate-500', 'dark:text-slate-400');
+                }
+            });
+            
+            // Add active class to clicked button
+            const activeBtn = document.querySelector(`.overtime-btn[data-hours="${hours}"]`);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-slate-300', 'dark:border-slate-600', 'bg-white', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-slate-300');
+                activeBtn.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-700', 'dark:text-blue-400');
+                // Update text color for description
+                const descDiv = activeBtn.querySelector('div:last-child');
+                if (descDiv) {
+                    descDiv.classList.remove('text-slate-500', 'dark:text-slate-400');
+                    descDiv.classList.add('text-blue-600', 'dark:text-blue-400');
+                }
+            }
+            
+            // Update total hours and calculate times
+            updateTotalHours();
+        }
 
-        let currentPage = 1;
-        let hasMoreRequests = false;
+        function updateTotalHours() {
+            const hours = parseFloat(document.getElementById('overtime_hours').value);
+            if (hours) {
+                // Get selected date
+                const selectedDateValue = document.getElementById('selected_date').value;
+                
+                // Find latest end time for selected date
+                let startTime = '17:15'; // Default start time (end of work day)
+                
+                if (selectedDateValue && window.allRequests) {
+                    const dateRequests = window.allRequests.filter(r => 
+                        r.overtime_date === selectedDateValue && 
+                        (r.status === 'pending' || r.status === 'approved')
+                    );
+                    
+                    if (dateRequests.length > 0) {
+                        // Find the latest end time
+                        const latestEndTime = dateRequests.reduce((latest, req) => {
+                            return req.end_time > latest ? req.end_time : latest;
+                        }, '00:00');
+                        
+                        startTime = latestEndTime;
+                    }
+                }
+                
+                document.getElementById('start_time').value = startTime;
+                
+                // Calculate end time based on hours
+                const start = new Date(`2000-01-01T${startTime}`);
+                const end = new Date(start.getTime() + hours * 60 * 60 * 1000);
+                const endHours = String(end.getHours()).padStart(2, '0');
+                const endMinutes = String(end.getMinutes()).padStart(2, '0');
+                const endTime = `${endHours}:${endMinutes}`;
+                document.getElementById('end_time').value = endTime;
+                
+                // Update display
+                document.getElementById('total-hours').textContent = hours.toFixed(1);
+            } else {
+                document.getElementById('total-hours').textContent = '0.0';
+            }
+        }
 
-        function loadPendingRequests(page = 1, append = false) {
-            fetch(`/overtime/my-requests?page=${page}&per_page=7`)
+        function loadPendingRequests() {
+            fetch('/overtime/my-requests')
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        currentPage = data.pagination.page;
-                        hasMoreRequests = data.pagination.has_next;
-                        
-                        if (append) {
-                            // Append to existing requests
-                            window.allRequests = window.allRequests.concat(data.requests);
-                        } else {
-                            // Replace all requests
-                            window.allRequests = data.requests;
-                        }
-                        
-                        renderMyRequests(window.allRequests, hasMoreRequests);
+                        // Store all requests globally for time calculation
+                        window.allRequests = data.requests;
+                        renderMyRequests(data.requests);
+                        // Update time calculation when requests are loaded
+                        updateTotalHours();
                     }
                 })
                 .catch(err => console.error('Error loading requests:', err));
         }
 
-        function loadMoreRequests() {
-            loadPendingRequests(currentPage + 1, true);
-        }
-
-        function renderMyRequests(requests, showLoadMore = false) {
+        function renderMyRequests(requests) {
             const container = document.getElementById('my-requests-container');
             const myRequestsSection = document.getElementById('my-requests-section');
             const tabBadge = document.getElementById('tab-status-badge');
@@ -502,7 +664,8 @@
                         <thead class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Ngày</th>
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Số người</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Thời gian</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Tổng giờ</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Lý do</th>
                                 <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Trạng thái</th>
                                 <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Thao tác</th>
@@ -535,10 +698,13 @@
                         <td class="px-4 py-3">
                             <p class="text-sm text-slate-700 dark:text-slate-300 font-medium">${formatDate(r.overtime_date)}</p>
                         </td>
+                        <td class="px-4 py-3">
+                            <p class="text-sm text-slate-700 dark:text-slate-300">${r.start_time} - ${r.end_time}</p>
+                        </td>
                         <td class="px-4 py-3 text-center">
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg text-sm font-bold">
-                                <span class="material-symbols-outlined text-xs">group</span>
-                                ${r.number_of_people || 0}
+                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-sm font-bold">
+                                <span class="material-symbols-outlined text-xs">timer</span>
+                                ${r.total_hours}h
                             </span>
                         </td>
                         <td class="px-4 py-3">
@@ -588,10 +754,10 @@
             cardHTML += statusBadge + '</div>';
             cardHTML += '<div class="space-y-2 mb-3">';
             cardHTML += '<div class="flex items-center gap-2 text-sm">';
-            cardHTML += '<span class="material-symbols-outlined text-slate-400 text-lg">group</span>';
-            cardHTML += '<span class="text-slate-700">Số người: </span>';
-            cardHTML += '<span class="ml-auto inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold">';
-            cardHTML += '<span class="material-symbols-outlined text-xs">group</span>' + (r.number_of_people || 0) + '</span></div>';
+            cardHTML += '<span class="material-symbols-outlined text-slate-400 text-lg">schedule</span>';
+            cardHTML += '<span class="text-slate-700">' + r.start_time + ' - ' + r.end_time + '</span>';
+            cardHTML += '<span class="ml-auto inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold">';
+            cardHTML += '<span class="material-symbols-outlined text-xs">timer</span>' + r.total_hours + 'h</span></div>';
             cardHTML += '<div class="flex items-start gap-2 text-sm">';
             cardHTML += '<span class="material-symbols-outlined text-slate-400 text-lg">description</span>';
             cardHTML += '<p class="text-slate-700 flex-1">' + r.reason + '</p></div>';
@@ -604,20 +770,7 @@
         });
         mobileHTML += '</div>';
         
-        // Add "Load More" button if there are more requests
-        let loadMoreBtn = '';
-        if (showLoadMore) {
-            loadMoreBtn = `
-                <div class="p-4 text-center border-t border-slate-200 dark:border-slate-700">
-                    <button onclick="loadMoreRequests()" class="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold inline-flex items-center gap-2">
-                        <span class="material-symbols-outlined text-lg">expand_more</span>
-                        Xem thêm
-                    </button>
-                </div>
-            `;
-        }
-        
-        container.innerHTML = mobileHTML + '<div class="hidden lg:block">' + tableHTML + '</div>' + loadMoreBtn;
+        container.innerHTML = mobileHTML + '<div class="hidden lg:block">' + tableHTML + '</div>';
     }
 
     function formatDate(dateStr) {
@@ -679,6 +832,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         console.log('=== Page Loaded ===');
         generateDatePicker();
+        updateTotalHours();
         loadPendingRequests();
         
         // Ensure register tab is shown and status tab is hidden on load

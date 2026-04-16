@@ -322,7 +322,10 @@ def admin_dashboard():
     tomorrow = today + timedelta(days=1)
     
     # Get all meal registrations for tomorrow - only employee_id starting with 10 or 20
-    tomorrow_meals = MealRegistration.query.join(User).filter(
+    tomorrow_meals = MealRegistration.query.join(
+        User,
+        MealRegistration.user_id == User.id
+    ).filter(
         MealRegistration.date == tomorrow,
         MealRegistration.has_meal == True,
         or_(
@@ -1889,7 +1892,13 @@ def get_stats_data():
         print(f"✅ AUTO-REGISTER: Đã tự động đăng ký {auto_registered_count} suất ăn")
     
     # Get registrations for the period with proper joins - only employee_id starting with 10 or 20
-    registrations = MealRegistration.query.join(User).join(Menu).filter(
+    registrations = MealRegistration.query.join(
+        User,
+        MealRegistration.user_id == User.id
+    ).join(
+        Menu,
+        MealRegistration.meal_id == Menu.id
+    ).filter(
         MealRegistration.date >= start_date,
         MealRegistration.date <= end_date,
         MealRegistration.has_meal == True,

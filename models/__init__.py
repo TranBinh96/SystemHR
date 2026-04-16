@@ -69,7 +69,14 @@ class User(UserMixin, db.Model):
                                        foreign_keys='OvertimeRequest.user_id',
                                        backref='user', 
                                        lazy=True)
-    meal_registrations = db.relationship('MealRegistration', backref='user', lazy=True)
+    meal_registrations = db.relationship('MealRegistration', 
+                                        foreign_keys='MealRegistration.user_id',
+                                        backref='user', 
+                                        lazy=True)
+    confirmed_meals = db.relationship('MealRegistration',
+                                     foreign_keys='MealRegistration.confirmed_by',
+                                     backref='confirmer',
+                                     lazy=True)
     pos = db.relationship('Position', backref='users', lazy=True)
     
     def __repr__(self):
@@ -238,6 +245,9 @@ class MealRegistration(db.Model):
     meal_type = db.Column(db.String(20))  # breakfast, lunch, dinner
     has_meal = db.Column(db.Boolean, default=True)
     notes = db.Column(db.Text)
+    is_confirmed = db.Column(db.Boolean, default=False)  # Xác nhận hoàn thành (cho cơm cải thiện)
+    confirmed_at = db.Column(db.DateTime)  # Thời gian xác nhận
+    confirmed_by = db.Column(db.Integer, db.ForeignKey('users.id'))  # Người xác nhận
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

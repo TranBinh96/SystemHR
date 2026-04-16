@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html class="light" lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>The Culinary Concierge - QR Scanner</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#fff7f6",
+                        "secondary-container": "#cbe7f5",
+                        "on-primary-fixed": "#4a2800",
+                        "secondary-fixed": "#cbe7f5",
+                        "secondary-dim": "#3d5762",
+                        "on-secondary-container": "#3c5561",
+                        "surface-tint": "#ff8c00",
+                        "secondary": "#49636f",
+                        "on-surface": "#2c3437",
+                        "on-error-container": "#6e0a12",
+                        "on-primary": "#fff5e6",
+                        "on-surface-variant": "#596064",
+                        "on-primary-fixed-variant": "#cc6600",
+                        "surface-variant": "#dce4e8",
+                        "on-secondary-fixed-variant": "#455f6b",
+                        "error-container": "#fa746f",
+                        "tertiary-dim": "#4d5827",
+                        "primary": "#ff8c00",
+                        "surface-container": "#eaeff2",
+                        "error": "#a83836",
+                        "outline-variant": "#acb3b7",
+                        "on-tertiary-container": "#576231",
+                        "tertiary-fixed": "#f0fdbd",
+                        "primary-fixed": "#ffd699",
+                        "surface-container-high": "#e3e9ed",
+                        "surface-dim": "#d4dbdf",
+                        "primary-container": "#ffd699",
+                        "tertiary": "#596432",
+                        "inverse-on-surface": "#9a9d9f",
+                        "on-tertiary-fixed-variant": "#626d3a",
+                        "on-secondary-fixed": "#29434e",
+                        "secondary-fixed-dim": "#bdd9e6",
+                        "primary-fixed-dim": "#ffb84d",
+                        "surface-container-highest": "#dce4e8",
+                        "on-tertiary": "#f3ffc3",
+                        "tertiary-fixed-dim": "#e2efb0",
+                        "outline": "#747c80",
+                        "tertiary-container": "#f0fdbd",
+                        "surface": "#f8f9fb",
+                        "inverse-surface": "#0b0f10",
+                        "on-primary-container": "#663300",
+                        "on-background": "#2c3437",
+                        "background": "#f8f9fb",
+                        "surface-bright": "#f8f9fb",
+                        "on-tertiary-fixed": "#455020",
+                        "primary-dim": "#cc7000",
+                        "inverse-primary": "#ffd699",
+                        "error-dim": "#67040d",
+                        "surface-container-low": "#f0f4f7",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#f2faff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+        }
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+        }
+        
+        .scanner-frame::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 2px solid rgba(255, 140, 0, 0.3);
+            border-radius: 1.5rem;
+        }
+        
+        .scanner-corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #ff8c00;
+        }
+        
+        .scanner-corner-tl { 
+            top: -2px; 
+            left: -2px; 
+            border-right: 0; 
+            border-bottom: 0; 
+            border-top-left-radius: 1.5rem; 
+        }
+        
+        .scanner-corner-tr { 
+            top: -2px; 
+            right: -2px; 
+            border-left: 0; 
+            border-bottom: 0; 
+            border-top-right-radius: 1.5rem; 
+        }
+        
+        .scanner-corner-bl { 
+            bottom: -2px; 
+            left: -2px; 
+            border-right: 0; 
+            border-top: 0; 
+            border-bottom-left-radius: 1.5rem; 
+        }
+        
+        .scanner-corner-br { 
+            bottom: -2px; 
+            right: -2px; 
+            border-left: 0; 
+            border-top: 0; 
+            border-bottom-right-radius: 1.5rem; 
+        }
+        
+        @keyframes scan-line {
+            0% { top: 10%; }
+            50% { top: 90%; }
+            100% { top: 10%; }
+        }
+        
+        .scanning-line {
+            animation: scan-line 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface overflow-hidden">
+    <!-- SideNavBar -->
+    <aside class="fixed left-0 top-0 h-full flex flex-col py-8 px-6 bg-slate-50 dark:bg-slate-950 h-full w-72 border-r-0 z-50">
+        <div class="mb-10 px-2">
+            <div class="flex items-center gap-3 mb-1">
+                <span class="material-symbols-outlined text-3xl text-primary" data-icon="restaurant">restaurant</span>
+                <h1 class="text-xl font-bold tracking-tighter text-slate-800 dark:text-slate-100">The Culinary Concierge</h1>
+            </div>
+            <p class="text-xs font-medium uppercase tracking-widest text-slate-500 opacity-70 ml-10">Tableau Management</p>
+        </div>
+        
+        <nav class="flex-1 space-y-2">
+            <!-- Dashboard -->
+            <a class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors group" href="#">
+                <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                <span class="plus-jakarta-sans font-medium tracking-tight">Dashboard</span>
+            </a>
+            
+            <!-- Meal Logs -->
+            <a class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors group" href="#">
+                <span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+                <span class="plus-jakarta-sans font-medium tracking-tight">Meal Logs</span>
+            </a>
+            
+            <!-- QR Scanner (Active) -->
+            <a class="flex items-center gap-4 px-4 py-3 rounded-xl text-orange-700 dark:text-orange-400 font-bold border-r-4 border-orange-600 bg-orange-50 dark:bg-orange-900/20 transition-colors scale-[0.98] transition-transform duration-150" href="#">
+                <span class="material-symbols-outlined" data-icon="qr_code_scanner" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+                <span class="plus-jakarta-sans font-medium tracking-tight">QR Scanner</span>
+            </a>
+            
+            <!-- Settings -->
+            <a class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors group" href="#">
+                <span class="material-symbols-outlined" data-icon="settings">settings</span>
+                <span class="plus-jakarta-sans font-medium tracking-tight">Settings</span>
+            </a>
+        </nav>
+        
+        <div class="mt-auto pt-6 border-t border-slate-200/50">
+            <button class="w-full bg-primary text-on-primary py-4 px-6 rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm hover:opacity-90 transition-opacity">
+                <span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                New Meal Plan
+            </button>
+            
+            <div class="mt-6 flex items-center gap-3 px-2">
+                <div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden">
+                    <img alt="User Profile Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCK9zIL0YDYg0Hm5sDHYfB7_MZ7FnVZUZYR3HHN6mzBbM_7EwIsxZKJYA5xEO551lfmzCG37xr5zPJj2LpM8EAE9ChbpepUDLYJxHWpl7ke7bk_L0btWbRzmW0LZ3W57VglVRkX9IACfa1pLoDhRhDvOv2q0qkeLu0ijYMsLMJ39eUEn0_UGLN4hb1BI_o99KRaCz9FKBpZkehWZi8ct9pnXuRLmp_3xri7VokSsINYJ4DqsdZ7vSQ2Vigvop_DWqWYZdiaw7Ucb252"/>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-slate-800">Chef Nguyen</p>
+                    <p class="text-xs text-slate-500">Executive Head</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Canvas -->
+    <main class="ml-72 min-h-screen flex flex-col">
+        <!-- TopAppBar -->
+        <header class="flex justify-between items-center px-10 py-6 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm z-40">
+            <div>
+                <h2 class="text-lg font-black text-slate-900 dark:text-white tracking-tight uppercase">Culinary Tablet</h2>
+            </div>
+            
+            <div class="flex items-center gap-8">
+                <nav class="hidden md:flex items-center gap-6">
+                    <a class="plus-jakarta-sans text-sm font-semibold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-opacity" href="#">Overview</a>
+                    <a class="plus-jakarta-sans text-sm font-semibold uppercase tracking-widest text-orange-600 border-b-2 border-orange-600 pb-1" href="#">History</a>
+                </nav>
+                
+                <div class="flex items-center gap-4 ml-4">
+                    <button class="p-2 text-slate-400 hover:text-slate-600 transition-opacity">
+                        <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                    </button>
+                    <button class="p-2 text-slate-400 hover:text-slate-600 transition-opacity">
+                        <span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Two Column Layout for Tablet -->
+        <div class="flex-1 p-10 flex gap-8 h-[calc(100vh-88px)]">
+            <!-- Column 1: QR Scanner Area -->
+            <section class="flex-[1.2] flex flex-col gap-6">
+                <div class="bg-surface-container rounded-xl p-8 h-full flex flex-col">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-headline-sm font-bold tracking-tight text-on-surface">Live Scanner</h3>
+                        <div class="flex items-center gap-2 bg-orange-100 px-3 py-1 rounded-full">
+                            <span class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                            <span class="text-xs font-bold text-orange-700 uppercase tracking-wider">System Active</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 relative bg-black rounded-xl overflow-hidden group">
+                        <!-- Simulated Camera Feed -->
+                        <img alt="Scanner background" class="w-full h-full object-cover opacity-60" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3vxs6DHXtZNtYuQNhRtbBlPis1wa5OdFySKDIAMeI4OZ88LemKfztl-F7VE-L3owZgVzEA68Bg9RRkgWIVzQroK1cKJWfkZHeMZYcxXCvJaqkBXPHv3LV6jGnuKPieuhlWdmX-sWjwUul4HER35JFmwdzgm1tBTnajFJtNp14Dtvcr6IVjuNLOyyiFDB1vtwUpLj-0FdhRYusjrTqYqgmDAgHqTB20Bj9cDXTh9JJKBJwG43Pt9ux77fln_I725iKZtBOqAsnXw9r"/>
+                        
+                        <!-- Scanner UI Overlays -->
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-72 h-72 relative scanner-frame">
+                                <div class="scanner-corner scanner-corner-tl"></div>
+                                <div class="scanner-corner scanner-corner-tr"></div>
+                                <div class="scanner-corner scanner-corner-bl"></div>
+                                <div class="scanner-corner scanner-corner-br"></div>
+                                
+                                <!-- Animated Scanning Line -->
+                                <div class="absolute inset-x-4 scanning-line h-1 bg-orange-500/70 shadow-[0_0_20px_#ff8c00] rounded-full"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Instructions Overlay -->
+                        <div class="absolute bottom-10 left-0 right-0 text-center">
+                            <p class="text-white text-sm font-medium bg-black/40 backdrop-blur-md inline-block px-6 py-2 rounded-full">Align QR code within the frame to scan</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex items-center justify-center gap-10">
+                        <div class="text-center">
+                            <div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center mb-2 mx-auto hover:bg-orange-100 transition-colors cursor-pointer">
+                                <span class="material-symbols-outlined text-on-surface-variant" data-icon="flashlight_on">flashlight_on</span>
+                            </div>
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Flash</span>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center mb-2 mx-auto hover:bg-orange-100 transition-colors cursor-pointer">
+                                <span class="material-symbols-outlined text-on-surface-variant" data-icon="flip_camera_ios">flip_camera_ios</span>
+                            </div>
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Switch</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Column 2: Meal Information -->
+            <section class="flex-1 flex flex-col gap-6">
+                <!-- Result Card -->
+                <div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm flex-1 flex flex-col">
+                    <div class="flex items-center justify-between mb-8">
+                        <span class="label-md bg-orange-100 text-orange-700 px-4 py-1.5 rounded-full font-bold text-xs tracking-widest flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            ĐÃ XÁC NHẬN
+                        </span>
+                        <span class="text-on-surface-variant font-medium text-sm">12:30 PM • Today</span>
+                    </div>
+                    
+                    <div class="flex flex-col items-center text-center mb-8">
+                        <div class="w-full aspect-video rounded-xl overflow-hidden mb-6 bg-surface-container">
+                            <img alt="Cơm gà xối mỡ" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtO6RxEwS93kSUl9RlfsD_M0O8sJplXN65BrB3ptsN_k8f_sCiu8lY0SNrF7HKa5BaNyzLJuaXVXQHlGCqzcRxLXE-xIoEyZANEef8V5xLrukq1oCUvBEMhEwY6uKZ46YriUe0kKYV1W51a4zvok8pdBvjp0RYuLEBNvDMGkdUddOlxb5ndl3-lekXS4I92f5f7yQPCw08-_HN4ge2dI9yNL3Rf7E2MCW_HK_PABLGex3GUB0aUE2YgcF0dNv3RuGe3ZwPaxxBzES8"/>
+                        </div>
+                        <h2 class="text-3xl font-extrabold text-on-surface tracking-tight mb-2">Cơm gà xối mỡ</h2>
+                        <p class="text-on-surface-variant font-medium">Signature Lunch Special • Kitchen Station 1</p>
+                    </div>
+                    
+                    <div class="space-y-6 flex-1">
+                        <div class="bg-surface-container-low rounded-xl p-6 flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-full bg-white border-2 border-orange-200 p-1">
+                                <img alt="Nguyen Van Anh" class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZcmXoy8GA0E2_Us_ft6pOq98D3i4FHqXegKr7WwNi6QHxOHy8C7n384f9O-pNSDhgghNA3hxSMxNH8dtPO9_wsDwvH9oz4pBnj2YIjWeT4FaYA9YN2--nYSZMc9dZCMjNEEycOnP0CNKiAE8s0ZgOg34s73a2HgrmM_w6doWp3kxHDX2dwlhbqn5kMCheSgylc2CLg-5QtifkBLf7UaHNgGpKRjoIJG3JfwYVk8PMubnVOw1V62pdizjBy7jv96sIqDnGJf9YS6uR"/>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-0.5">Employee</p>
+                                <p class="text-lg font-bold text-on-surface">Nguyen Van Anh</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-surface-container-low rounded-xl p-5">
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Department</p>
+                                <p class="font-bold text-on-surface">Creative Design</p>
+                            </div>
+                            <div class="bg-surface-container-low rounded-xl p-5">
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Meal Credit</p>
+                                <p class="font-bold text-orange-600">-1 Balance</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex gap-4">
+                        <button class="flex-1 bg-surface-container-highest text-on-surface font-bold py-4 rounded-xl hover:bg-surface-variant transition-colors">Report Issue</button>
+                        <button class="flex-1 bg-primary text-on-primary font-bold py-4 rounded-xl shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 hover:bg-orange-600 transition-colors">
+                            <span class="material-symbols-outlined" data-icon="done_all">done_all</span>
+                            Complete
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity Small Bento -->
+                <div class="bg-tertiary-container rounded-xl p-6 flex items-center justify-between border border-tertiary-fixed-dim/30">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-on-tertiary-container/10 rounded-full flex items-center justify-center text-on-tertiary-container">
+                            <span class="material-symbols-outlined" data-icon="history">history</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-widest text-on-tertiary-container/70">Previous Scan</p>
+                            <p class="font-bold text-on-tertiary-container">Tran Thi Binh • 12:28 PM</p>
+                        </div>
+                    </div>
+                    <span class="material-symbols-outlined text-on-tertiary-container/40" data-icon="chevron_right">chevron_right</span>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

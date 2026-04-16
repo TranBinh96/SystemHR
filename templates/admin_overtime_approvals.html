@@ -122,9 +122,14 @@
                 <!-- KPI theo phòng ban -->
                 <div class="mb-5">
                     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
-                      
-                        <div id="department-kpi" class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                            <!-- KPI text will be inserted here -->
+                        <div class="flex items-start justify-between gap-3">
+                            <div id="department-kpi" class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed flex-1 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                                <!-- KPI text will be inserted here -->
+                            </div>
+                            <button id="view-kpi-detail-btn" onclick="showKPIDetail()" class="hidden flex-shrink-0 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
+                                <span class="material-symbols-outlined text-sm mr-1 align-middle">visibility</span>
+                                Xem chi tiết
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -154,9 +159,9 @@
                         </div>
                     </div>
                     <div class="flex bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <button onclick="changePeriod('today')" id="btn-today" class="px-4 py-1.5 text-xs font-bold rounded bg-green-600 text-white">Hôm nay</button>
+                        <button onclick="changePeriod('today')" id="btn-today" class="px-4 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 rounded">Hôm nay</button>
                         <button onclick="changePeriod('tomorrow')" id="btn-tomorrow" class="px-4 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 rounded">Ngày mai</button>
-                        <button onclick="changePeriod('week')" id="btn-week" class="px-4 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 rounded">Tuần</button>
+                        <button onclick="changePeriod('week')" id="btn-week" class="px-4 py-1.5 text-xs font-bold rounded bg-green-600 text-white">Tuần</button>
                         <button onclick="changePeriod('month')" id="btn-month" class="px-4 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 rounded">Tháng</button>
                     </div>
                 </div>
@@ -229,8 +234,45 @@
         </div>
     </nav>
 
+    <!-- KPI Detail Modal -->
+    <div id="kpi-detail-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">Chi tiết thống kê theo phòng ban</h3>
+                <button onclick="closeKPIDetail()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
+                <div id="kpi-detail-content" class="space-y-4">
+                    <!-- Content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reason Detail Modal -->
+    <div id="reason-detail-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">Lý do làm thêm</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1" id="reason-employee-name"></p>
+                </div>
+                <button onclick="closeReasonDetail()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+                <div id="reason-detail-content" class="text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
+                    <!-- Content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        let currentPeriod = 'today';
+        let currentPeriod = 'week';
         let currentPage = 1;
         const itemsPerPage = 10;
         let allRegistrations = [];
@@ -238,7 +280,9 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date();
-            document.getElementById('filterDateFrom').value = today.toISOString().split('T')[0];
+            const sevenDaysAgo = new Date(today);
+            sevenDaysAgo.setDate(today.getDate() - 7);
+            document.getElementById('filterDateFrom').value = sevenDaysAgo.toISOString().split('T')[0];
             document.getElementById('filterDateTo').value = today.toISOString().split('T')[0];
             loadStatistics();
         });
@@ -299,7 +343,12 @@
                                 department: r.department,
                                 reason: r.reason,
                                 total_hours: r.total_hours,
-                                status: r.status
+                                status: r.status,
+                                // Add new fields
+                                requester_name: r.requester_name,
+                                requester_username: r.requester_username,
+                                approver_name: r.approver_name,
+                                approver_username: r.approver_username
                             };
                         });
                         updateSummaryCards();
@@ -326,32 +375,28 @@
         function updateDepartmentKPI() {
             const deptMap = {};
             let totalCount = 0;
-            let totalHours = 0;
             
-            // Group by department and sum hours
+            // Group by department and count people
             allRegistrations.forEach(function(r) {
                 const dept = r.department || 'Chưa xác định';
                 if (!deptMap[dept]) {
-                    deptMap[dept] = { count: 0, hours: 0 };
+                    deptMap[dept] = { count: 0 };
                 }
                 deptMap[dept].count++;
-                deptMap[dept].hours += parseFloat(r.total_hours) || 0;
                 totalCount++;
-                totalHours += parseFloat(r.total_hours) || 0;
             });
             
-            // Sort by hours descending
+            // Sort by count descending
             const deptArray = Object.keys(deptMap).map(function(dept) {
-                return { name: dept, count: deptMap[dept].count, hours: deptMap[dept].hours };
-            }).sort(function(a, b) { return b.hours - a.hours; });
+                return { name: dept, count: deptMap[dept].count };
+            }).sort(function(a, b) { return b.count - a.count; });
             
             // Generate text only - all in one line
             let html = '';
             
             // Add total first
             html += '<span class="font-bold text-slate-700 dark:text-slate-300">Tổng tất cả:</span> ';
-            html += '<span class="font-bold text-emerald-600 dark:text-emerald-400">' + totalCount + ' người</span>, ';
-            html += '<span class="font-bold text-blue-600 dark:text-blue-400">' + totalHours.toFixed(1) + ' giờ</span>';
+            html += '<span class="font-bold text-emerald-600 dark:text-emerald-400">' + totalCount + ' người</span>';
             
             // Add separator
             if (deptArray.length > 0) {
@@ -364,8 +409,7 @@
                     html += ' <span class="text-slate-300 dark:text-slate-600 mx-2">•</span> ';
                 }
                 html += '<span class="font-semibold text-slate-700 dark:text-slate-300">' + dept.name + ':</span> ';
-                html += '<span class="text-slate-600 dark:text-slate-400">' + dept.count + ' người</span>, ';
-                html += '<span class="text-blue-600 dark:text-blue-400">' + dept.hours.toFixed(1) + ' giờ</span>';
+                html += '<span class="text-slate-600 dark:text-slate-400">' + dept.count + ' người</span>';
             });
             
             if (deptArray.length === 0 && totalCount === 0) {
@@ -373,7 +417,103 @@
             }
             
             document.getElementById('department-kpi').innerHTML = html;
+            
+            // Check if content is too long (more than 3 lines) and show "View detail" button
+            const kpiElement = document.getElementById('department-kpi');
+            const viewBtn = document.getElementById('view-kpi-detail-btn');
+            
+            // Check if content overflows (scrollHeight > clientHeight means it's truncated)
+            setTimeout(function() {
+                if (kpiElement.scrollHeight > kpiElement.clientHeight) {
+                    viewBtn.classList.remove('hidden');
+                    viewBtn.classList.add('inline-flex');
+                } else {
+                    viewBtn.classList.add('hidden');
+                    viewBtn.classList.remove('inline-flex');
+                }
+            }, 100);
+            
+            // Store data for modal (without hours)
+            window.kpiDetailData = {
+                total: { count: totalCount },
+                departments: deptArray
+            };
         }
+
+        function showKPIDetail() {
+            const modal = document.getElementById('kpi-detail-modal');
+            const content = document.getElementById('kpi-detail-content');
+            const data = window.kpiDetailData;
+            
+            if (!data) return;
+            
+            let html = '';
+            
+            // Total summary card
+            html += '<div class="bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-xl p-6 border border-emerald-200 dark:border-emerald-800">';
+            html += '<h4 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Tổng hợp</h4>';
+            html += '<div class="flex items-center justify-center">';
+            html += '<div><p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Tổng số người</p><p class="text-4xl font-black text-emerald-600 dark:text-emerald-400">' + data.total.count + '</p></div>';
+            html += '</div></div>';
+            
+            // Department breakdown
+            html += '<div class="space-y-3">';
+            html += '<h4 class="text-lg font-bold text-slate-900 dark:text-slate-100">Chi tiết theo phòng ban</h4>';
+            
+            data.departments.forEach(function(dept, index) {
+                const bgColor = index % 2 === 0 ? 'bg-slate-50 dark:bg-slate-800/50' : 'bg-white dark:bg-slate-900';
+                html += '<div class="' + bgColor + ' rounded-lg p-4 border border-slate-200 dark:border-slate-700">';
+                html += '<div class="flex items-center justify-between">';
+                html += '<div class="flex-1">';
+                html += '<h5 class="font-bold text-slate-900 dark:text-slate-100 mb-2">' + dept.name + '</h5>';
+                html += '<div class="flex items-center gap-2"><span class="material-symbols-outlined text-sm text-emerald-600">group</span><span class="text-sm text-slate-600 dark:text-slate-400">' + dept.count + ' người</span></div>';
+                html += '</div></div></div>';
+            });
+            
+            html += '</div>';
+            
+            content.innerHTML = html;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeKPIDetail() {
+            const modal = document.getElementById('kpi-detail-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('kpi-detail-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeKPIDetail();
+            }
+        });
+
+        function showReasonDetail(reason, employeeName) {
+            const modal = document.getElementById('reason-detail-modal');
+            const content = document.getElementById('reason-detail-content');
+            const nameElement = document.getElementById('reason-employee-name');
+            
+            nameElement.textContent = employeeName;
+            content.textContent = reason;
+            
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeReasonDetail() {
+            const modal = document.getElementById('reason-detail-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Close reason modal when clicking outside
+        document.getElementById('reason-detail-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeReasonDetail();
+            }
+        });
 
         function applyGlobalFilter() {
             const q = document.getElementById('globalSearch').value.toLowerCase().trim();
@@ -433,7 +573,7 @@
                 return;
             }
 
-            let tableHTML = '<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 dark:bg-slate-800/50"><tr><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Ngày</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Nhân viên</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Mã NV</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Phòng ban</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Số giờ</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Lý do</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Trạng thái</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-700">';
+            let tableHTML = '<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 dark:bg-slate-800/50"><tr><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Ngày</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Phòng ban</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Số người</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Người đăng ký</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Lý do</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Người phê duyệt</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Trạng thái</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-700">';
 
             pageGroups.forEach(function(g) {
                 const dateObj = new Date(g.date);
@@ -453,11 +593,37 @@
                     const statusClass = r.status === 'approved' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : r.status === 'pending' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
                     const statusText = r.status === 'approved' ? 'Đã duyệt' : r.status === 'pending' ? 'Chờ duyệt' : 'Từ chối';
                     
-                    tableHTML += '<td class="px-4 py-3"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-xs font-bold">' + r.user_name.charAt(0).toUpperCase() + '</div><span class="font-medium text-slate-900 dark:text-slate-100">' + r.user_name + '</span></div></td>';
-                    tableHTML += '<td class="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono text-xs">' + r.employee_id + '</td>';
+                    // Debug log
+                    console.log('Request data:', {
+                        requester_name: r.requester_name,
+                        requester_username: r.requester_username,
+                        approver_name: r.approver_name,
+                        approver_username: r.approver_username
+                    });
+                    
+                    // Handle requester display - fallback to employee info if requester info not available
+                    let requesterDisplay = '-';
+                    if (r.requester_name && r.requester_username) {
+                        requesterDisplay = r.requester_name + ' (' + r.requester_username + ')';
+                    } else if (r.employee_name && r.employee_id) {
+                        requesterDisplay = r.employee_name + ' (' + r.employee_id + ')';
+                    }
+                    
+                    // Handle approver display
+                    let approverDisplay = '-';
+                    if (r.approver_name && r.approver_username) {
+                        approverDisplay = r.approver_name + ' (' + r.approver_username + ')';
+                    }
+                    
+                    console.log('Display values:', { requesterDisplay, approverDisplay });
+                    
+                    const employeeName = r.employee_name || r.requester_name || 'N/A';
+                    
                     tableHTML += '<td class="px-4 py-3 text-slate-600 dark:text-slate-400">' + r.department + '</td>';
-                    tableHTML += '<td class="px-4 py-3"><span class="font-bold text-slate-900 dark:text-slate-100">' + r.total_hours + ' giờ</span></td>';
-                    tableHTML += '<td class="px-4 py-3"><div class="text-slate-600 dark:text-slate-400 text-xs">' + (r.reason || '-') + '</div></td>';
+                    tableHTML += '<td class="px-4 py-3"><span class="font-bold text-slate-900 dark:text-slate-100">' + r.total_hours + '</span></td>';
+                    tableHTML += '<td class="px-4 py-3"><div class="text-slate-700 dark:text-slate-300 text-xs font-medium">' + requesterDisplay + '</div></td>';
+                    tableHTML += '<td class="px-4 py-3 max-w-xs"><div class="text-slate-600 dark:text-slate-400 text-xs cursor-pointer hover:text-blue-600 transition-colors" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;" onclick="showReasonDetail(\'' + (r.reason || '-').replace(/'/g, "\\'").replace(/\n/g, '\\n') + '\', \'' + employeeName.replace(/'/g, "\\'") + '\')" title="Kích để xem đầy đủ">' + (r.reason || '-') + '</div></td>';
+                    tableHTML += '<td class="px-4 py-3"><div class="text-slate-700 dark:text-slate-300 text-xs font-medium">' + approverDisplay + '</div></td>';
                     tableHTML += '<td class="px-4 py-3"><span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ' + statusClass + '">' + statusText + '</span></td>';
                     tableHTML += '</tr>';
                 });

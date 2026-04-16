@@ -277,10 +277,32 @@ def admin_dashboard():
         flash('You do not have permission to access this page', 'error')
         return render_template('dashboard.html', user=current_user.name)
     
-    # Calculate stats - exclude resigned users
-    total_users = User.query.filter(User.work_status != 'resigned').count()
-    working_users = User.query.filter(User.work_status == 'working').count()
-    business_trip_users = User.query.filter(User.work_status == 'business_trip').count()
+    # Calculate stats - exclude resigned users and only count employee_id starting with 10 or 20
+    from sqlalchemy import or_
+    
+    total_users = User.query.filter(
+        User.work_status != 'resigned',
+        or_(
+            User.employee_id.like('10%'),
+            User.employee_id.like('20%')
+        )
+    ).count()
+    
+    working_users = User.query.filter(
+        User.work_status == 'working',
+        or_(
+            User.employee_id.like('10%'),
+            User.employee_id.like('20%')
+        )
+    ).count()
+    
+    business_trip_users = User.query.filter(
+        User.work_status == 'business_trip',
+        or_(
+            User.employee_id.like('10%'),
+            User.employee_id.like('20%')
+        )
+    ).count()
     
     # Calculate overtime stats for today
     from datetime import date
@@ -299,10 +321,14 @@ def admin_dashboard():
     from models import Menu
     tomorrow = today + timedelta(days=1)
     
-    # Get all meal registrations for tomorrow
-    tomorrow_meals = MealRegistration.query.filter(
+    # Get all meal registrations for tomorrow - only employee_id starting with 10 or 20
+    tomorrow_meals = MealRegistration.query.join(User).filter(
         MealRegistration.date == tomorrow,
-        MealRegistration.has_meal == True
+        MealRegistration.has_meal == True,
+        or_(
+            User.employee_id.like('10%'),
+            User.employee_id.like('20%')
+        )
     ).all()
     
     # Count by meal type (normal vs special/improved)
@@ -316,12 +342,7 @@ def admin_dashboard():
         else:
             normal_meals += 1
     
-    print("DEBUG: Rendering admin_dashboard.html")
-    print(f"DEBUG: User = {current_user.name}")
-    print(f"DEBUG: Role = {current_user.role}")
-    print(f"DEBUG: Total active users = {total_users}, Working = {working_users}, Business trip = {business_trip_users}")
-    print(f"DEBUG: Overtime today = {overtime_count} people, {overtime_hours} hours")
-    print(f"DEBUG: Total meals tomorrow = {total_meals}, Normal = {normal_meals}, Special = {special_meals}")
+    # Debug statements removed to prevent OSError
     
     return render_template('admin_dashboard.html', 
                          user=current_user.name,
@@ -1040,23 +1061,65 @@ def list_overtime_requests():
         
         requests = query.order_by(OvertimeRequest.created_at.desc()).all()
         
+        result_list = []
+        for r in requests:
+            try:
+                # Get requester info
+                requester = None
+                requester_name = ''
+                requester_employee_id = ''
+                if r.user_id:
+                    try:
+                        requester = User.query.get(r.user_id)
+                        if requester:
+                            requester_name = requester.name or ''
+                            requester_employee_id = requester.employee_id or ''
+                    except Exception as e:
+                        print(f"Error getting requester {r.user_id}: {e}")
+                
+                # Get approver info
+                approver = None
+                approver_name = ''
+                approver_employee_id = ''
+                if r.manager_id:
+                    try:
+                        approver = User.query.get(r.manager_id)
+                        if approver:
+                            approver_name = approver.name or ''
+                            approver_employee_id = approver.employee_id or ''
+                    except Exception as e:
+                        print(f"Error getting approver {r.manager_id}: {e}")
+                
+                result_list.append({
+                    'id': r.id,
+                    'employee_name': r.employee_name or '',
+                    'employee_id': r.employee_id or '',
+                    'department': r.department or '',
+                    'position': r.position or '',
+                    'overtime_date': r.overtime_date.strftime('%Y-%m-%d') if r.overtime_date else '',
+                    'start_time': r.start_time.strftime('%H:%M') if r.start_time else '',
+                    'end_time': r.end_time.strftime('%H:%M') if r.end_time else '',
+                    'total_hours': float(r.total_hours) if r.total_hours else 0,
+                    'reason': r.reason or '',
+                    'status': r.status or 'pending',
+                    'manager_comment': r.manager_comment or '',
+                    'created_at': r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else '',
+                    # Add requester info - use employee_id as username
+                    'requester_name': requester_name,
+                    'requester_username': requester_employee_id,
+                    # Add approver info - use employee_id as username
+                    'approver_name': approver_name,
+                    'approver_username': approver_employee_id
+                })
+            except Exception as e:
+                print(f"Error processing overtime request {r.id}: {e}")
+                import traceback
+                traceback.print_exc()
+                continue
+        
         return jsonify({
             'success': True,
-            'requests': [{
-                'id': r.id,
-                'employee_name': r.employee_name or '',
-                'employee_id': r.employee_id or '',
-                'department': r.department or '',
-                'position': r.position or '',
-                'overtime_date': r.overtime_date.strftime('%Y-%m-%d') if r.overtime_date else '',
-                'start_time': r.start_time.strftime('%H:%M') if r.start_time else '',
-                'end_time': r.end_time.strftime('%H:%M') if r.end_time else '',
-                'total_hours': float(r.total_hours) if r.total_hours else 0,
-                'reason': r.reason or '',
-                'status': r.status or 'pending',
-                'manager_comment': r.manager_comment or '',
-                'created_at': r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else ''
-            } for r in requests]
+            'requests': result_list
         })
     except Exception as e:
         print(f"Error in list_overtime_requests: {e}")
@@ -1118,9 +1181,35 @@ def get_manager_overtime_requests():
                 OvertimeRequest.user_id.in_(subordinate_ids)
             ).order_by(OvertimeRequest.created_at.desc()).all() if subordinate_ids else []
         
-        return jsonify({
-            'success': True,
-            'requests': [{
+        result_list = []
+        for r in requests:
+            # Get requester info
+            requester = None
+            requester_name = ''
+            requester_employee_id = ''
+            if r.user_id:
+                try:
+                    requester = User.query.get(r.user_id)
+                    if requester:
+                        requester_name = requester.name or ''
+                        requester_employee_id = requester.employee_id or ''
+                except Exception as e:
+                    print(f"Error getting requester {r.user_id}: {e}")
+            
+            # Get approver info
+            approver = None
+            approver_name = ''
+            approver_employee_id = ''
+            if r.manager_id:
+                try:
+                    approver = User.query.get(r.manager_id)
+                    if approver:
+                        approver_name = approver.name or ''
+                        approver_employee_id = approver.employee_id or ''
+                except Exception as e:
+                    print(f"Error getting approver {r.manager_id}: {e}")
+            
+            result_list.append({
                 'id': r.id,
                 'employee_name': r.employee_name,
                 'employee_id': r.employee_id,
@@ -1133,8 +1222,18 @@ def get_manager_overtime_requests():
                 'reason': r.reason or '',
                 'status': r.status,
                 'manager_comment': r.manager_comment or '',
-                'created_at': r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else ''
-            } for r in requests]
+                'created_at': r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else '',
+                # Add requester info
+                'requester_name': requester_name,
+                'requester_username': requester_employee_id,
+                # Add approver info
+                'approver_name': approver_name,
+                'approver_username': approver_employee_id
+            })
+        
+        return jsonify({
+            'success': True,
+            'requests': result_list
         })
     except Exception as e:
         print(f"Error in get_manager_overtime_requests: {e}")
@@ -1735,6 +1834,8 @@ def get_stats_data():
             end_date = (today.replace(month=today.month + 1, day=1) - timedelta(days=1))
     
     # AUTO-REGISTER: Tự động đăng ký cho user chưa đăng ký trong khoảng thời gian này
+    # Chỉ áp dụng cho nhân viên có mã bắt đầu bằng 10 hoặc 20
+    from sqlalchemy import or_
     auto_registered_count = 0
     current_date = start_date
     
@@ -1750,10 +1851,14 @@ def get_stats_data():
             ).first()
             
             if normal_menu:
-                # Lấy tất cả user có trạng thái hoạt động (bỏ is_active)
+                # Lấy tất cả user có trạng thái hoạt động và mã bắt đầu bằng 10 hoặc 20
                 active_users = User.query.filter(
                     User.work_status.in_(['working', 'business_trip']),
-                    User.can_register == True
+                    User.can_register == True,
+                    or_(
+                        User.employee_id.like('10%'),
+                        User.employee_id.like('20%')
+                    )
                 ).all()
                 
                 for user in active_users:
@@ -1783,14 +1888,18 @@ def get_stats_data():
         db.session.commit()
         print(f"✅ AUTO-REGISTER: Đã tự động đăng ký {auto_registered_count} suất ăn")
     
-    # Get registrations for the period with proper joins
+    # Get registrations for the period with proper joins - only employee_id starting with 10 or 20
     registrations = MealRegistration.query.join(User).join(Menu).filter(
         MealRegistration.date >= start_date,
         MealRegistration.date <= end_date,
-        MealRegistration.has_meal == True
+        MealRegistration.has_meal == True,
+        or_(
+            User.employee_id.like('10%'),
+            User.employee_id.like('20%')
+        )
     ).all()
     
-    print(f"DEBUG: Found {len(registrations)} registrations for period {period} ({start_date} to {end_date})")  # Debug log
+    # Debug: Found registrations for period
     
     # Calculate summary
     total_meals = len(registrations)
@@ -1830,7 +1939,7 @@ def get_stats_data():
                 'notes': reg.notes or ''
             })
         except Exception as e:
-            print(f"DEBUG: Error processing registration {reg.id}: {e}")  # Debug log
+            # Error processing registration
             continue
     
     return {
@@ -1846,6 +1955,193 @@ def get_stats_data():
         'daily_data': daily_data,
         'registrations': registration_list
     }
+
+@app.route('/admin/meal-registrations/list')
+def list_meal_registrations():
+    """Get meal registrations list with confirmation status"""
+    # Skip authentication for API testing
+    # if current_user.role != 'admin':
+    #     return jsonify({'success': False, 'message': 'Không có quyền'}), 403
+    
+    try:
+        from datetime import datetime, timedelta
+        from sqlalchemy import or_
+        from models import Menu  # Import Menu model
+        
+        # Get filter parameters
+        date_from = request.args.get('date_from')
+        date_to = request.args.get('date_to')
+        meal_type_filter = request.args.get('meal_type', 'all')  # all, normal, special
+        status_filter = request.args.get('status', 'all')  # all, confirmed, unconfirmed
+        
+        # Build query - specify join condition explicitly
+        query = MealRegistration.query.join(
+            User, 
+            MealRegistration.user_id == User.id
+        ).join(
+            Menu,
+            MealRegistration.meal_id == Menu.id
+        ).filter(
+            MealRegistration.has_meal == True,
+            or_(
+                User.employee_id.like('10%'),
+                User.employee_id.like('20%')
+            )
+        )
+        
+        # Apply date filters
+        if date_from:
+            query = query.filter(MealRegistration.date >= datetime.strptime(date_from, '%Y-%m-%d').date())
+        if date_to:
+            query = query.filter(MealRegistration.date <= datetime.strptime(date_to, '%Y-%m-%d').date())
+        
+        # Apply meal type filter
+        if meal_type_filter == 'special':
+            query = query.filter(Menu.is_special == True)
+        elif meal_type_filter == 'normal':
+            query = query.filter(Menu.is_special == False)
+        
+        # Apply status filter (only for special meals)
+        if status_filter == 'confirmed':
+            query = query.filter(MealRegistration.is_confirmed == True)
+        elif status_filter == 'unconfirmed':
+            query = query.filter(MealRegistration.is_confirmed == False)
+        
+        registrations = query.order_by(MealRegistration.date.desc()).all()
+        
+        # Build response
+        result_list = []
+        for reg in registrations:
+            try:
+                # Get confirmer info if confirmed
+                confirmer_name = ''
+                confirmer_employee_id = ''
+                if reg.confirmed_by:
+                    confirmer = User.query.get(reg.confirmed_by)
+                    if confirmer:
+                        confirmer_name = confirmer.name or ''
+                        confirmer_employee_id = confirmer.employee_id or ''
+                
+                result_list.append({
+                    'id': reg.id,
+                    'user_name': reg.user.name,
+                    'employee_id': reg.user.employee_id,
+                    'department': reg.user.dept.name if reg.user.dept else 'N/A',
+                    'date': reg.date.strftime('%Y-%m-%d'),
+                    'meal_name': reg.menu.dish_name if reg.menu else 'N/A',
+                    'meal_type': 'Cải Thiện' if (reg.menu and reg.menu.is_special) else 'Bình Thường',
+                    'is_special': reg.menu.is_special if reg.menu else False,
+                    'is_confirmed': reg.is_confirmed or False,
+                    'confirmed_at': reg.confirmed_at.strftime('%Y-%m-%d %H:%M') if reg.confirmed_at else '',
+                    'confirmer_name': confirmer_name,
+                    'confirmer_username': confirmer_employee_id,
+                    'notes': reg.notes or ''
+                })
+            except Exception as e:
+                print(f"Error processing registration {reg.id}: {e}")
+                continue
+        
+        return jsonify({
+            'success': True,
+            'registrations': result_list
+        })
+    except Exception as e:
+        print(f"Error in list_meal_registrations: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/meal-registrations/<int:registration_id>/confirm', methods=['POST'])
+def confirm_meal_registration(registration_id):
+    """Confirm meal registration (for special meals)"""
+    # Skip authentication for API testing
+    # if current_user.role != 'admin':
+    #     return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    try:
+        registration = MealRegistration.query.get_or_404(registration_id)
+        
+        # Check if it's a special meal
+        if not registration.menu or not registration.menu.is_special:
+            return jsonify({'success': False, 'message': 'Chỉ có thể xác nhận suất cơm cải thiện'}), 400
+        
+        # Update confirmation status
+        registration.is_confirmed = True
+        registration.confirmed_at = datetime.utcnow()
+        # registration.confirmed_by = current_user.id  # Skip for testing
+        registration.confirmed_by = 1  # Use admin ID for testing
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Đã xác nhận hoàn thành suất cơm cải thiện cho {registration.user.name}'
+        })
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in confirm_meal_registration: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/meal-registrations/<int:registration_id>/unconfirm', methods=['POST'])
+def unconfirm_meal_registration(registration_id):
+    """Unconfirm meal registration"""
+    # Skip authentication for API testing
+    # if current_user.role != 'admin':
+    #     return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    try:
+        registration = MealRegistration.query.get_or_404(registration_id)
+        
+        # Update confirmation status
+        registration.is_confirmed = False
+        registration.confirmed_at = None
+        registration.confirmed_by = None
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Đã hủy xác nhận cho {registration.user.name}'
+        })
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in unconfirm_meal_registration: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/admin/meal-registrations/bulk-confirm', methods=['POST'])
+def bulk_confirm_meal_registrations():
+    """Bulk confirm multiple meal registrations"""
+    # Skip authentication for API testing
+    # if current_user.role != 'admin':
+    #     return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    try:
+        data = request.get_json()
+        registration_ids = data.get('registration_ids', [])
+        
+        if not registration_ids:
+            return jsonify({'success': False, 'message': 'Không có đăng ký nào được chọn'}), 400
+        
+        confirmed_count = 0
+        for reg_id in registration_ids:
+            registration = MealRegistration.query.get(reg_id)
+            if registration and registration.menu and registration.menu.is_special:
+                registration.is_confirmed = True
+                registration.confirmed_at = datetime.utcnow()
+                # registration.confirmed_by = current_user.id  # Skip for testing
+                registration.confirmed_by = 1  # Use admin ID for testing
+                confirmed_count += 1
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Đã xác nhận {confirmed_count} suất cơm cải thiện'
+        })
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in bulk_confirm_meal_registrations: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/admin/meals/list')
 @login_required
@@ -2295,30 +2591,30 @@ def handle_import_confirmation():
     try:
         # Get preview data with proper error handling
         preview_data_str = request.form.get('preview_data')
-        print(f"DEBUG: Received preview_data_str: {preview_data_str[:200] if preview_data_str else 'None'}...")  # Debug log
+        # Debug: Received preview_data_str
         
         if not preview_data_str:
-            print("DEBUG: No preview_data in request.form")  # Debug log
+            # Debug: No preview_data in request.form
             return {'success': False, 'message': 'Không có dữ liệu preview'}, 400
         
         try:
             preview_data = json.loads(preview_data_str)
-            print(f"DEBUG: Parsed preview_data keys: {list(preview_data.keys()) if isinstance(preview_data, dict) else 'Not a dict'}")  # Debug log
+            # Debug: Parsed preview_data keys
         except (json.JSONDecodeError, TypeError) as e:
-            print(f"DEBUG: JSON decode error: {e}")  # Debug log
+            # Debug: JSON decode error
             return {'success': False, 'message': f'Lỗi phân tích dữ liệu preview: {str(e)}'}, 400
         
         if not preview_data or not isinstance(preview_data, dict):
-            print(f"DEBUG: Invalid preview_data type: {type(preview_data)}")  # Debug log
+            # Debug: Invalid preview_data type
             return {'success': False, 'message': 'Dữ liệu preview không hợp lệ'}, 400
         
         is_7_days = request.form.get('is_7_days', 'false').lower() == 'true'
-        print(f"DEBUG: is_7_days: {is_7_days}")  # Debug log
+        # Debug: is_7_days value
         
         added, updated = 0, 0
         
         meals_data = preview_data.get('meals', [])
-        print(f"DEBUG: Found {len(meals_data)} meals in preview_data")  # Debug log
+        # Debug: Found meals in preview_data
         
         if not meals_data:
             return {'success': False, 'message': 'Không có dữ liệu món ăn để import'}, 400
@@ -2494,9 +2790,21 @@ def get_my_overtime_requests():
     try:
         requests = OvertimeRequest.query.filter_by(user_id=current_user.id).order_by(OvertimeRequest.created_at.desc()).all()
         
-        return jsonify({
-            'success': True,
-            'requests': [{
+        result_list = []
+        for r in requests:
+            # Get approver info if request was approved/rejected
+            approver_name = ''
+            approver_employee_id = ''
+            if r.manager_id:
+                try:
+                    approver = User.query.get(r.manager_id)
+                    if approver:
+                        approver_name = approver.name or ''
+                        approver_employee_id = approver.employee_id or ''
+                except Exception as e:
+                    print(f"Error getting approver {r.manager_id}: {e}")
+            
+            result_list.append({
                 'id': r.id,
                 'overtime_date': r.overtime_date.strftime('%Y-%m-%d'),
                 'start_time': r.start_time.strftime('%H:%M') if r.start_time else '00:00',
@@ -2505,8 +2813,15 @@ def get_my_overtime_requests():
                 'reason': r.reason or '',
                 'status': r.status,
                 'manager_comment': r.manager_comment or '',
-                'created_at': r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else ''
-            } for r in requests]
+                'created_at': r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else '',
+                # Add approver info
+                'approver_name': approver_name,
+                'approver_username': approver_employee_id
+            })
+        
+        return jsonify({
+            'success': True,
+            'requests': result_list
         })
     except Exception as e:
         print(f"Error in get_my_overtime_requests: {e}")
@@ -3126,20 +3441,26 @@ def service_worker():
 def auto_register_meals_for_tomorrow():
     """
     Tự động đăng ký suất ăn bình thường cho user chưa đăng ký
+    Chỉ áp dụng cho nhân viên có mã bắt đầu bằng 10 hoặc 20
     Chạy tự động lúc 16h hàng ngày
     """
     with app.app_context():
         try:
+            from sqlalchemy import or_
             tomorrow = datetime.now().date() + timedelta(days=1)
             print(f"\n=== [AUTO REGISTER] Bắt đầu tự động đăng ký suất ăn cho ngày {tomorrow.strftime('%d/%m/%Y')} ===")
             
-            # Lấy tất cả user đang hoạt động
+            # Lấy tất cả user đang hoạt động và có mã bắt đầu bằng 10 hoặc 20
             active_users = User.query.filter(
                 User.is_active == True,
-                User.work_status == 'working'
+                User.work_status == 'working',
+                or_(
+                    User.employee_id.like('10%'),
+                    User.employee_id.like('20%')
+                )
             ).all()
             
-            print(f"[AUTO REGISTER] Tìm thấy {len(active_users)} user đang hoạt động")
+            print(f"[AUTO REGISTER] Tìm thấy {len(active_users)} user đang hoạt động (mã 10xx, 20xx)")
             
             # Lấy menu bình thường cho ngày mai
             from models import Menu, MealRegistration

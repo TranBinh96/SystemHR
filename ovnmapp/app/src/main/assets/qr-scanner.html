@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>QR Scanner</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f8f9fb;
+            color: #2c3437;
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+        
+        .container {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #fafafa;
+            border-right: 1px solid #e5e7eb;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: width 0.3s ease, padding 0.3s ease;
+            position: relative;
+        }
+        
+        .sidebar.collapsed {
+            width: 80px;
+            padding: 32px 16px;
+        }
+        
+        .sidebar.collapsed .logo-text,
+        .sidebar.collapsed .logo-subtitle,
+        .sidebar.collapsed .nav-item span:not(.nav-icon),
+        .sidebar.collapsed .user-info,
+        .sidebar.collapsed .new-meal-btn span:not(.menu-icon) {
+            display: none;
+        }
+        
+        .sidebar.collapsed .logo-section {
+            text-align: center;
+        }
+        
+        .sidebar.collapsed .logo-title {
+            justify-content: center;
+        }
+        
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding: 12px;
+        }
+        
+        .sidebar.collapsed .nav-item.active {
+            border-right: 0;
+            border-left: 4px solid #27AE60;
+        }
+        
+        .sidebar.collapsed .new-meal-btn {
+            padding: 16px;
+        }
+        
+        .sidebar.collapsed .user-profile {
+            justify-content: center;
+        }
+        
+        .sidebar.collapsed .user-avatar {
+            margin: 0;
+        }
+        
+        .logo-section {
+            margin-bottom: 40px;
+            padding: 0 8px;
+            position: relative;
+        }
+        
+        .menu-toggle {
+            position: absolute;
+            top: 0;
+            right: -8px;
+            width: 32px;
+            height: 32px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            color: #64748b;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        
+        .menu-toggle:hover {
+            background: #f1f5f9;
+            color: #27AE60;
+        }
+        
+        .sidebar.collapsed .menu-toggle {
+            right: 50%;
+            transform: translateX(50%);
+        }
+        
+        .logo-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+        
+        .logo-icon {
+            font-size: 32px;
+            color: #27AE60;
+        }
+        
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.2;
+        }
+        
+        .logo-subtitle {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #94a3b8;
+            margin-left: 44px;
+        }
+        
+        .nav-menu {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #64748b;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .nav-item:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        
+        .nav-item.active {
+            background: #e8f5e9;
+            color: #27AE60;
+            font-weight: 700;
+            border-right: 4px solid #27AE60;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+        }
+        
+        .sidebar-bottom {
+            margin-top: auto;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .new-meal-btn {
+            width: 100%;
+            background: #27AE60;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar.collapsed .new-meal-btn {
+            width: 48px;
+            height: 48px;
+            padding: 0;
+            border-radius: 50%;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 24px;
+            padding: 0 8px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        .user-role {
+            font-size: 12px;
+            color: #64748b;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+        
+        .sidebar.collapsed ~ .main-content .header {
+            padding: 16px 24px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .header-title {
+            font-size: 16px;
+        }
+        
+        .header-title {
+            font-size: 18px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #1e293b;
+        }
+        
+        .header-nav {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+        
+        .header-nav a {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            color: #94a3b8;
+            padding-bottom: 4px;
+        }
+        
+        .header-nav a.active {
+            color: #27AE60;
+            border-bottom: 2px solid #27AE60;
+        }
+        
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            gap: 24px;
+            overflow: hidden;
+        }
+        
+        .sidebar.collapsed ~ .main-content .content-area {
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        /* Scanner Section */
+        .scanner-section {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .scanner-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #f8f9fb;
+            border-radius: 12px;
+        }
+        
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1e293b;
+        }
+        
+        .stat-item.total .stat-value {
+            color: #27AE60;
+        }
+        
+        .stat-item.improved .stat-value {
+            color: #3b82f6;
+        }
+        
+        .stat-item.normal .stat-value {
+            color: #f59e0b;
+        }
+        
+        .sidebar.collapsed ~ .main-content .stats-bar {
+            gap: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .stat-item {
+            padding: 8px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .stat-label {
+            font-size: 9px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .stat-value {
+            font-size: 20px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .scanner-card {
+            padding: 20px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .scanner-header {
+            margin-bottom: 16px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .scanner-title {
+            font-size: 18px;
+        }
+        
+        .scanner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .scanner-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #d4f4dd;
+            padding: 6px 16px;
+            border-radius: 20px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #27AE60;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .status-text {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #27AE60;
+        }
+        
+        .scanner-frame {
+            flex: 1;
+            background: #000;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .scanner-frame {
+            min-height: 300px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .scanner-overlay {
+            width: 240px;
+            height: 240px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .scanner-controls {
+            margin-top: 16px;
+            gap: 24px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .control-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+        }
+        
+        .scanner-overlay {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 2px solid rgba(39, 174, 96, 0.3);
+            border-radius: 24px;
+        }
+        
+        .corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #27AE60;
+        }
+        
+        .corner-tl {
+            top: -2px;
+            left: -2px;
+            border-right: 0;
+            border-bottom: 0;
+            border-top-left-radius: 24px;
+        }
+        
+        .corner-tr {
+            top: -2px;
+            right: -2px;
+            border-left: 0;
+            border-bottom: 0;
+            border-top-right-radius: 24px;
+        }
+        
+        .corner-bl {
+            bottom: -2px;
+            left: -2px;
+            border-right: 0;
+            border-top: 0;
+            border-bottom-left-radius: 24px;
+        }
+        
+        .corner-br {
+            bottom: -2px;
+            right: -2px;
+            border-left: 0;
+            border-top: 0;
+            border-bottom-right-radius: 24px;
+        }
+        
+        .scan-line {
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            height: 4px;
+            background: rgba(39, 174, 96, 0.7);
+            box-shadow: 0 0 20px #27AE60;
+            border-radius: 2px;
+            animation: scan 2s ease-in-out infinite;
+        }
+        
+        @keyframes scan {
+            0%, 100% { top: 10%; }
+            50% { top: 90%; }
+        }
+        
+        .scanner-instruction {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .scanner-controls {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 24px;
+        }
+        
+        .pickup-stats {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            padding: 16px;
+            background: #f8f9fb;
+            border-radius: 12px;
+        }
+        
+        .pickup-stats-inline {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .pickup-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-align: center;
+            padding: 8px 16px;
+            background: white;
+            border-radius: 20px;
+            border: 2px solid #e5e7eb;
+            min-width: 120px;
+            justify-content: center;
+        }
+        
+        .sidebar.collapsed ~ .main-content .pickup-item {
+            padding: 6px 12px;
+            gap: 4px;
+            min-width: 100px;
+        }
+        
+        .pickup-item.picked {
+            border-color: #27AE60;
+            background: #f0fdf4;
+        }
+        
+        .pickup-item.remaining {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+        
+        .pickup-label {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0;
+        }
+        
+        .pickup-item.picked .pickup-label {
+            color: #27AE60;
+        }
+        
+        .pickup-item.remaining .pickup-label {
+            color: #f59e0b;
+        }
+        
+        .pickup-value {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1;
+        }
+        
+        .pickup-item.picked .pickup-value {
+            color: #27AE60;
+        }
+        
+        .pickup-item.remaining .pickup-value {
+            color: #f59e0b;
+        }
+        
+        .sidebar.collapsed ~ .main-content .pickup-stats {
+            padding: 12px;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .pickup-stats-inline {
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .pickup-item {
+            padding: 8px 16px;
+            gap: 6px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .pickup-label {
+            font-size: 11px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .pickup-value {
+            font-size: 22px;
+        }
+        
+        .control-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .control-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #64748b;
+        }
+        
+        .control-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #64748b;
+        }
+        
+        /* Info Section */
+        .info-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .sidebar.collapsed ~ .main-content .info-card {
+            padding: 16px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .info-header {
+            margin-bottom: 20px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .meal-info {
+            margin-bottom: 20px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .meal-image {
+            margin-bottom: 16px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .meal-name {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .meal-description {
+            font-size: 13px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .employee-card {
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .employee-avatar {
+            width: 48px;
+            height: 48px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .employee-name {
+            font-size: 16px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .details-grid {
+            margin-bottom: 20px;
+            gap: 12px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .detail-item {
+            padding: 16px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .btn {
+            padding: 14px;
+            font-size: 14px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .history-card {
+            padding: 16px;
+        }
+        
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        
+        .confirmed-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #d4f4dd;
+            color: #27AE60;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .time-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #64748b;
+        }
+        
+        .meal-info {
+            text-align: left;
+            margin-bottom: 16px;
+        }
+        
+        .meal-content-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 16px;
+            background: #f8f9fb;
+            border-radius: 12px;
+        }
+        
+        .meal-details-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+        
+        .meal-image-compact {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ffd699 0%, #ffb84d 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            flex-shrink: 0;
+        }
+        
+        .meal-text {
+            flex: 1;
+        }
+        
+        .meal-name {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            color: #1e293b;
+        }
+        
+        .meal-description {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .pickup-stats-right {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        
+        .sidebar.collapsed ~ .main-content .meal-content-wrapper {
+            padding: 12px;
+            gap: 12px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .meal-image-compact {
+            width: 60px;
+            height: 60px;
+            font-size: 32px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .meal-name {
+            font-size: 20px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .meal-description {
+            font-size: 12px;
+        }
+        
+        .sidebar.collapsed ~ .main-content .pickup-stats-right {
+            gap: 6px;
+        }
+        
+        .meal-image {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ffd699 0%, #ffb84d 100%);
+            margin-bottom: 24px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+        }
+        
+        .meal-name {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        
+        .meal-description {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .employee-card {
+            background: #f8f9fb;
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .employee-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 2px solid #a8e6cf;
+            padding: 2px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .employee-avatar-inner {
+            width: 100%;
+            height: 100%;
+            background: #e5e7eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .employee-info {
+            flex: 1;
+        }
+        
+        .employee-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+        
+        .employee-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .detail-item {
+            background: #f8f9fb;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .detail-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            font-size: 15px;
+            font-weight: 700;
+        }
+        
+        .detail-value.green {
+            color: #27AE60;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            margin-top: auto;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #2c3437;
+        }
+        
+        .btn-primary {
+            background: #27AE60;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.2);
+        }
+        
+        .history-card {
+            background: #f0fdbd;
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid rgba(89, 100, 50, 0.2);
+        }
+        
+        .history-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .history-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(87, 98, 49, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #576231;
+        }
+        
+        .history-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(87, 98, 49, 0.7);
+            margin-bottom: 4px;
+        }
+        
+        .history-text {
+            font-size: 15px;
+            font-weight: 700;
+            color: #576231;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo-section">
+                <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">☰</button>
+                <div class="logo-title">
+                    <span class="logo-icon">🍴</span>
+                    <h1 class="logo-text">The Culinary<br>Concierge</h1>
+                </div>
+                <p class="logo-subtitle">Tableau Management</p>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span>Tổng quan</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📅</span>
+                    <span>Nhật ký bữa ăn</span>
+                </a>
+                <a href="#" class="nav-item active">
+                    <span class="nav-icon">📱</span>
+                    <span>Quét mã QR</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Cài đặt</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-bottom">
+                <button class="new-meal-btn">
+                    <span class="menu-icon">➕</span>
+                    <span>Kế hoạch bữa ăn mới</span>
+                </button>
+                
+                <div class="user-profile">
+                    <div class="user-avatar">👤</div>
+                    <div class="user-info">
+                        <div class="user-name">Bếp trưởng Nguyễn</div>
+                        <div class="user-role">Trưởng bếp điều hành</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <h2 class="header-title">Máy tính bảng ẩm thực</h2>
+                <nav class="header-nav">
+                    <a href="#">Tổng quan</a>
+                    <a href="#" class="active">Lịch sử</a>
+                </nav>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Scanner Section -->
+                <section class="scanner-section">
+                    <div class="scanner-card">
+                        <div class="scanner-header">
+                            <h3 class="scanner-title">Máy quét trực tiếp</h3>
+                            <div class="status-badge">
+                                <span class="status-dot"></span>
+                                <span class="status-text">Hệ thống hoạt động</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Stats Bar -->
+                        <div class="stats-bar">
+                            <div class="stat-item total">
+                                <div class="stat-label">Tổng xuất ăn</div>
+                                <div class="stat-value">120</div>
+                            </div>
+                            <div class="stat-item improved">
+                                <div class="stat-label">Cải thiện</div>
+                                <div class="stat-value">10</div>
+                            </div>
+                            <div class="stat-item normal">
+                                <div class="stat-label">Thường</div>
+                                <div class="stat-value">200</div>
+                            </div>
+                        </div>
+                        
+                        <div class="scanner-frame">
+                            <div class="scanner-overlay">
+                                <div class="corner corner-tl"></div>
+                                <div class="corner corner-tr"></div>
+                                <div class="corner corner-bl"></div>
+                                <div class="corner corner-br"></div>
+                                <div class="scan-line"></div>
+                            </div>
+                            <div class="scanner-instruction">Căn chỉnh mã QR trong khung để quét</div>
+                        </div>
+                        
+                        <div class="scanner-controls">
+                            <div class="control-btn">
+                                <div class="control-icon">💡</div>
+                                <span class="control-label">Đèn flash</span>
+                            </div>
+                            <div class="control-btn">
+                                <div class="control-icon">📷</div>
+                                <span class="control-label">Chuyển</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Info Section -->
+                <section class="info-section">
+                    <div class="info-card">
+                        <div class="info-header">
+                            <span class="confirmed-badge">
+                                <span>✓</span>
+                                ĐÃ XÁC NHẬN
+                            </span>
+                            <span class="time-text">12:30 chiều • Hôm nay</span>
+                        </div>
+                        
+                        <div class="meal-info">
+                            <div class="meal-content-wrapper">
+                                <!-- Left: Meal Details -->
+                                <div class="meal-details-left">
+                                    <div class="meal-image-compact">🍗</div>
+                                    <div class="meal-text">
+                                        <h2 class="meal-name">Cơm gà xối mỡ</h2>
+                                        <p class="meal-description">Đặc sản bữa trưa • Bếp số 1</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Right: Pickup Stats -->
+                                <div class="pickup-stats-right">
+                                    <div class="pickup-item picked">
+                                        <div class="pickup-label">Đã lấy:</div>
+                                        <div class="pickup-value">8</div>
+                                    </div>
+                                    <div class="pickup-item remaining">
+                                        <div class="pickup-label">Còn lại:</div>
+                                        <div class="pickup-value">3</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="employee-card">
+                            <div class="employee-avatar">
+                                <div class="employee-avatar-inner">👤</div>
+                            </div>
+                            <div class="employee-info">
+                                <div class="employee-label">Nhân viên</div>
+                                <div class="employee-name">Nguyễn Văn Anh</div>
+                            </div>
+                        </div>
+                        
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Phòng ban</div>
+                                <div class="detail-value">Thiết kế sáng tạo</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Tín dụng bữa ăn</div>
+                                <div class="detail-value green">-1 Số dư</div>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary">Báo cáo sự cố</button>
+                            <button class="btn btn-primary">
+                                <span>✓✓</span>
+                                Hoàn thành
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="history-card">
+                        <div class="history-content">
+                            <div class="history-icon">🕐</div>
+                            <div>
+                                <div class="history-label">Lần quét trước</div>
+                                <div class="history-text">Trần Thị Bình • 12:28 chiều</div>
+                            </div>
+                        </div>
+                        <span style="color: rgba(87, 98, 49, 0.4); font-size: 24px;">›</span>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            const container = document.querySelector('.container');
+            
+            sidebar.classList.toggle('collapsed');
+            
+            // Thay đổi icon
+            if (sidebar.classList.contains('collapsed')) {
+                menuToggle.textContent = '☰';
+            } else {
+                menuToggle.textContent = '✕';
+            }
+            
+            // Lưu trạng thái
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
+        
+        // Khôi phục trạng thái sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedState = localStorage.getItem('sidebarCollapsed');
+            if (savedState === 'true') {
+                const sidebar = document.getElementById('sidebar');
+                const menuToggle = document.getElementById('menuToggle');
+                sidebar.classList.add('collapsed');
+                menuToggle.textContent = '☰';
+            }
+        });
+    </script>

@@ -268,26 +268,33 @@
         .control-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; }
         
         /* Pickup Stats */
-        .pickup-stats { display: flex; gap: 8px; margin-top: 12px; }
+        .pickup-stats { display: flex; gap: 12px; margin-top: 12px; }
         .pickup-item {
             flex: 1;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            padding: 8px 12px;
+            padding: 14px 12px;
             background: white;
-            border-radius: 20px;
-            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            text-align: center;
         }
-        .pickup-item.picked { border-color: #27AE60; background: #f0fdf4; }
-        .pickup-item.remaining { border-color: #f59e0b; background: #fffbeb; }
-        .pickup-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .pickup-item.picked .pickup-label { color: #27AE60; }
-        .pickup-item.remaining .pickup-label { color: #f59e0b; }
-        .pickup-value { font-size: 20px; font-weight: 800; line-height: 1; }
-        .pickup-item.picked .pickup-value { color: #27AE60; }
-        .pickup-item.remaining .pickup-value { color: #f59e0b; }
+        .pickup-item.picked  { background: #f0fdf4; border-color: #86efac; }
+        .pickup-item.remaining { background: #fffbeb; border-color: #fcd34d; }
+        .pickup-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .pickup-item.picked .pickup-label    { color: #16a34a; }
+        .pickup-item.remaining .pickup-label { color: #d97706; }
+        .pickup-value { font-size: 28px; font-weight: 900; line-height: 1; }
+        .pickup-item.picked .pickup-value    { color: #16a34a; }
+        .pickup-item.remaining .pickup-value { color: #d97706; }
         
         /* Info Section */
         .info-section { flex: 1; display: flex; flex-direction: column; gap: 24px; }
@@ -425,6 +432,60 @@
         }
         .history-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(87, 98, 49, 0.7); margin-bottom: 4px; }
         .history-text { font-size: 15px; font-weight: 700; color: #576231; }
+
+        /* ── Modal thông báo ── */
+        .toast-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .toast-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .toast-box {
+            background: white;
+            border-radius: 24px;
+            padding: 40px 56px;
+            text-align: center;
+            min-width: 420px;
+            max-width: 560px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+            transform: scale(0.9);
+            transition: transform 0.25s ease;
+        }
+        .toast-modal.show .toast-box { transform: scale(1); }
+        .toast-box.success { border-top: 6px solid #22c55e; }
+        .toast-box.error   { border-top: 6px solid #ef4444; }
+        .toast-box.warning { border-top: 6px solid #f59e0b; }
+        .toast-icon { font-size: 72px; margin-bottom: 16px; line-height: 1; }
+        .toast-title {
+            font-size: 26px;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+        .toast-box.success .toast-title { color: #16a34a; }
+        .toast-box.error   .toast-title { color: #dc2626; }
+        .toast-box.warning .toast-title { color: #d97706; }
+        .toast-msg {
+            font-size: 17px;
+            font-weight: 600;
+            color: #475569;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+        .toast-sub {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -520,11 +581,8 @@
                             <div class="scanner-instruction" id="scanInstruction">Nhấn để bắt đầu quét QR</div>
                         </div>
                         
-                        <div class="scanner-controls">
-                            <div class="control-btn" onclick="startScan()">
-                                <div class="control-icon" id="scanBtnIcon">�</div>
-                                <span class="control-label">Quét QR</span>
-                            </div>
+                        <div style="text-align:center; margin-top:16px; font-size:15px; color:#64748b; font-weight:700; letter-spacing:0.5px;">
+                            Hệ thống Phát Triển Bởi Robert Trần
                         </div>
                         
 
@@ -549,17 +607,6 @@
                                     <p class="meal-description" id="mealDesc">Đặc sản bữa trưa • Bếp số 1</p>
                                 </div>
                             </div>
-                            
-                            <div class="pickup-stats-right">
-                                <div class="pickup-item picked">
-                                    <div class="pickup-label">Đã lấy:</div>
-                                    <div class="pickup-value" id="pickedCount">—</div>
-                                </div>
-                                <div class="pickup-item remaining">
-                                    <div class="pickup-label">Còn lại:</div>
-                                    <div class="pickup-value" id="remainingCount">—</div>
-                                </div>
-                            </div>
                         </div>
                         
                         <div class="employee-card">
@@ -582,14 +629,18 @@
                                 <div class="detail-value green" id="mealTypeLabel">—</div>
                             </div>
                         </div>
-                        
-                        <div class="action-buttons">
-                            <button class="btn btn-secondary">Báo cáo sự cố</button>
-                            <button class="btn btn-primary">
-                                <span>✓✓</span>
-                                Hoàn thành
-                            </button>
+
+                        <div class="pickup-stats">
+                            <div class="pickup-item picked">
+                                <div class="pickup-label">Đã lấy:</div>
+                                <div class="pickup-value" id="pickedCount">—</div>
+                            </div>
+                            <div class="pickup-item remaining">
+                                <div class="pickup-label">Còn lại:</div>
+                                <div class="pickup-value" id="remainingCount">—</div>
+                            </div>
                         </div>
+
                     </div>
                     
                     <div class="history-card">
@@ -607,312 +658,295 @@
         </main>
     </div>
 
+    <!-- Modal thông báo -->
+    <div class="toast-modal" id="toastModal">
+        <div class="toast-box" id="toastBox">
+            <div class="toast-icon" id="toastIcon">✓</div>
+            <div class="toast-title" id="toastTitle">Thành công</div>
+            <div class="toast-msg" id="toastMsg">Hệ thống ghi nhận thành công</div>
+            <div class="toast-sub" id="toastSub">Mời bạn lấy suất ăn</div>
+        </div>
+    </div>
+
     <script>
-        // ── State ──────────────────────────────────────────────────────────────
         let lastScan = null;
         let allRegistrations = [];
-        let statsLoaded = false;
-        let lastLoadDate = null;   // ngày đã load data gần nhất (YYYY-MM-DD)
 
-        // ── Khởi động ──────────────────────────────────────────────────────────
+        // Lấy ngày hôm nay theo timezone VN
+        function getTodayVN() {
+            return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+        }
+
+        // ── Khởi động ─────────────────────────────────────────────────────────
         window.addEventListener('DOMContentLoaded', function () {
             loadTodayData();
-            // Kiểm tra mỗi phút — tự reload lúc 7h sáng ngày mới
-            setInterval(checkDailyReload, 60000);
+            setInterval(function() {
+                const h = new Date().getHours();
+                if (h >= 7 && lastLoadDate !== getTodayVN()) loadTodayData();
+            }, 60000);
         });
 
+        let lastLoadDate = null;
         function loadTodayData() {
             if (typeof AndroidAPI !== 'undefined' && AndroidAPI.fetchMealData) {
                 AndroidAPI.fetchMealData();
-                lastLoadDate = new Date().toISOString().slice(0, 10);
-                console.log('Data loaded for:', lastLoadDate);
+                lastLoadDate = getTodayVN();
             }
         }
 
-        // Gọi mỗi phút — reload nếu đã qua 7h sáng ngày mới
-        function checkDailyReload() {
-            const now   = new Date();
-            const today = now.toISOString().slice(0, 10);
-            const hour  = now.getHours();
-            if (lastLoadDate !== today && hour >= 7) {
-                console.log('Daily reload at', hour + ':' + String(now.getMinutes()).padStart(2,'0'));
-                allRegistrations = [];
-                statsLoaded = false;
-                loadTodayData();
-            }
-        }
-
-        // Callback nhận dữ liệu từ Android (dùng cho stats bar)
+        // Callback từ Android — nhận dữ liệu
         function handleMealDataFromAndroid(data) {
             try {
                 if (typeof data === 'string') data = JSON.parse(data);
-                let regs = data.registrations || (Array.isArray(data) ? data : data.data) || [];
-                
+                const regs = data.registrations || (Array.isArray(data) ? data : data.data) || [];
                 allRegistrations = regs;
-                statsLoaded = true;
-                updateStatsBar(regs);
-                updateMealInfo(regs);
-            } catch (e) {
-                console.error('handleMealDataFromAndroid error:', e);
-            }
+                updateStatsBar();
+                updateMealInfo();
+            } catch(e) { console.error('handleMealDataFromAndroid:', e); }
         }
 
-        // Cập nhật phần thông tin món ăn + đã lấy/còn lại ngay khi load
-        function updateMealInfo(regs) {
-            const today = new Date().toISOString().slice(0, 10);
-            const specialToday = regs.filter(r => r.date === today && r.is_special);
-            
-            if (specialToday.length > 0) {
-                // Lấy tên món từ bản ghi đầu tiên có meal_name
-                const sample = specialToday.find(r => r.meal_name) || specialToday[0];
-                const mealName = sample.meal_name || 'Cơm cải thiện';
+        function handleMealDataError(msg) { console.error('Meal data error:', msg); }
 
-                const picked    = specialToday.filter(r => r.is_confirmed).length;
-                const remaining = Math.max(0, specialToday.length - picked);
-
-                document.getElementById('mealEmoji').textContent = '⭐';
-                document.getElementById('mealName').textContent  = mealName;
-                document.getElementById('mealDesc').textContent  = 'Suất cải thiện • Bếp số 1';
-                document.getElementById('mealTypeLabel').textContent = 'Cải thiện';
-                document.getElementById('pickedCount').textContent    = picked;
-                document.getElementById('remainingCount').textContent = remaining;
-            }
-
-            // Cập nhật lịch sử: người confirm gần nhất hôm nay
-            updateHistory(regs);
-        }
-
-        // Cập nhật lịch sử từ data API
-        function updateHistory(regs) {
-            const today = new Date().toISOString().slice(0, 10);
-            // Lấy tất cả đã confirm hôm nay, có confirmed_at
-            const confirmed = regs.filter(r => 
-                r.date === today && 
-                r.is_confirmed && 
-                r.confirmed_at && 
-                r.confirmed_at.trim() !== ''
-            );
-
-            if (confirmed.length === 0) {
-                document.getElementById('historyText').textContent = '—';
-                return;
-            }
-
-            // Sort theo confirmed_at giảm dần (mới nhất trước)
-            confirmed.sort((a, b) => {
-                const timeA = a.confirmed_at || '';
-                const timeB = b.confirmed_at || '';
-                return timeB.localeCompare(timeA);
-            });
-
-            const last = confirmed[0];
-            
-            // Parse time từ confirmed_at
-            // Format API: 'YYYY-MM-DD HH:MM:SS' hoặc 'HH:MM:SS' hoặc 'HH:MM'
-            let time = '—';
-            if (last.confirmed_at) {
-                const str = last.confirmed_at.trim();
-                // Nếu có dấu cách → format 'YYYY-MM-DD HH:MM:SS'
-                if (str.includes(' ')) {
-                    const parts = str.split(' ');
-                    time = parts[1].slice(0, 5); // Lấy HH:MM
-                } else {
-                    // Format 'HH:MM:SS' hoặc 'HH:MM'
-                    time = str.slice(0, 5);
-                }
-            }
-            
-            document.getElementById('historyText').textContent = last.user_name + ' • ' + time;
-        }
-
-        function handleMealDataError(msg) {
-            console.error('Meal data error:', msg);
-        }
-
-        function updateStatsBar(regs) {
-            const today = new Date().toISOString().slice(0, 10);
-            const todayRegs = regs.filter(r => r.date === today);
-            const total    = todayRegs.length;
-            const improved = todayRegs.filter(r => r.is_special).length;
-            const normal   = total - improved;
-            document.getElementById('statTotal').textContent   = total;
+        // Cập nhật stats bar (tổng / cải thiện / thường)
+        function updateStatsBar() {
+            const today = getTodayVN();
+            const todayRegs = allRegistrations.filter(r => r.date === today);
+            const improved  = todayRegs.filter(r => r.is_special).length;
+            document.getElementById('statTotal').textContent    = todayRegs.length;
             document.getElementById('statImproved').textContent = improved;
-            document.getElementById('statNormal').textContent  = normal;
+            document.getElementById('statNormal').textContent   = todayRegs.length - improved;
         }
 
-        // ── QR Scan ────────────────────────────────────────────────────────────
+        // Cập nhật thông tin món ăn + đã lấy / còn lại
+        function updateMealInfo() {
+            const today    = getTodayVN();
+            const todayAll = allRegistrations.filter(r => r.date === today);
+            if (todayAll.length === 0) return;
+
+            const special  = todayAll.filter(r => r.is_special);
+            const display  = special.length > 0 ? special : todayAll;
+            const isSpec   = special.length > 0;
+            const sample   = display.find(r => r.meal_name) || display[0];
+
+            document.getElementById('mealEmoji').textContent     = isSpec ? '⭐' : '🍚';
+            document.getElementById('mealName').textContent      = sample.meal_name || (isSpec ? 'Cơm cải thiện' : 'Cơm thường');
+            document.getElementById('mealDesc').textContent      = isSpec ? 'Suất cải thiện • Bếp số 1' : 'Suất thường • Bếp số 1';
+            document.getElementById('mealTypeLabel').textContent = isSpec ? 'Cải thiện' : 'Bình thường';
+
+            const picked    = display.filter(r => r.is_confirmed).length;
+            const remaining = Math.max(0, display.length - picked);
+            document.getElementById('pickedCount').textContent    = picked;
+            document.getElementById('remainingCount').textContent = remaining;
+
+            // Lịch sử: người confirm gần nhất
+            const confirmed = todayAll
+                .filter(r => r.is_confirmed && r.confirmed_at && r.confirmed_at.trim())
+                .sort((a, b) => b.confirmed_at.localeCompare(a.confirmed_at));
+            if (confirmed.length > 0) {
+                const last = confirmed[0];
+                const t    = last.confirmed_at.includes(' ')
+                    ? last.confirmed_at.split(' ')[1].slice(0, 5)
+                    : last.confirmed_at.slice(0, 5);
+                document.getElementById('historyText').textContent = last.user_name + ' • ' + t;
+            }
+        }
+
+        // ── QR Scan ───────────────────────────────────────────────────────────
         function startScan() {
             if (typeof AndroidAPI !== 'undefined' && AndroidAPI.startQRScan) {
                 setScanning(true);
                 AndroidAPI.startQRScan();
             } else {
-                // Chế độ demo khi chạy ngoài Android
+                // Demo mode
                 setScanning(true);
-                setTimeout(() => handleQRScanned('REG-00123'), 1500);
+                setTimeout(() => handleQRScanned('10009'), 1500);
             }
         }
 
-        // Callback: Android trả về kết quả QR
         function handleQRScanned(content) {
             setScanning(false);
             console.log('QR scanned:', content);
-
-            // Cập nhật instruction
-            document.getElementById('scanInstruction').textContent = '✓ Đang xử lý...';
-
-            // Gọi API xác nhận
-            confirmRegistration(content);
-        }
-
-        // Tìm đăng ký hôm nay theo username, chưa confirm, ưu tiên cải thiện
-        function findInCache(username) {
-            if (!allRegistrations.length) return null;
-            const today = new Date().toISOString().slice(0, 10);
-            const todayRegs = allRegistrations.filter(r => r.date === today);
-
-            // Tìm theo username chưa confirm (ưu tiên cải thiện)
-            let reg = todayRegs.find(r =>
-                !r.is_confirmed &&
-                r.is_special &&
-                r.confirmer_username === username || // nếu API trả về confirmer_username
-                String(r.employee_id) === username
-            );
-            // Fallback: bất kỳ đăng ký nào của username hôm nay chưa confirm
-            if (!reg) reg = todayRegs.find(r =>
-                !r.is_confirmed && String(r.employee_id) === username
-            );
-            // Fallback nữa: kể cả đã confirm
-            if (!reg) reg = todayRegs.find(r =>
-                String(r.employee_id) === username
-            );
-            return reg || null;
-        }
-
-        // Gọi API confirm theo đúng endpoint: POST /admin/meal-registrations/<id>/confirm
-        function confirmRegistration(username) {
-            // Bước 1: tìm registration trong cache theo username
-            const reg = findInCache(username);
-            if (!reg) {
-                showScanError('Không tìm thấy đăng ký cho: ' + username);
+            document.getElementById('scanInstruction').textContent = '⏳ Đang xử lý...';
+            const employeeId = content.trim();
+            // Kiểm tra đang xử lý dở không (tránh double-scan)
+            const inProgress = allRegistrations.find(r => r._processing);
+            if (inProgress) {
+                console.log('Already processing, skip');
                 return;
             }
-            if (reg.is_confirmed) {
-                // Đã confirm rồi — vẫn hiển thị thông tin
-                showConfirmResult(reg, username, true);
+            processQR(employeeId);
+        }
+
+        // Xử lý QR: tìm đăng ký → confirm hoặc báo lỗi
+        function processQR(employeeId) {
+            const today    = getTodayVN();
+            const todayAll = allRegistrations.filter(r => r.date === today);
+            const allOfUser = todayAll.filter(r => String(r.employee_id) === employeeId);
+
+            if (allOfUser.length === 0) {
+                showResultModal(false, null, employeeId, 'not_registered');
                 return;
             }
 
-            // Bước 2: gọi API confirm
-            const apiUrl = `https://ovnm.up.railway.app/admin/meal-registrations/${reg.id}/confirm`;
-            fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
-            })
-            .then(res => res.json())
-            .then(data => {
-                console.log('Confirm response:', data);
-                if (data && data.success) {
-                    reg.is_confirmed = true; // cập nhật cache
-                    showConfirmResult(reg, username, false);
-                } else {
-                    showScanError(data.message || 'Xác nhận thất bại');
-                }
-            })
-            .catch(err => {
-                console.warn('API confirm error:', err);
-                // Vẫn hiển thị thông tin dù lỗi mạng
-                showConfirmResult(reg, username, false);
-            });
-        }
+            // Nếu TẤT CẢ suất của nhân viên hôm nay đã confirm → không cho quét lại
+            const allConfirmed = allOfUser.every(r => r.is_confirmed);
+            if (allConfirmed) {
+                showResultModal(false, allOfUser[0], employeeId, 'already_confirmed');
+                return;
+            }
 
-        // Hiển thị kết quả sau khi xác nhận thành công
-        function showConfirmResult(reg, username, alreadyConfirmed) {
-            const now = new Date();
-            const h = now.getHours().toString().padStart(2,'0');
-            const m = now.getMinutes().toString().padStart(2,'0');
-            const timeStr = h + ':' + m;
+            // Ưu tiên suất chưa confirm (cải thiện trước, rồi thường)
+            const reg = allOfUser.find(r => !r.is_confirmed && r.is_special)
+                     || allOfUser.find(r => !r.is_confirmed);
 
-            const name     = reg.user_name  || username;
-            const dept     = reg.department || '—';
-            const mealName = reg.meal_name  || (reg.is_special ? 'Cơm cải thiện' : 'Cơm thường');
-            const isSpecial = reg.is_special;
+            // Lưu reg đang xử lý để callback dùng
+            window._pendingReg = reg;
+            window._pendingEmployeeId = employeeId;
 
-            // Instruction
-            document.getElementById('scanInstruction').textContent =
-                alreadyConfirmed ? '⚠ Đã xác nhận trước đó' : '✓ Xác nhận thành công';
-
-            // Badge
-            const badge = document.getElementById('confirmedBadge');
-            if (alreadyConfirmed) {
-                badge.innerHTML = '<span>⚠</span> ĐÃ LẤY TRƯỚC ĐÓ';
-                badge.style.background = '#fef3c7';
-                badge.style.color = '#d97706';
+            // Gọi qua AndroidAPI để tránh CORS
+            if (typeof AndroidAPI !== 'undefined' && AndroidAPI.confirmRegistration) {
+                AndroidAPI.confirmRegistration(reg.id);
             } else {
-                badge.innerHTML = '<span>✓</span> ĐÃ XÁC NHẬN';
-                badge.style.background = '#d4f4dd';
-                badge.style.color = '#27AE60';
+                // Demo mode
+                handleConfirmResult(true, reg.id, { success: true });
             }
-            document.getElementById('scanTime').textContent = timeStr + ' • Hôm nay';
+        }
 
-            // Bữa ăn
-            document.getElementById('mealEmoji').textContent = isSpecial ? '⭐' : '🍚';
-            document.getElementById('mealName').textContent  = mealName;
-            document.getElementById('mealDesc').textContent  = isSpecial ? 'Suất cải thiện • Bếp số 1' : 'Suất thường • Bếp số 1';
-            document.getElementById('mealTypeLabel').textContent = isSpecial ? 'Cải thiện' : 'Thường';
+        // Callback từ Android sau khi confirm
+        function handleConfirmResult(success, registrationId, data) {
+            const reg        = window._pendingReg;
+            const employeeId = window._pendingEmployeeId;
+            window._pendingReg = null;
+            window._pendingEmployeeId = null;
 
-            // Nhân viên & phòng ban
-            document.getElementById('employeeName').textContent = name;
-            document.getElementById('employeeDept').textContent = dept;
+            if (!reg) return;
 
-            // Pickup stats — chỉ tính suất cải thiện hôm nay
-            const today = new Date().toISOString().slice(0, 10);
-            const specialToday = allRegistrations.filter(r => r.date === today && r.is_special);
-            const picked    = specialToday.filter(r => r.is_confirmed).length;
-            const remaining = Math.max(0, specialToday.length - picked);
-            document.getElementById('pickedCount').textContent    = picked;
-            document.getElementById('remainingCount').textContent = remaining;
-
-            // History card
-            if (lastScan) {
-                document.getElementById('historyText').textContent = lastScan.name + ' • ' + lastScan.time;
+            if (success && data && data.success) {
+                // Đánh dấu local ngay — chặn quét lại trước khi reload xong
+                reg.is_confirmed = true;
+                reg.confirmed_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
+                showResultModal(true, reg, employeeId, 'success');
+            } else {
+                showResultModal(false, reg, employeeId, 'api_error');
             }
-            lastScan = { name, time: timeStr };
 
-            // Cập nhật stats bar
-            updateStatsBar(allRegistrations);
+            // Reload lại data từ server để đồng bộ
+            loadTodayData();
+        }
 
-            // Flash màu scanner frame
+        // Hiển thị kết quả lên info-card
+        function showResultModal(success, reg, employeeId, type) {
+            const now     = new Date();
+            const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+            const card    = document.querySelector('.info-card');
+            const badge   = document.getElementById('confirmedBadge');
+            const wrapper = document.querySelector('.meal-content-wrapper');
+
+            // Reset màu card
+            card.style.background = '';
+            card.style.border     = '';
+
+            if (type === 'not_registered') {
+                card.style.background = '#fff5f5';
+                card.style.border     = '2px solid #fca5a5';
+                badge.innerHTML       = '<span>✗</span> KHÔNG ĐĂNG KÝ';
+                badge.style.background = '#fee2e2';
+                badge.style.color      = '#dc2626';
+                document.getElementById('scanTime').textContent   = timeStr + ' • Hôm nay';
+                document.getElementById('mealEmoji').textContent  = '❌';
+                document.getElementById('mealName').textContent   = 'Không có đăng ký';
+                document.getElementById('mealDesc').textContent   = 'Nhân viên chưa đăng ký suất ăn hôm nay';
+                document.getElementById('mealTypeLabel').textContent = '—';
+                document.getElementById('employeeName').textContent  = 'Mã: ' + employeeId;
+                document.getElementById('employeeDept').textContent  = '—';
+                document.getElementById('scanInstruction').textContent = '✗ Không tìm thấy đăng ký';
+                flashFrame('#ef4444');
+                showToast('error', 'Không đăng ký', 'Hôm nay bạn chưa đăng ký suất ăn', 'Mã NV: ' + employeeId);
+
+            } else if (type === 'already_confirmed') {
+                card.style.background = '#fffbeb';
+                card.style.border     = '2px solid #fcd34d';
+                badge.innerHTML       = '<span>⚠</span> ĐÃ LẤY RỒI';
+                badge.style.background = '#fef3c7';
+                badge.style.color      = '#d97706';
+                fillRegInfo(reg, timeStr);
+                document.getElementById('scanInstruction').textContent = '⚠ Đã xác nhận trước đó';
+                flashFrame('#f59e0b');
+                showToast('warning', 'Đã lấy rồi', reg ? reg.user_name : employeeId, 'Suất ăn đã được lấy trước đó');
+
+            } else if (type === 'success') {
+                card.style.background = '#f0fdf4';
+                card.style.border     = '2px solid #86efac';
+                badge.innerHTML       = '<span>✓</span> HỆ THỐNG GHI NHẬN THÀNH CÔNG';
+                badge.style.background = '#dcfce7';
+                badge.style.color      = '#16a34a';
+                fillRegInfo(reg, timeStr);
+                document.getElementById('scanInstruction').textContent = '✓ Xác nhận thành công';
+                flashFrame('#27AE60');
+                showToast('success', 'Hệ thống ghi nhận thành công', reg.user_name || employeeId, 'Mời bạn lấy suất ăn');
+
+                // Cập nhật "Lần quét trước" = người vừa quét thành công
+                document.getElementById('historyText').textContent =
+                    (reg.user_name || employeeId) + ' • ' + timeStr;
+                lastScan = { name: reg.user_name || employeeId, time: timeStr };
+
+            } else {
+                card.style.background = '#fff5f5';
+                card.style.border     = '2px solid #fca5a5';
+                badge.innerHTML       = '<span>⚠</span> LỖI HỆ THỐNG';
+                badge.style.background = '#fee2e2';
+                badge.style.color      = '#dc2626';
+                document.getElementById('scanInstruction').textContent = '⚠ Lỗi xác nhận, thử lại';
+                flashFrame('#ef4444');
+                showToast('error', 'Lỗi hệ thống', 'Không thể xác nhận', 'Vui lòng thử lại');
+            }
+        }
+
+        function fillRegInfo(reg, timeStr) {
+            document.getElementById('scanTime').textContent      = timeStr + ' • Hôm nay';
+            document.getElementById('mealEmoji').textContent     = reg.is_special ? '⭐' : '🍚';
+            document.getElementById('mealName').textContent      = reg.meal_name || (reg.is_special ? 'Cơm cải thiện' : 'Cơm thường');
+            document.getElementById('mealDesc').textContent      = reg.is_special ? 'Suất cải thiện • Bếp số 1' : 'Suất thường • Bếp số 1';
+            document.getElementById('mealTypeLabel').textContent = reg.is_special ? 'Cải thiện' : 'Thường';
+            document.getElementById('employeeName').textContent  = reg.user_name || '—';
+            document.getElementById('employeeDept').textContent  = reg.department || '—';
+        }
+
+        function flashFrame(color) {
             const frame = document.getElementById('scannerFrame');
-            frame.style.boxShadow = alreadyConfirmed ? '0 0 0 4px #f59e0b' : '0 0 0 4px #27AE60';
-            setTimeout(() => { frame.style.boxShadow = ''; }, 1500);
+            frame.style.boxShadow = `0 0 0 4px ${color}`;
+            setTimeout(() => { frame.style.boxShadow = ''; }, 2000);
         }
 
-        function showScanError(msg) {
-            document.getElementById('scanInstruction').textContent = '⚠ ' + msg;
-            document.querySelector('.confirmed-badge').innerHTML = '<span>⚠</span> LỖI';
-            document.querySelector('.confirmed-badge').style.background = '#fee2e2';
-            document.querySelector('.confirmed-badge').style.color = '#ef4444';
+        // ── Toast modal ───────────────────────────────────────────────────────
+        function showToast(type, title, msg, sub) {
+            const modal = document.getElementById('toastModal');
+            const box   = document.getElementById('toastBox');
+            box.className = 'toast-box ' + type;
+            document.getElementById('toastIcon').textContent  = type === 'success' ? '✓' : type === 'warning' ? '⚠' : '✗';
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMsg').textContent   = msg;
+            document.getElementById('toastSub').textContent   = sub || '';
+            modal.classList.add('show');
+            setTimeout(() => modal.classList.remove('show'), 3000);
         }
 
-        // Callback: người dùng huỷ quét
         function handleQRCancelled() {
             setScanning(false);
             document.getElementById('scanInstruction').textContent = 'Nhấn để bắt đầu quét QR';
         }
 
-        // Callback: lỗi camera
         function handleQRError(msg) {
             setScanning(false);
             document.getElementById('scanInstruction').textContent = '⚠ ' + msg;
         }
 
         function setScanning(active) {
-            const frame       = document.getElementById('scannerFrame');
-            const instruction = document.getElementById('scanInstruction');
-            const icon        = document.getElementById('scanBtnIcon');
+            const frame = document.getElementById('scannerFrame');
+            const icon  = document.getElementById('scanBtnIcon');
             if (active) {
                 frame.classList.add('scanning');
-                instruction.textContent = 'Đang mở camera...';
+                document.getElementById('scanInstruction').textContent = 'Đang mở camera...';
                 icon.textContent = '⏳';
             } else {
                 frame.classList.remove('scanning');

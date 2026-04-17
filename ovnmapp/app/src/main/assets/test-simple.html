@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Test</title>
+</head>
+<body>
+    <h1 id="title">Test Page</h1>
+    <button onclick="testClick()">Click Me</button>
+    <div id="result"></div>
+    
+    <script>
+        console.log('Script loaded');
+        
+        function testClick() {
+            console.log('Button clicked');
+            document.getElementById('result').textContent = 'Button works!';
+            
+            if (typeof AndroidAPI !== 'undefined') {
+                console.log('AndroidAPI available');
+                document.getElementById('result').textContent = 'AndroidAPI available!';
+            } else {
+                console.log('AndroidAPI NOT available');
+                document.getElementById('result').textContent = 'AndroidAPI NOT available';
+            }
+        }
+        
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            document.getElementById('title').textContent = 'Test Page - DOM Loaded';
+        });
+    </script>
+</body>
+</html>

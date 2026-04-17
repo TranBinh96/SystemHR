@@ -581,25 +581,34 @@
 
         // Populate filter dropdowns
         function populateFilters() {
-            // Dates - sorted newest first
-            const dates = [...new Set(allRegistrations.map(r => r.date))].sort().reverse();
+            // Generate 40 ngày gần nhất (mới nhất trước)
             const dateFilter = document.getElementById('dateFilter');
-            dates.forEach(date => {
-                const option = document.createElement('option');
-                option.value = date;
-                option.textContent = formatDate(date);
-                dateFilter.appendChild(option);
-            });
+            // Xóa options cũ (giữ lại "Tất cả")
+            while (dateFilter.options.length > 1) dateFilter.remove(1);
 
-            // Mặc định chọn ngày mới nhất
-            if (dates.length > 0) {
-                dateFilter.value = dates[0];
-                applyFilters();
+            const today = new Date();
+            for (let i = 0; i < 40; i++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                const yyyy = d.getFullYear();
+                const mm   = String(d.getMonth() + 1).padStart(2, '0');
+                const dd   = String(d.getDate()).padStart(2, '0');
+                const val  = `${yyyy}-${mm}-${dd}`;
+                const option = document.createElement('option');
+                option.value = val;
+                option.textContent = formatDate(val);
+                dateFilter.appendChild(option);
             }
-            
-            // Departments
+
+            // Mặc định chọn ngày hôm nay
+            const todayStr = today.toLocaleDateString('en-CA');
+            dateFilter.value = todayStr;
+            applyFilters();
+
+            // Departments từ data
             const departments = [...new Set(allRegistrations.map(r => r.department))].sort();
             const deptFilter = document.getElementById('departmentFilter');
+            while (deptFilter.options.length > 1) deptFilter.remove(1);
             departments.forEach(dept => {
                 const option = document.createElement('option');
                 option.value = dept;
@@ -627,8 +636,34 @@
         // Render statistics cards only - no person list
         function renderTable() {
             const container = document.getElementById('tableContainer');
-            
-            if (filteredRegistrations.length === 0) {
+            const dateFilterVal = document.getElementById('dateFilter').value;
+
+            // Group filtered data by date
+            const groupedByDate = {};
+            filteredRegistrations.forEach(reg => {
+                if (!groupedByDate[reg.date]) groupedByDate[reg.date] = [];
+                groupedByDate[reg.date].push(reg);
+            });
+
+            // Tạo danh sách 40 ngày gần nhất (hoặc chỉ ngày được chọn)
+            let dates = [];
+            if (dateFilterVal) {
+                dates = [dateFilterVal];
+            } else {
+                const today = new Date();
+                for (let i = 0; i < 40; i++) {
+                    const d = new Date(today);
+                    d.setDate(today.getDate() - i);
+                    dates.push(d.toLocaleDateString('en-CA'));
+                }
+            }
+
+            // Lọc chỉ giữ ngày có data (nếu có filter thì giữ ngày đó dù không có data)
+            const datesToShow = dateFilterVal
+                ? dates
+                : dates.filter(d => groupedByDate[d]);
+
+            if (datesToShow.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">📭</div>
@@ -637,34 +672,16 @@
                 `;
                 return;
             }
-            
-            // Sort by date descending (newest first)
-            const sorted = [...filteredRegistrations].sort((a, b) => {
-                return new Date(b.date) - new Date(a.date);
-            });
-            
-            // Group by date
-            const groupedByDate = {};
-            sorted.forEach(reg => {
-                if (!groupedByDate[reg.date]) {
-                    groupedByDate[reg.date] = [];
-                }
-                groupedByDate[reg.date].push(reg);
-            });
-            
-            // Lấy danh sách ngày theo đúng thứ tự đã sort (mới nhất trước), tối đa 5 ngày
-            const dates = [...new Set(sorted.map(r => r.date))].slice(0, 5);
-            
+
             let html = '<div class="timeline">';
-            
-            dates.forEach(date => {
-                const allRegs = groupedByDate[date];
-                
-                // Tính thống kê cho ngày này
-                const totalCount = allRegs.length;
-                const improvedRegs = allRegs.filter(r => r.meal_type && r.meal_type.includes('Cải'));
-                const improvedCount = improvedRegs.length;
-                const normalCount = totalCount - improvedCount;
+
+            datesToShow.forEach(date => {
+                const allRegs = groupedByDate[date] || [];
+                const totalCount      = allRegs.length;
+                const improvedRegs    = allRegs.filter(r => r.is_special);
+                const improvedCount   = improvedRegs.length;
+                const normalCount     = totalCount - improvedCount;
+                const confirmedAll    = allRegs.filter(r => r.is_confirmed).length;
                 const confirmedImproved = improvedRegs.filter(r => r.is_confirmed).length;
                 const pendingImproved = improvedCount - confirmedImproved;
                 
@@ -674,6 +691,11 @@
                             <span>📅</span>
                             <span class="day-date">${formatDateFull(date)}</span>
                         </div>
+                        ${totalCount === 0 ? `
+                        <div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px;font-weight:600;">
+                            Không có đăng ký
+                        </div>
+                        ` : `
                         <div class="stats-grid">
                             <div class="stat-card-item total">
                                 <div class="stat-card-icon">📋</div>
@@ -681,35 +703,32 @@
                                 <div class="stat-card-value">${totalCount}</div>
                                 <div class="stat-card-subtitle">xuất</div>
                             </div>
-                            
                             <div class="stat-card-item improved">
                                 <div class="stat-card-icon">⭐</div>
                                 <div class="stat-card-label">Cải thiện</div>
                                 <div class="stat-card-value">${improvedCount}</div>
                                 <div class="stat-card-subtitle">xuất</div>
                             </div>
-                            
                             <div class="stat-card-item normal">
                                 <div class="stat-card-icon">🍚</div>
                                 <div class="stat-card-label">Cơm thường</div>
                                 <div class="stat-card-value">${normalCount}</div>
                                 <div class="stat-card-subtitle">xuất</div>
                             </div>
-                            
                             <div class="stat-card-item confirmed">
                                 <div class="stat-card-icon">✓</div>
-                                <div class="stat-card-label">Đã lấy (Cải thiện)</div>
-                                <div class="stat-card-value">${confirmedImproved}</div>
+                                <div class="stat-card-label">Đã lấy</div>
+                                <div class="stat-card-value">${confirmedAll}</div>
                                 <div class="stat-card-subtitle">xuất</div>
                             </div>
-                            
                             <div class="stat-card-item pending">
                                 <div class="stat-card-icon">⏳</div>
-                                <div class="stat-card-label">Còn lại (Cải thiện)</div>
-                                <div class="stat-card-value">${pendingImproved}</div>
+                                <div class="stat-card-label">Còn lại</div>
+                                <div class="stat-card-value">${totalCount - confirmedAll}</div>
                                 <div class="stat-card-subtitle">xuất</div>
                             </div>
                         </div>
+                        `}
                     </div>
                 `;
             });

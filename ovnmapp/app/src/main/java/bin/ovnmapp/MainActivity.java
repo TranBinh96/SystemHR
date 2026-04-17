@@ -73,6 +73,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Giữ màn hình luôn sáng, không khóa
+        getWindow().addFlags(
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
+            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+            WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+        );
+
         getWindow().setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN
@@ -271,6 +278,59 @@ public class MainActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     Log.e("WebView", "Error", e);
                     sendErrorToWebView("Lỗi: " + e.getMessage());
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void confirmRegistration(int registrationId) {
+            Log.d("WebView", "confirmRegistration called: id=" + registrationId);
+            executorService.execute(() -> {
+                try {
+                    String apiUrl = "https://ovnm.up.railway.app/admin/meal-registrations/" + registrationId + "/confirm";
+                    Log.d("WebView", "POST confirm: " + apiUrl);
+                    URL url = new URL(apiUrl);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("POST");
+                    connection.setConnectTimeout(15000);
+                    connection.setReadTimeout(15000);
+                    connection.setRequestProperty("Content-Type", "application/json");
+                    connection.setRequestProperty("Accept", "application/json");
+                    connection.setDoOutput(true);
+                    connection.getOutputStream().write("{}".getBytes());
+
+                    int responseCode = connection.getResponseCode();
+                    Log.d("WebView", "Confirm response code: " + responseCode);
+
+                    BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(
+                            responseCode == HttpURLConnection.HTTP_OK
+                                ? connection.getInputStream()
+                                : connection.getErrorStream()
+                        )
+                    );
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) response.append(line);
+                    reader.close();
+                    connection.disconnect();
+
+                    final String jsonData = response.toString();
+                    final boolean success = responseCode == HttpURLConnection.HTTP_OK;
+                    Log.d("WebView", "Confirm result: " + jsonData);
+
+                    runOnUiThread(() ->
+                        webView.evaluateJavascript(
+                            "handleConfirmResult(" + success + ", " + registrationId + ", " + jsonData + ")", null
+                        )
+                    );
+                } catch (Exception e) {
+                    Log.e("WebView", "confirmRegistration error", e);
+                    runOnUiThread(() ->
+                        webView.evaluateJavascript(
+                            "handleConfirmResult(false, " + registrationId + ", {\"success\":false,\"message\":\"" + e.getMessage() + "\"})", null
+                        )
+                    );
                 }
             });
         }

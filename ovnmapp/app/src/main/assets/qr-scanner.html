@@ -7,157 +7,70 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             background: #f8f9fb;
             color: #2c3437;
             overflow: hidden;
-            height: 100%;
-            width: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
+            height: 100vh;
+            width: 100vw;
         }
         
-        .container {
-            display: flex;
-            height: 100%;
-            width: 100%;
-            position: relative;
-        }
+        .container { display: flex; height: 100vh; width: 100vw; }
         
         /* Sidebar */
         .sidebar {
             width: 280px;
             background: #fafafa;
             border-right: 1px solid #e5e7eb;
-            padding: 32px 24px;
+            padding: 24px 24px 32px 24px;
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
             transition: width 0.3s ease, padding 0.3s ease;
             position: relative;
         }
-        
         .sidebar.collapsed {
-            width: 80px;
-            padding: 32px 16px;
+            width: 72px;
+            padding: 24px 12px 32px 12px;
         }
-        
-        .sidebar.collapsed .logo-text,
-        .sidebar.collapsed .logo-subtitle,
-        .sidebar.collapsed .nav-item span:not(.nav-icon),
-        .sidebar.collapsed .user-info,
-        .sidebar.collapsed .new-meal-btn span:not(.menu-icon) {
-            display: none;
-        }
-        
-        .sidebar.collapsed .logo-section {
-            text-align: center;
-        }
-        
-        .sidebar.collapsed .logo-title {
-            justify-content: center;
-        }
-        
-        .sidebar.collapsed .nav-item {
-            justify-content: center;
-            padding: 12px;
-        }
-        
-        .sidebar.collapsed .nav-item.active {
-            border-right: 0;
-            border-left: 4px solid #27AE60;
-        }
-        
-        .sidebar.collapsed .new-meal-btn {
-            padding: 16px;
-        }
-        
-        .sidebar.collapsed .user-profile {
-            justify-content: center;
-        }
-        
-        .sidebar.collapsed .user-avatar {
-            margin: 0;
-        }
-        
-        .logo-section {
-            margin-bottom: 40px;
-            padding: 0 8px;
-            position: relative;
-        }
-        
+
+        /* Nút toggle */
         .menu-toggle {
-            position: absolute;
-            top: 0;
-            right: -8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            align-self: flex-end;
             width: 32px;
             height: 32px;
-            background: white;
+            background: #f1f5f9;
             border: 1px solid #e5e7eb;
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 13px;
             color: #64748b;
+            margin-bottom: 16px;
             transition: all 0.2s;
-            z-index: 10;
+            flex-shrink: 0;
         }
-        
-        .menu-toggle:hover {
-            background: #f1f5f9;
-            color: #27AE60;
+        .menu-toggle:hover { background: #e8f5e9; color: #27AE60; border-color: #27AE60; }
+        .sidebar.collapsed .menu-toggle { align-self: center; }
+
+        .logo-section {
+            margin-bottom: 24px;
+            padding: 0 8px;
+            flex-shrink: 0;
+            overflow: hidden;
         }
-        
-        .sidebar.collapsed .menu-toggle {
-            right: 50%;
-            transform: translateX(50%);
-        }
-        
-        .logo-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 4px;
-        }
-        
-        .logo-icon {
-            font-size: 32px;
-            color: #27AE60;
-        }
-        
-        .logo-text {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1e293b;
-            line-height: 1.2;
-        }
-        
-        .logo-subtitle {
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #94a3b8;
-            margin-left: 44px;
-        }
-        
-        .nav-menu {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
+        .logo-title { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+        .logo-icon { font-size: 32px; color: #27AE60; flex-shrink: 0; }
+        .logo-text { font-size: 18px; font-weight: 700; color: #1e293b; line-height: 1.2; white-space: nowrap; transition: opacity 0.2s; }
+        .logo-subtitle { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin-left: 44px; white-space: nowrap; transition: opacity 0.2s; }
+        .sidebar.collapsed .logo-text,
+        .sidebar.collapsed .logo-subtitle { opacity: 0; pointer-events: none; }
+        .sidebar.collapsed .logo-section { padding: 0; }
+
+        .nav-menu { flex: 1; display: flex; flex-direction: column; gap: 8px; }
         .nav-item {
             display: flex;
             align-items: center;
@@ -169,30 +82,22 @@
             transition: all 0.2s;
             font-weight: 500;
             font-size: 15px;
+            white-space: nowrap;
+            overflow: hidden;
         }
-        
-        .nav-item:hover {
-            background: #f1f5f9;
-            color: #1e293b;
-        }
-        
+        .nav-item:hover { background: #f1f5f9; color: #1e293b; }
         .nav-item.active {
             background: #e8f5e9;
             color: #27AE60;
             font-weight: 700;
             border-right: 4px solid #27AE60;
         }
-        
-        .nav-icon {
-            font-size: 24px;
-        }
-        
-        .sidebar-bottom {
-            margin-top: auto;
-            padding-top: 24px;
-            border-top: 1px solid #e5e7eb;
-        }
-        
+        .sidebar.collapsed .nav-item { padding: 12px; justify-content: center; gap: 0; }
+        .sidebar.collapsed .nav-item.active { border-right: none; border-left: 4px solid #27AE60; }
+        .sidebar.collapsed .nav-item span:not(.nav-icon) { display: none; }
+        .nav-icon { font-size: 24px; flex-shrink: 0; }
+
+        .sidebar-bottom { margin-top: auto; padding-top: 24px; border-top: 1px solid #e5e7eb; flex-shrink: 0; }
         .new-meal-btn {
             width: 100%;
             background: #27AE60;
@@ -207,58 +112,29 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            white-space: nowrap;
+            overflow: hidden;
             transition: all 0.3s;
         }
-        
         .sidebar.collapsed .new-meal-btn {
             width: 48px;
             height: 48px;
             padding: 0;
             border-radius: 50%;
+            margin: 0 auto;
         }
-        
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 24px;
-            padding: 0 8px;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-        
-        .user-info {
-            flex: 1;
-        }
-        
-        .user-name {
-            font-size: 14px;
-            font-weight: 700;
-            color: #1e293b;
-        }
-        
-        .user-role {
-            font-size: 12px;
-            color: #64748b;
-        }
+        .sidebar.collapsed .new-meal-btn span:last-child { display: none; }
+
+        .user-profile { display: flex; align-items: center; gap: 12px; margin-top: 24px; padding: 0 8px; transition: all 0.2s; }
+        .sidebar.collapsed .user-profile { justify-content: center; padding: 0; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .user-info { flex: 1; overflow: hidden; transition: opacity 0.2s; }
+        .sidebar.collapsed .user-info { display: none; }
+        .user-name { font-size: 14px; font-weight: 700; color: #1e293b; }
+        .user-role { font-size: 12px; color: #64748b; }
         
         /* Main Content */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            transition: margin-left 0.3s ease;
-        }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         
         .header {
             display: flex;
@@ -269,29 +145,8 @@
             border-bottom: 1px solid #e5e7eb;
             flex-shrink: 0;
         }
-        
-        .sidebar.collapsed ~ .main-content .header {
-            padding: 16px 24px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .header-title {
-            font-size: 16px;
-        }
-        
-        .header-title {
-            font-size: 18px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #1e293b;
-        }
-        
-        .header-nav {
-            display: flex;
-            gap: 24px;
-            align-items: center;
-        }
-        
+        .header-title { font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: #1e293b; }
+        .header-nav { display: flex; gap: 24px; align-items: center; }
         .header-nav a {
             font-size: 13px;
             font-weight: 600;
@@ -301,128 +156,24 @@
             color: #94a3b8;
             padding-bottom: 4px;
         }
+        .header-nav a.active { color: #27AE60; border-bottom: 2px solid #27AE60; }
         
-        .header-nav a.active {
-            color: #27AE60;
-            border-bottom: 2px solid #27AE60;
-        }
-        
-        .content-area {
-            flex: 1;
-            padding: 24px;
-            display: flex;
-            gap: 24px;
-            overflow: hidden;
-        }
-        
-        .sidebar.collapsed ~ .main-content .content-area {
-            padding: 20px;
-            gap: 20px;
-        }
+        .content-area { flex: 1; padding: 24px; display: flex; gap: 24px; overflow: hidden; }
         
         /* Scanner Section */
-        .scanner-section {
-            flex: 1.2;
-            display: flex;
-            flex-direction: column;
-        }
-        
+        .scanner-section { flex: 1.2; display: flex; flex-direction: column; }
         .scanner-card {
             background: white;
             border-radius: 16px;
-            padding: 32px;
+            padding: 20px;
             height: 100%;
             display: flex;
             flex-direction: column;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
-        .stats-bar {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 24px;
-            padding: 16px;
-            background: #f8f9fb;
-            border-radius: 12px;
-        }
-        
-        .stat-item {
-            flex: 1;
-            text-align: center;
-            padding: 12px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .stat-label {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #64748b;
-            margin-bottom: 6px;
-        }
-        
-        .stat-value {
-            font-size: 24px;
-            font-weight: 800;
-            color: #1e293b;
-        }
-        
-        .stat-item.total .stat-value {
-            color: #27AE60;
-        }
-        
-        .stat-item.improved .stat-value {
-            color: #3b82f6;
-        }
-        
-        .stat-item.normal .stat-value {
-            color: #f59e0b;
-        }
-        
-        .sidebar.collapsed ~ .main-content .stats-bar {
-            gap: 12px;
-            padding: 12px;
-            margin-bottom: 16px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .stat-item {
-            padding: 8px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .stat-label {
-            font-size: 9px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .stat-value {
-            font-size: 20px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .scanner-card {
-            padding: 20px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .scanner-header {
-            margin-bottom: 16px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .scanner-title {
-            font-size: 18px;
-        }
-        
-        .scanner-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-        
-        .scanner-title {
-            font-size: 20px;
-            font-weight: 700;
-        }
+        .scanner-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .scanner-title { font-size: 20px; font-weight: 700; }
         
         .status-badge {
             display: flex;
@@ -432,7 +183,6 @@
             padding: 6px 16px;
             border-radius: 20px;
         }
-        
         .status-dot {
             width: 8px;
             height: 8px;
@@ -440,19 +190,17 @@
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .status-text { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #27AE60; }
         
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .status-text {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #27AE60;
-        }
+        /* Stats Bar */
+        .stats-bar { display: flex; gap: 12px; margin-bottom: 16px; padding: 12px; background: #f8f9fb; border-radius: 12px; }
+        .stat-item { flex: 1; text-align: center; padding: 10px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; }
+        .stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-bottom: 4px; }
+        .stat-value { font-size: 20px; font-weight: 800; color: #1e293b; }
+        .stat-item.total .stat-value { color: #27AE60; }
+        .stat-item.improved .stat-value { color: #3b82f6; }
+        .stat-item.normal .stat-value { color: #f59e0b; }
         
         .scanner-frame {
             flex: 1;
@@ -463,75 +211,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 400px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .scanner-frame {
             min-height: 300px;
+            cursor: pointer;
         }
+        .scanner-frame:hover { opacity: 0.92; }
+        .scanner-frame.scanning { cursor: default; }
+        .scanner-frame.scanning .scan-line { animation: scan 1.5s ease-in-out infinite; }
+        .scanner-frame:not(.scanning) .scan-line { animation: none; opacity: 0.3; top: 50%; }
         
-        .sidebar.collapsed ~ .main-content .scanner-overlay {
-            width: 240px;
-            height: 240px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .scanner-controls {
-            margin-top: 16px;
-            gap: 24px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .control-icon {
-            width: 40px;
-            height: 40px;
-            font-size: 20px;
-        }
-        
-        .scanner-overlay {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            border: 2px solid rgba(39, 174, 96, 0.3);
-            border-radius: 24px;
-        }
-        
-        .corner {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #27AE60;
-        }
-        
-        .corner-tl {
-            top: -2px;
-            left: -2px;
-            border-right: 0;
-            border-bottom: 0;
-            border-top-left-radius: 24px;
-        }
-        
-        .corner-tr {
-            top: -2px;
-            right: -2px;
-            border-left: 0;
-            border-bottom: 0;
-            border-top-right-radius: 24px;
-        }
-        
-        .corner-bl {
-            bottom: -2px;
-            left: -2px;
-            border-right: 0;
-            border-top: 0;
-            border-bottom-left-radius: 24px;
-        }
-        
-        .corner-br {
-            bottom: -2px;
-            right: -2px;
-            border-left: 0;
-            border-top: 0;
-            border-bottom-right-radius: 24px;
-        }
+        .scanner-overlay { position: absolute; width: 240px; height: 240px; border: 2px solid rgba(39, 174, 96, 0.3); border-radius: 24px; }
+        .corner { position: absolute; width: 40px; height: 40px; border: 4px solid #27AE60; }
+        .corner-tl { top: -2px; left: -2px; border-right: 0; border-bottom: 0; border-top-left-radius: 24px; }
+        .corner-tr { top: -2px; right: -2px; border-left: 0; border-bottom: 0; border-top-right-radius: 24px; }
+        .corner-bl { bottom: -2px; left: -2px; border-right: 0; border-top: 0; border-bottom-left-radius: 24px; }
+        .corner-br { bottom: -2px; right: -2px; border-left: 0; border-top: 0; border-bottom-right-radius: 24px; }
         
         .scan-line {
             position: absolute;
@@ -543,11 +236,7 @@
             border-radius: 2px;
             animation: scan 2s ease-in-out infinite;
         }
-        
-        @keyframes scan {
-            0%, 100% { top: 10%; }
-            50% { top: 90%; }
-        }
+        @keyframes scan { 0%, 100% { top: 10%; } 50% { top: 90%; } }
         
         .scanner-instruction {
             position: absolute;
@@ -555,7 +244,6 @@
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
             color: white;
             padding: 12px 24px;
             border-radius: 20px;
@@ -564,149 +252,45 @@
             white-space: nowrap;
         }
         
-        .scanner-controls {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-top: 24px;
-        }
-        
-        .pickup-stats {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
-            padding: 16px;
-            background: #f8f9fb;
-            border-radius: 12px;
-        }
-        
-        .pickup-stats-inline {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .pickup-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            text-align: center;
-            padding: 8px 16px;
-            background: white;
-            border-radius: 20px;
-            border: 2px solid #e5e7eb;
-            min-width: 120px;
-            justify-content: center;
-        }
-        
-        .sidebar.collapsed ~ .main-content .pickup-item {
-            padding: 6px 12px;
-            gap: 4px;
-            min-width: 100px;
-        }
-        
-        .pickup-item.picked {
-            border-color: #27AE60;
-            background: #f0fdf4;
-        }
-        
-        .pickup-item.remaining {
-            border-color: #f59e0b;
-            background: #fffbeb;
-        }
-        
-        .pickup-label {
-            font-size: 13px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0;
-        }
-        
-        .pickup-item.picked .pickup-label {
-            color: #27AE60;
-        }
-        
-        .pickup-item.remaining .pickup-label {
-            color: #f59e0b;
-        }
-        
-        .pickup-value {
-            font-size: 28px;
-            font-weight: 800;
-            line-height: 1;
-        }
-        
-        .pickup-item.picked .pickup-value {
-            color: #27AE60;
-        }
-        
-        .pickup-item.remaining .pickup-value {
-            color: #f59e0b;
-        }
-        
-        .sidebar.collapsed ~ .main-content .pickup-stats {
-            padding: 12px;
-            gap: 8px;
-            margin-top: 12px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .pickup-stats-inline {
-            gap: 8px;
-            margin-top: 16px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .pickup-item {
-            padding: 8px 16px;
-            gap: 6px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .pickup-label {
-            font-size: 11px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .pickup-value {
-            font-size: 22px;
-        }
-        
-        .control-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-        }
-        
+        .scanner-controls { display: flex; justify-content: center; gap: 24px; margin-top: 16px; }
+        .control-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
         .control-icon {
-            width: 48px;
-            height: 48px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: #f1f5f9;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
             color: #64748b;
         }
+        .control-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; }
         
-        .control-label {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #64748b;
-        }
-        
-        /* Info Section */
-        .info-section {
+        /* Pickup Stats */
+        .pickup-stats { display: flex; gap: 8px; margin-top: 12px; }
+        .pickup-item {
             flex: 1;
             display: flex;
-            flex-direction: column;
-            gap: 24px;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 20px;
+            border: 2px solid #e5e7eb;
         }
+        .pickup-item.picked { border-color: #27AE60; background: #f0fdf4; }
+        .pickup-item.remaining { border-color: #f59e0b; background: #fffbeb; }
+        .pickup-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .pickup-item.picked .pickup-label { color: #27AE60; }
+        .pickup-item.remaining .pickup-label { color: #f59e0b; }
+        .pickup-value { font-size: 20px; font-weight: 800; line-height: 1; }
+        .pickup-item.picked .pickup-value { color: #27AE60; }
+        .pickup-item.remaining .pickup-value { color: #f59e0b; }
         
+        /* Info Section */
+        .info-section { flex: 1; display: flex; flex-direction: column; gap: 24px; }
         .info-card {
             background: white;
             border-radius: 16px;
@@ -718,70 +302,7 @@
             overflow: hidden;
         }
         
-        .sidebar.collapsed ~ .main-content .info-card {
-            padding: 16px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .info-header {
-            margin-bottom: 20px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .meal-info {
-            margin-bottom: 20px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .meal-image {
-            margin-bottom: 16px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .meal-name {
-            font-size: 24px;
-            margin-bottom: 6px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .meal-description {
-            font-size: 13px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .employee-card {
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .employee-avatar {
-            width: 48px;
-            height: 48px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .employee-name {
-            font-size: 16px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .details-grid {
-            margin-bottom: 20px;
-            gap: 12px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .detail-item {
-            padding: 16px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .btn {
-            padding: 14px;
-            font-size: 14px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .history-card {
-            padding: 16px;
-        }
-        
-        .info-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-        }
-        
+        .info-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .confirmed-badge {
             display: flex;
             align-items: center;
@@ -795,35 +316,21 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+        .time-text { font-size: 14px; font-weight: 500; color: #64748b; }
         
-        .time-text {
-            font-size: 14px;
-            font-weight: 500;
-            color: #64748b;
-        }
-        
-        .meal-info {
-            text-align: left;
-            margin-bottom: 16px;
-        }
-        
+        /* Meal Content Wrapper */
         .meal-content-wrapper {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 20px;
+            gap: 16px;
             padding: 16px;
             background: #f8f9fb;
             border-radius: 12px;
+            margin-bottom: 16px;
         }
         
-        .meal-details-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex: 1;
-        }
-        
+        .meal-details-left { display: flex; align-items: center; gap: 16px; flex: 1; }
         .meal-image-compact {
             width: 80px;
             height: 80px;
@@ -835,92 +342,24 @@
             font-size: 40px;
             flex-shrink: 0;
         }
+        .meal-text { flex: 1; }
+        .meal-name { font-size: 24px; font-weight: 800; margin-bottom: 4px; color: #1e293b; }
+        .meal-description { font-size: 13px; color: #64748b; font-weight: 500; }
         
-        .meal-text {
-            flex: 1;
-        }
-        
-        .meal-name {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 4px;
-            color: #1e293b;
-        }
-        
-        .meal-description {
-            font-size: 13px;
-            color: #64748b;
-            font-weight: 500;
-        }
-        
-        .pickup-stats-right {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-        
-        .sidebar.collapsed ~ .main-content .meal-content-wrapper {
-            padding: 12px;
-            gap: 12px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .meal-image-compact {
-            width: 60px;
-            height: 60px;
-            font-size: 32px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .meal-name {
-            font-size: 20px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .meal-description {
-            font-size: 12px;
-        }
-        
-        .sidebar.collapsed ~ .main-content .pickup-stats-right {
-            gap: 6px;
-        }
-        
-        .meal-image {
-            width: 100%;
-            aspect-ratio: 16/9;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #ffd699 0%, #ffb84d 100%);
-            margin-bottom: 24px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 64px;
-        }
-        
-        .meal-name {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 8px;
-        }
-        
-        .meal-description {
-            font-size: 14px;
-            color: #64748b;
-            font-weight: 500;
-        }
+        .pickup-stats-right { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
         
         .employee-card {
             background: #f8f9fb;
             border-radius: 12px;
-            padding: 24px;
+            padding: 16px;
             display: flex;
             align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: 12px;
+            margin-bottom: 16px;
         }
-        
         .employee-avatar {
-            width: 56px;
-            height: 56px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             border: 2px solid #a8e6cf;
             padding: 2px;
@@ -928,8 +367,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
-        
         .employee-avatar-inner {
             width: 100%;
             height: 100%;
@@ -940,77 +379,19 @@
             justify-content: center;
             font-size: 24px;
         }
+        .employee-info { flex: 1; }
+        .employee-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 4px; }
+        .employee-name { font-size: 16px; font-weight: 700; }
         
-        .employee-info {
-            flex: 1;
-        }
+        .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .detail-item { background: #f8f9fb; border-radius: 12px; padding: 14px; }
+        .detail-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 4px; }
+        .detail-value { font-size: 15px; font-weight: 700; }
+        .detail-value.green { color: #27AE60; }
         
-        .employee-label {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #94a3b8;
-            margin-bottom: 4px;
-        }
-        
-        .employee-name {
-            font-size: 18px;
-            font-weight: 700;
-        }
-        
-        .details-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-        
-        .detail-item {
-            background: #f8f9fb;
-            border-radius: 12px;
-            padding: 20px;
-        }
-        
-        .detail-label {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #94a3b8;
-            margin-bottom: 4px;
-        }
-        
-        .detail-value {
-            font-size: 15px;
-            font-weight: 700;
-        }
-        
-        .detail-value.green {
-            color: #27AE60;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 16px;
-            margin-top: auto;
-        }
-        
-        .btn {
-            flex: 1;
-            padding: 16px;
-            border-radius: 12px;
-            border: none;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-        }
-        
-        .btn-secondary {
-            background: #f1f5f9;
-            color: #2c3437;
-        }
-        
+        .action-buttons { display: flex; gap: 12px; margin-top: auto; }
+        .btn { flex: 1; padding: 14px; border-radius: 12px; border: none; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .btn-secondary { background: #f1f5f9; color: #2c3437; }
         .btn-primary {
             background: #27AE60;
             color: white;
@@ -1024,19 +405,13 @@
         .history-card {
             background: #f0fdbd;
             border-radius: 12px;
-            padding: 24px;
+            padding: 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             border: 1px solid rgba(89, 100, 50, 0.2);
         }
-        
-        .history-content {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        
+        .history-content { display: flex; align-items: center; gap: 16px; }
         .history-icon {
             width: 40px;
             height: 40px;
@@ -1048,34 +423,20 @@
             font-size: 20px;
             color: #576231;
         }
-        
-        .history-label {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: rgba(87, 98, 49, 0.7);
-            margin-bottom: 4px;
-        }
-        
-        .history-text {
-            font-size: 15px;
-            font-weight: 700;
-            color: #576231;
-        }
+        .history-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(87, 98, 49, 0.7); margin-bottom: 4px; }
+        .history-text { font-size: 15px; font-weight: 700; color: #576231; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar collapsed" id="sidebar">
+            <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()" title="Mở rộng menu">▶</button>
             <div class="logo-section">
-                <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">☰</button>
                 <div class="logo-title">
                     <span class="logo-icon">🍴</span>
                     <h1 class="logo-text">The Culinary<br>Concierge</h1>
                 </div>
-                <p class="logo-subtitle">Tableau Management</p>
+                <p class="logo-subtitle">Quản lý bàn ăn</p>
             </div>
             
             <nav class="nav-menu">
@@ -1083,11 +444,11 @@
                     <span class="nav-icon">📊</span>
                     <span>Tổng quan</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="meal-log.html" class="nav-item">
                     <span class="nav-icon">📅</span>
                     <span>Nhật ký bữa ăn</span>
                 </a>
-                <a href="#" class="nav-item active">
+                <a href="qr-scanner.html" class="nav-item active">
                     <span class="nav-icon">📱</span>
                     <span>Quét mã QR</span>
                 </a>
@@ -1099,8 +460,8 @@
             
             <div class="sidebar-bottom">
                 <button class="new-meal-btn">
-                    <span class="menu-icon">➕</span>
-                    <span>Kế hoạch bữa ăn mới</span>
+                    <span>➕</span>
+                    Kế hoạch bữa ăn mới
                 </button>
                 
                 <div class="user-profile">
@@ -1113,9 +474,7 @@
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
-            <!-- Header -->
             <header class="header">
                 <h2 class="header-title">Máy tính bảng ẩm thực</h2>
                 <nav class="header-nav">
@@ -1124,9 +483,7 @@
                 </nav>
             </header>
 
-            <!-- Content Area -->
             <div class="content-area">
-                <!-- Scanner Section -->
                 <section class="scanner-section">
                     <div class="scanner-card">
                         <div class="scanner-header">
@@ -1137,78 +494,70 @@
                             </div>
                         </div>
                         
-                        <!-- Stats Bar -->
                         <div class="stats-bar">
                             <div class="stat-item total">
                                 <div class="stat-label">Tổng xuất ăn</div>
-                                <div class="stat-value">120</div>
+                                <div class="stat-value" id="statTotal">—</div>
                             </div>
                             <div class="stat-item improved">
                                 <div class="stat-label">Cải thiện</div>
-                                <div class="stat-value">10</div>
+                                <div class="stat-value" id="statImproved">—</div>
                             </div>
                             <div class="stat-item normal">
                                 <div class="stat-label">Thường</div>
-                                <div class="stat-value">200</div>
+                                <div class="stat-value" id="statNormal">—</div>
                             </div>
                         </div>
                         
-                        <div class="scanner-frame">
+                        <div class="scanner-frame" id="scannerFrame" onclick="startScan()">
                             <div class="scanner-overlay">
                                 <div class="corner corner-tl"></div>
                                 <div class="corner corner-tr"></div>
                                 <div class="corner corner-bl"></div>
                                 <div class="corner corner-br"></div>
-                                <div class="scan-line"></div>
+                                <div class="scan-line" id="scanLine"></div>
                             </div>
-                            <div class="scanner-instruction">Căn chỉnh mã QR trong khung để quét</div>
+                            <div class="scanner-instruction" id="scanInstruction">Nhấn để bắt đầu quét QR</div>
                         </div>
                         
                         <div class="scanner-controls">
-                            <div class="control-btn">
-                                <div class="control-icon">💡</div>
-                                <span class="control-label">Đèn flash</span>
-                            </div>
-                            <div class="control-btn">
-                                <div class="control-icon">📷</div>
-                                <span class="control-label">Chuyển</span>
+                            <div class="control-btn" onclick="startScan()">
+                                <div class="control-icon" id="scanBtnIcon">�</div>
+                                <span class="control-label">Quét QR</span>
                             </div>
                         </div>
+                        
+
                     </div>
                 </section>
 
-                <!-- Info Section -->
                 <section class="info-section">
                     <div class="info-card">
                         <div class="info-header">
-                            <span class="confirmed-badge">
-                                <span>✓</span>
-                                ĐÃ XÁC NHẬN
+                            <span class="confirmed-badge" id="confirmedBadge">
+                                <span>⏳</span>
+                                CHỜ QUÉT
                             </span>
-                            <span class="time-text">12:30 chiều • Hôm nay</span>
+                            <span class="time-text" id="scanTime">—</span>
                         </div>
                         
-                        <div class="meal-info">
-                            <div class="meal-content-wrapper">
-                                <!-- Left: Meal Details -->
-                                <div class="meal-details-left">
-                                    <div class="meal-image-compact">🍗</div>
-                                    <div class="meal-text">
-                                        <h2 class="meal-name">Cơm gà xối mỡ</h2>
-                                        <p class="meal-description">Đặc sản bữa trưa • Bếp số 1</p>
-                                    </div>
+                        <div class="meal-content-wrapper">
+                            <div class="meal-details-left">
+                                <div class="meal-image-compact" id="mealEmoji">🍗</div>
+                                <div class="meal-text">
+                                    <h2 class="meal-name" id="mealName">Cơm gà xối mỡ</h2>
+                                    <p class="meal-description" id="mealDesc">Đặc sản bữa trưa • Bếp số 1</p>
                                 </div>
-                                
-                                <!-- Right: Pickup Stats -->
-                                <div class="pickup-stats-right">
-                                    <div class="pickup-item picked">
-                                        <div class="pickup-label">Đã lấy:</div>
-                                        <div class="pickup-value">8</div>
-                                    </div>
-                                    <div class="pickup-item remaining">
-                                        <div class="pickup-label">Còn lại:</div>
-                                        <div class="pickup-value">3</div>
-                                    </div>
+                            </div>
+                            
+                            <div class="pickup-stats-right">
+                                <div class="pickup-item picked">
+                                    <div class="pickup-label">Đã lấy:</div>
+                                    <div class="pickup-value" id="pickedCount">—</div>
+                                </div>
+                                <div class="pickup-item remaining">
+                                    <div class="pickup-label">Còn lại:</div>
+                                    <div class="pickup-value" id="remainingCount">—</div>
                                 </div>
                             </div>
                         </div>
@@ -1219,18 +568,18 @@
                             </div>
                             <div class="employee-info">
                                 <div class="employee-label">Nhân viên</div>
-                                <div class="employee-name">Nguyễn Văn Anh</div>
+                                <div class="employee-name" id="employeeName">—</div>
                             </div>
                         </div>
                         
                         <div class="details-grid">
                             <div class="detail-item">
                                 <div class="detail-label">Phòng ban</div>
-                                <div class="detail-value">Thiết kế sáng tạo</div>
+                                <div class="detail-value" id="employeeDept">—</div>
                             </div>
                             <div class="detail-item">
-                                <div class="detail-label">Tín dụng bữa ăn</div>
-                                <div class="detail-value green">-1 Số dư</div>
+                                <div class="detail-label">Loại suất</div>
+                                <div class="detail-value green" id="mealTypeLabel">—</div>
                             </div>
                         </div>
                         
@@ -1248,7 +597,7 @@
                             <div class="history-icon">🕐</div>
                             <div>
                                 <div class="history-label">Lần quét trước</div>
-                                <div class="history-text">Trần Thị Bình • 12:28 chiều</div>
+                                <div class="history-text" id="historyText">—</div>
                             </div>
                         </div>
                         <span style="color: rgba(87, 98, 49, 0.4); font-size: 24px;">›</span>
@@ -1257,36 +606,327 @@
             </div>
         </main>
     </div>
-</body>
-</html>
 
     <script>
+        // ── State ──────────────────────────────────────────────────────────────
+        let lastScan = null;
+        let allRegistrations = [];
+        let statsLoaded = false;
+        let lastLoadDate = null;   // ngày đã load data gần nhất (YYYY-MM-DD)
+
+        // ── Khởi động ──────────────────────────────────────────────────────────
+        window.addEventListener('DOMContentLoaded', function () {
+            loadTodayData();
+            // Kiểm tra mỗi phút — tự reload lúc 7h sáng ngày mới
+            setInterval(checkDailyReload, 60000);
+        });
+
+        function loadTodayData() {
+            if (typeof AndroidAPI !== 'undefined' && AndroidAPI.fetchMealData) {
+                AndroidAPI.fetchMealData();
+                lastLoadDate = new Date().toISOString().slice(0, 10);
+                console.log('Data loaded for:', lastLoadDate);
+            }
+        }
+
+        // Gọi mỗi phút — reload nếu đã qua 7h sáng ngày mới
+        function checkDailyReload() {
+            const now   = new Date();
+            const today = now.toISOString().slice(0, 10);
+            const hour  = now.getHours();
+            if (lastLoadDate !== today && hour >= 7) {
+                console.log('Daily reload at', hour + ':' + String(now.getMinutes()).padStart(2,'0'));
+                allRegistrations = [];
+                statsLoaded = false;
+                loadTodayData();
+            }
+        }
+
+        // Callback nhận dữ liệu từ Android (dùng cho stats bar)
+        function handleMealDataFromAndroid(data) {
+            try {
+                if (typeof data === 'string') data = JSON.parse(data);
+                let regs = data.registrations || (Array.isArray(data) ? data : data.data) || [];
+                
+                allRegistrations = regs;
+                statsLoaded = true;
+                updateStatsBar(regs);
+                updateMealInfo(regs);
+            } catch (e) {
+                console.error('handleMealDataFromAndroid error:', e);
+            }
+        }
+
+        // Cập nhật phần thông tin món ăn + đã lấy/còn lại ngay khi load
+        function updateMealInfo(regs) {
+            const today = new Date().toISOString().slice(0, 10);
+            const specialToday = regs.filter(r => r.date === today && r.is_special);
+            
+            if (specialToday.length > 0) {
+                // Lấy tên món từ bản ghi đầu tiên có meal_name
+                const sample = specialToday.find(r => r.meal_name) || specialToday[0];
+                const mealName = sample.meal_name || 'Cơm cải thiện';
+
+                const picked    = specialToday.filter(r => r.is_confirmed).length;
+                const remaining = Math.max(0, specialToday.length - picked);
+
+                document.getElementById('mealEmoji').textContent = '⭐';
+                document.getElementById('mealName').textContent  = mealName;
+                document.getElementById('mealDesc').textContent  = 'Suất cải thiện • Bếp số 1';
+                document.getElementById('mealTypeLabel').textContent = 'Cải thiện';
+                document.getElementById('pickedCount').textContent    = picked;
+                document.getElementById('remainingCount').textContent = remaining;
+            }
+
+            // Cập nhật lịch sử: người confirm gần nhất hôm nay
+            updateHistory(regs);
+        }
+
+        // Cập nhật lịch sử từ data API
+        function updateHistory(regs) {
+            const today = new Date().toISOString().slice(0, 10);
+            // Lấy tất cả đã confirm hôm nay, có confirmed_at
+            const confirmed = regs.filter(r => 
+                r.date === today && 
+                r.is_confirmed && 
+                r.confirmed_at && 
+                r.confirmed_at.trim() !== ''
+            );
+
+            if (confirmed.length === 0) {
+                document.getElementById('historyText').textContent = '—';
+                return;
+            }
+
+            // Sort theo confirmed_at giảm dần (mới nhất trước)
+            confirmed.sort((a, b) => {
+                const timeA = a.confirmed_at || '';
+                const timeB = b.confirmed_at || '';
+                return timeB.localeCompare(timeA);
+            });
+
+            const last = confirmed[0];
+            
+            // Parse time từ confirmed_at
+            // Format API: 'YYYY-MM-DD HH:MM:SS' hoặc 'HH:MM:SS' hoặc 'HH:MM'
+            let time = '—';
+            if (last.confirmed_at) {
+                const str = last.confirmed_at.trim();
+                // Nếu có dấu cách → format 'YYYY-MM-DD HH:MM:SS'
+                if (str.includes(' ')) {
+                    const parts = str.split(' ');
+                    time = parts[1].slice(0, 5); // Lấy HH:MM
+                } else {
+                    // Format 'HH:MM:SS' hoặc 'HH:MM'
+                    time = str.slice(0, 5);
+                }
+            }
+            
+            document.getElementById('historyText').textContent = last.user_name + ' • ' + time;
+        }
+
+        function handleMealDataError(msg) {
+            console.error('Meal data error:', msg);
+        }
+
+        function updateStatsBar(regs) {
+            const today = new Date().toISOString().slice(0, 10);
+            const todayRegs = regs.filter(r => r.date === today);
+            const total    = todayRegs.length;
+            const improved = todayRegs.filter(r => r.is_special).length;
+            const normal   = total - improved;
+            document.getElementById('statTotal').textContent   = total;
+            document.getElementById('statImproved').textContent = improved;
+            document.getElementById('statNormal').textContent  = normal;
+        }
+
+        // ── QR Scan ────────────────────────────────────────────────────────────
+        function startScan() {
+            if (typeof AndroidAPI !== 'undefined' && AndroidAPI.startQRScan) {
+                setScanning(true);
+                AndroidAPI.startQRScan();
+            } else {
+                // Chế độ demo khi chạy ngoài Android
+                setScanning(true);
+                setTimeout(() => handleQRScanned('REG-00123'), 1500);
+            }
+        }
+
+        // Callback: Android trả về kết quả QR
+        function handleQRScanned(content) {
+            setScanning(false);
+            console.log('QR scanned:', content);
+
+            // Cập nhật instruction
+            document.getElementById('scanInstruction').textContent = '✓ Đang xử lý...';
+
+            // Gọi API xác nhận
+            confirmRegistration(content);
+        }
+
+        // Tìm đăng ký hôm nay theo username, chưa confirm, ưu tiên cải thiện
+        function findInCache(username) {
+            if (!allRegistrations.length) return null;
+            const today = new Date().toISOString().slice(0, 10);
+            const todayRegs = allRegistrations.filter(r => r.date === today);
+
+            // Tìm theo username chưa confirm (ưu tiên cải thiện)
+            let reg = todayRegs.find(r =>
+                !r.is_confirmed &&
+                r.is_special &&
+                r.confirmer_username === username || // nếu API trả về confirmer_username
+                String(r.employee_id) === username
+            );
+            // Fallback: bất kỳ đăng ký nào của username hôm nay chưa confirm
+            if (!reg) reg = todayRegs.find(r =>
+                !r.is_confirmed && String(r.employee_id) === username
+            );
+            // Fallback nữa: kể cả đã confirm
+            if (!reg) reg = todayRegs.find(r =>
+                String(r.employee_id) === username
+            );
+            return reg || null;
+        }
+
+        // Gọi API confirm theo đúng endpoint: POST /admin/meal-registrations/<id>/confirm
+        function confirmRegistration(username) {
+            // Bước 1: tìm registration trong cache theo username
+            const reg = findInCache(username);
+            if (!reg) {
+                showScanError('Không tìm thấy đăng ký cho: ' + username);
+                return;
+            }
+            if (reg.is_confirmed) {
+                // Đã confirm rồi — vẫn hiển thị thông tin
+                showConfirmResult(reg, username, true);
+                return;
+            }
+
+            // Bước 2: gọi API confirm
+            const apiUrl = `https://ovnm.up.railway.app/admin/meal-registrations/${reg.id}/confirm`;
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log('Confirm response:', data);
+                if (data && data.success) {
+                    reg.is_confirmed = true; // cập nhật cache
+                    showConfirmResult(reg, username, false);
+                } else {
+                    showScanError(data.message || 'Xác nhận thất bại');
+                }
+            })
+            .catch(err => {
+                console.warn('API confirm error:', err);
+                // Vẫn hiển thị thông tin dù lỗi mạng
+                showConfirmResult(reg, username, false);
+            });
+        }
+
+        // Hiển thị kết quả sau khi xác nhận thành công
+        function showConfirmResult(reg, username, alreadyConfirmed) {
+            const now = new Date();
+            const h = now.getHours().toString().padStart(2,'0');
+            const m = now.getMinutes().toString().padStart(2,'0');
+            const timeStr = h + ':' + m;
+
+            const name     = reg.user_name  || username;
+            const dept     = reg.department || '—';
+            const mealName = reg.meal_name  || (reg.is_special ? 'Cơm cải thiện' : 'Cơm thường');
+            const isSpecial = reg.is_special;
+
+            // Instruction
+            document.getElementById('scanInstruction').textContent =
+                alreadyConfirmed ? '⚠ Đã xác nhận trước đó' : '✓ Xác nhận thành công';
+
+            // Badge
+            const badge = document.getElementById('confirmedBadge');
+            if (alreadyConfirmed) {
+                badge.innerHTML = '<span>⚠</span> ĐÃ LẤY TRƯỚC ĐÓ';
+                badge.style.background = '#fef3c7';
+                badge.style.color = '#d97706';
+            } else {
+                badge.innerHTML = '<span>✓</span> ĐÃ XÁC NHẬN';
+                badge.style.background = '#d4f4dd';
+                badge.style.color = '#27AE60';
+            }
+            document.getElementById('scanTime').textContent = timeStr + ' • Hôm nay';
+
+            // Bữa ăn
+            document.getElementById('mealEmoji').textContent = isSpecial ? '⭐' : '🍚';
+            document.getElementById('mealName').textContent  = mealName;
+            document.getElementById('mealDesc').textContent  = isSpecial ? 'Suất cải thiện • Bếp số 1' : 'Suất thường • Bếp số 1';
+            document.getElementById('mealTypeLabel').textContent = isSpecial ? 'Cải thiện' : 'Thường';
+
+            // Nhân viên & phòng ban
+            document.getElementById('employeeName').textContent = name;
+            document.getElementById('employeeDept').textContent = dept;
+
+            // Pickup stats — chỉ tính suất cải thiện hôm nay
+            const today = new Date().toISOString().slice(0, 10);
+            const specialToday = allRegistrations.filter(r => r.date === today && r.is_special);
+            const picked    = specialToday.filter(r => r.is_confirmed).length;
+            const remaining = Math.max(0, specialToday.length - picked);
+            document.getElementById('pickedCount').textContent    = picked;
+            document.getElementById('remainingCount').textContent = remaining;
+
+            // History card
+            if (lastScan) {
+                document.getElementById('historyText').textContent = lastScan.name + ' • ' + lastScan.time;
+            }
+            lastScan = { name, time: timeStr };
+
+            // Cập nhật stats bar
+            updateStatsBar(allRegistrations);
+
+            // Flash màu scanner frame
+            const frame = document.getElementById('scannerFrame');
+            frame.style.boxShadow = alreadyConfirmed ? '0 0 0 4px #f59e0b' : '0 0 0 4px #27AE60';
+            setTimeout(() => { frame.style.boxShadow = ''; }, 1500);
+        }
+
+        function showScanError(msg) {
+            document.getElementById('scanInstruction').textContent = '⚠ ' + msg;
+            document.querySelector('.confirmed-badge').innerHTML = '<span>⚠</span> LỖI';
+            document.querySelector('.confirmed-badge').style.background = '#fee2e2';
+            document.querySelector('.confirmed-badge').style.color = '#ef4444';
+        }
+
+        // Callback: người dùng huỷ quét
+        function handleQRCancelled() {
+            setScanning(false);
+            document.getElementById('scanInstruction').textContent = 'Nhấn để bắt đầu quét QR';
+        }
+
+        // Callback: lỗi camera
+        function handleQRError(msg) {
+            setScanning(false);
+            document.getElementById('scanInstruction').textContent = '⚠ ' + msg;
+        }
+
+        function setScanning(active) {
+            const frame       = document.getElementById('scannerFrame');
+            const instruction = document.getElementById('scanInstruction');
+            const icon        = document.getElementById('scanBtnIcon');
+            if (active) {
+                frame.classList.add('scanning');
+                instruction.textContent = 'Đang mở camera...';
+                icon.textContent = '⏳';
+            } else {
+                frame.classList.remove('scanning');
+                icon.textContent = '📷';
+            }
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const menuToggle = document.getElementById('menuToggle');
-            const container = document.querySelector('.container');
-            
-            sidebar.classList.toggle('collapsed');
-            
-            // Thay đổi icon
-            if (sidebar.classList.contains('collapsed')) {
-                menuToggle.textContent = '☰';
-            } else {
-                menuToggle.textContent = '✕';
-            }
-            
-            // Lưu trạng thái
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            const btn     = document.getElementById('menuToggle');
+            const collapsed = sidebar.classList.toggle('collapsed');
+            btn.textContent = collapsed ? '▶' : '◀';
+            btn.title = collapsed ? 'Mở rộng menu' : 'Thu gọn menu';
         }
-        
-        // Khôi phục trạng thái sidebar
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedState = localStorage.getItem('sidebarCollapsed');
-            if (savedState === 'true') {
-                const sidebar = document.getElementById('sidebar');
-                const menuToggle = document.getElementById('menuToggle');
-                sidebar.classList.add('collapsed');
-                menuToggle.textContent = '☰';
-            }
-        });
     </script>
+</body>
+</html>

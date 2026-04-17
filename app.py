@@ -65,26 +65,6 @@ def init_database():
             if new_tables:
                 print(f"🆕 New tables created: {', '.join(new_tables)}")
             
-            # Initialize default positions if positions table is new
-            if 'positions' in new_tables or 'positions' not in existing_tables:
-                from models import Position
-                if Position.query.count() == 0:
-                    print("Creating default positions...")
-                    default_positions = [
-                        {'code': '1', 'name': 'Nhân viên'},
-                        {'code': '2', 'name': 'Công nhân'},
-                        {'code': '3', 'name': 'Trưởng phòng'},
-                        {'code': '4', 'name': 'Phó phòng'},
-                        {'code': '5', 'name': 'Giám sát'},
-                        {'code': '6', 'name': 'Trưởng nhóm'},
-                        {'code': '7', 'name': 'Quản lý'},
-                    ]
-                    for pos_data in default_positions:
-                        position = Position(**pos_data)
-                        db.session.add(position)
-                    db.session.commit()
-                    print("✓ Default positions created")
-            
             # Check if we need to create default users
             if User.query.count() == 0:
                 print("Creating default users...")
@@ -195,6 +175,11 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(employee_id=form.employee_id.data).first()
         if user and check_password_hash(user.password, form.password.data):
+            # Auto-activate if work_status is 'working'
+            if user.work_status == 'working' and not user.is_active:
+                user.is_active = True
+                db.session.commit()
+            
             # Check if account is active
             if not user.is_active:
                 flash('Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.', 'error')
@@ -209,7 +194,6 @@ def login():
             session['user_name'] = user.name
             session.permanent = True  # Make session permanent (3 weeks)
             
-            flash('Login successful!', 'success')
             next_page = request.args.get('next')
             return redirect(next_page or url_for('dashboard'))
         else:
@@ -366,24 +350,25 @@ def admin_users():
         flash('Bạn không có quyền truy cập trang này', 'error')
         return redirect(url_for('dashboard'))
     
-    from models import Position, Department
-    # Get all users and positions (sort positions numerically)
-    users = User.query.order_by(User.created_at.desc()).all()
-    positions_raw = Position.query.all()
+    from models import Department
     
-    # Sort positions numerically by extracting numbers from code
-    import re
-    def extract_number(code):
-        match = re.search(r'\d+', str(code))
-        return int(match.group()) if match else 0
+    # Get all users
+    users = User.query.all()
     
-    positions = sorted(positions_raw, key=lambda x: extract_number(x.code))
+    # Sort by employee_id numerically
+    # Numeric IDs first (sorted as integers), then alphabetic IDs
+    def sort_key(user):
+        emp_id = user.employee_id
+        if emp_id.isdigit():
+            return (0, int(emp_id))  # Numeric IDs: sort as integers
+        else:
+            return (1, emp_id.lower())  # Non-numeric IDs: sort alphabetically
+    
+    users.sort(key=sort_key)
+    
     departments = Department.query.order_by(Department.name.asc()).all()
     
-    # Create position lookup dictionary for template
-    position_dict = {str(pos.code): pos.name for pos in positions}
-    
-    return render_template('admin_users.html', users=users, positions=positions, departments=departments, position_dict=position_dict)
+    return render_template('admin_users.html', users=users, departments=departments)
 
 @app.route('/admin/users/list', methods=['GET'])
 @login_required
@@ -392,43 +377,32 @@ def admin_users_list():
     if current_user.role != 'admin':
         return {'success': False, 'message': 'Không có quyền'}, 403
     
-    from models import Position
-    users = User.query.order_by(User.created_at.desc()).all()
-    positions_raw = Position.query.all()
+    # Get all users
+    users = User.query.all()
     
-    # Sort positions numerically by extracting numbers from code
-    import re
-    def extract_number(code):
-        match = re.search(r'\d+', str(code))
-        return int(match.group()) if match else 0
+    # Sort by employee_id numerically
+    def sort_key(user):
+        emp_id = user.employee_id
+        if emp_id.isdigit():
+            return (0, int(emp_id))
+        else:
+            return (1, emp_id.lower())
     
-    positions = sorted(positions_raw, key=lambda x: extract_number(x.code))
-    
-    # Create position lookup map (convert both to string for comparison)
-    position_map = {str(pos.code): pos.name for pos in positions}
+    users.sort(key=sort_key)
     
     users_data = []
     for user in users:
-        # Get position name from map, or 'Chưa xác định' if not found
-        position_code = str(user.position) if user.position else None
-        position_name = position_map.get(position_code, 'Chưa xác định') if position_code else 'Chưa xác định'
         users_data.append({
             'id': user.id,
             'employee_id': user.employee_id,
             'name': user.name,
-            'department': user.department,
-            'position_id': user.position_id,
-            'position_name': user.pos.name if user.pos else 'Chưa xác định',
+            'department': user.dept.name if user.dept else None,
             'role': user.role,
             'is_active': user.is_active,
             'work_status': user.work_status,
             'avatar_url': user.avatar_url,
             'can_approve': user.can_approve,
-            'can_register': user.can_register,
-            'gender': user.gender,
-            'phone': user.phone,
-            'citizen_id': user.citizen_id,
-            'hometown': user.hometown
+            'can_register': user.can_register
         })
     
     return {'success': True, 'users': users_data}
@@ -510,12 +484,12 @@ def edit_user(user_id):
     if current_user.role != 'admin':
         return {'success': False, 'message': 'Không có quyền'}, 403
     
-    from models import Position
     from werkzeug.utils import secure_filename
     import os
     from datetime import datetime
     
     user = User.query.get_or_404(user_id)
+    print(f"\n[EDIT USER] Bắt đầu edit user ID: {user_id}, Name: {user.name}")
     
     # Handle both JSON and FormData
     try:
@@ -524,14 +498,19 @@ def edit_user(user_id):
         else:
             data = request.form.to_dict()
         
+        print(f"[EDIT USER] Data received: {data}")
+        
         if 'name' in data:
             user.name = data['name']
+            print(f"[EDIT USER] Updated name: {user.name}")
+            
         if 'employee_id' in data:
             # Check if employee_id already exists
             existing = User.query.filter(User.employee_id == data['employee_id'], User.id != user_id).first()
             if existing:
                 return {'success': False, 'message': 'Mã nhân viên đã tồn tại'}, 400
             user.employee_id = data['employee_id']
+            print(f"[EDIT USER] Updated employee_id: {user.employee_id}")
         
         # Handle department - find department_id from name
         if 'department' in data:
@@ -539,35 +518,67 @@ def edit_user(user_id):
             dept = Department.query.filter_by(name=data['department']).first()
             if dept:
                 user.department_id = dept.id
+                print(f"[EDIT USER] Updated department: {dept.name}")
             else:
                 user.department_id = None
-        
-        # Handle position - store position_id
-        if 'position' in data:
-            user.position_id = data['position']  # This is the position ID
+                print(f"[EDIT USER] Department not found, set to None")
         
         if 'role' in data:
             user.role = data['role']
+            print(f"[EDIT USER] Updated role: {user.role}")
+        
+        deleted_count = 0  # Số đăng ký cơm đã xóa
+        
         if 'work_status' in data:
+            old_status = user.work_status
             user.work_status = data['work_status']
+            print(f"[EDIT USER] Updated work_status: {old_status} → {user.work_status}")
+            
+            # Auto-activate khi chuyển sang 'working'
+            if data['work_status'] == 'working' and not user.is_active:
+                user.is_active = True
+                print(f"[EDIT USER] Auto-activated is_active = True (work_status = working)")
+            
+            # Khi nghỉ việc: Xóa tất cả đăng ký cơm trong tương lai và vô hiệu hóa tài khoản
+            if data['work_status'] == 'resigned':
+                print(f"[EDIT USER] User resigned, deleting future meal registrations...")
+                user.is_active = False  # Tự động vô hiệu hóa khi nghỉ việc
+                print(f"[EDIT USER] Auto-deactivated is_active = False (work_status = resigned)")
+                
+                from models import MealRegistration
+                from datetime import date
+                today = date.today()
+                future_registrations = MealRegistration.query.filter(
+                    MealRegistration.user_id == user.id,
+                    MealRegistration.date >= today
+                ).all()
+                
+                deleted_count = len(future_registrations)
+                for reg in future_registrations:
+                    db.session.delete(reg)
+                
+                print(f"[EDIT USER] Deleted {deleted_count} future meal registrations")
+        
         if 'is_active' in data:
+            old_active = user.is_active
             # Convert string 'true'/'false' to boolean
             user.is_active = data['is_active'] in ['true', 'True', True, 1, '1']
+            print(f"[EDIT USER] Updated is_active: {old_active} → {user.is_active}")
         
         # Handle permission fields
         if 'can_approve' in data:
             user.can_approve = data['can_approve'] in ['true', 'True', True, 1, '1']
+            # Người có quyền phê duyệt tự động có quyền đăng ký
+            if user.can_approve:
+                user.can_register = True
         if 'can_register' in data:
             user.can_register = data['can_register'] in ['true', 'True', True, 1, '1']
-        if 'citizen_id' in data:
-            user.citizen_id = data['citizen_id'] if data['citizen_id'] else None
-        if 'hometown' in data:
-            user.hometown = data['hometown'] if data['hometown'] else None
         
         # Handle password update
         if 'password' in data and data['password']:
             from werkzeug.security import generate_password_hash
             user.password = generate_password_hash(data['password'])
+            print(f"[EDIT USER] Password updated")
         
         # Handle avatar upload
         if 'avatar' in request.files:
@@ -593,14 +604,37 @@ def edit_user(user_id):
                     
                     # Update user avatar_url
                     user.avatar_url = f"/static/uploads/avatars/{new_filename}"
+                    print(f"[EDIT USER] Avatar uploaded: {new_filename}")
         
+        print(f"[EDIT USER] Committing changes to database...")
         db.session.commit()
+        print(f"[EDIT USER] ✓ Database commit successful")
         
-        return {'success': True, 'message': f'Đã cập nhật thông tin {user.name}'}
+        # Tự động đăng ký suất ăn CHỈ KHI user đang làm việc
+        success_message = f'Đã cập nhật thông tin {user.name}'
+        
+        # Nếu nghỉ việc, thông báo đã xóa đăng ký
+        if user.work_status == 'resigned':
+            if deleted_count > 0:
+                success_message += f' và xóa {deleted_count} đăng ký cơm trong tương lai'
+        else:
+            # Chỉ auto-register khi đang làm việc
+            try:
+                if user.work_status == 'working':
+                    print(f"[EDIT USER] User is working, running auto-register...")
+                    auto_result = auto_register_meals_for_user(user.id, days=30)
+                    print(f"[EDIT USER] Auto-register result: {auto_result}")
+                    if auto_result['success'] and auto_result['registered'] > 0:
+                        success_message += f' và tự động đăng ký {auto_result["registered"]} ngày'
+            except Exception as auto_error:
+                print(f"[EDIT USER] Warning: Auto-register failed but user update succeeded: {auto_error}")
+        
+        print(f"[EDIT USER] ✓ Success: {success_message}\n")
+        return {'success': True, 'message': success_message}
     
     except Exception as e:
         db.session.rollback()
-        print(f"Error in edit_user: {e}")
+        print(f"[EDIT USER] ❌ Error: {e}")
         import traceback
         traceback.print_exc()
         return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
@@ -645,7 +679,6 @@ def add_user():
     if current_user.role != 'admin':
         return {'success': False, 'message': 'Không có quyền'}, 403
     
-    from models import Position
     from werkzeug.utils import secure_filename
     import os
     from datetime import datetime
@@ -658,7 +691,7 @@ def add_user():
             data = request.form.to_dict()
         
         # Validate required fields
-        required_fields = ['employee_id', 'name', 'password', 'department', 'position']
+        required_fields = ['employee_id', 'name', 'password', 'department']
         for field in required_fields:
             if field not in data or not data[field]:
                 return {'success': False, 'message': f'Thiếu thông tin: {field}'}, 400
@@ -677,7 +710,6 @@ def add_user():
             employee_id=data['employee_id'],
             name=data['name'],
             department_id=department_id,  # Department foreign key
-            position_id=data['position'],  # Position ID
             role=data.get('role', 'user'),
             work_status=data.get('work_status', 'working'),
             is_active=True,  # Mặc định luôn active khi tạo mới
@@ -714,7 +746,14 @@ def add_user():
         db.session.add(new_user)
         db.session.commit()
         
-        return {'success': True, 'message': f'Đã thêm nhân viên {new_user.name}'}
+        # Tự động đăng ký suất ăn 30 ngày cho user mới
+        auto_result = auto_register_meals_for_user(new_user.id, days=30)
+        
+        success_message = f'Đã thêm nhân viên {new_user.name}'
+        if auto_result['success']:
+            success_message += f' và tự động đăng ký {auto_result["registered"]} ngày'
+        
+        return {'success': True, 'message': success_message}
     
     except Exception as e:
         db.session.rollback()
@@ -738,172 +777,241 @@ def reset_user_password(user_id):
     
     return {'success': True, 'message': f'Đã reset mật khẩu của {user.name} về 123456'}
 
-# ============= POSITION MANAGEMENT ROUTES =============
-@app.route('/admin/positions')
+
+@app.route('/admin/users/download-template')
 @login_required
-def admin_positions():
-    """Position management page - admin only"""
+def download_users_template():
+    """Download Excel template for importing users"""
     if current_user.role != 'admin':
-        flash('Bạn không có quyền truy cập trang này', 'error')
-        return redirect(url_for('dashboard'))
+        return {'success': False, 'message': 'Không có quyền'}, 403
     
-    from models import Position
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment
+    import io
+    from flask import send_file
     
-    # Auto-create positions table and default data if not exists
+    # Create workbook
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Users Template"
+    
+    # Header style
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_alignment = Alignment(horizontal="center", vertical="center")
+    
+    # Define headers
+    headers = [
+        "Mã nhân viên *",
+        "Họ và tên *", 
+        "Phòng ban *",
+        "Mật khẩu",
+        "Quyền",
+        "Trạng thái",
+        "Quyền phê duyệt",
+        "Quyền đăng ký"
+    ]
+    
+    # Write headers
+    for col, header in enumerate(headers, start=1):
+        cell = ws.cell(row=1, column=col)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_alignment
+    
+    # Add example data
+    example_data = [
+        ["10001", "Nguyễn Văn A", "Phòng IT", "123456", "user", "working", "false", "false"],
+        ["10002", "Trần Thị B", "Phòng HR", "123456", "user", "working", "false", "false"],
+        ["20001", "Lê Văn C", "Phòng Sản xuất", "123456", "user", "working", "false", "false"]
+    ]
+    
+    for row_idx, row_data in enumerate(example_data, start=2):
+        for col_idx, value in enumerate(row_data, start=1):
+            ws.cell(row=row_idx, column=col_idx, value=value)
+    
+    # Add instructions sheet
+    ws_instructions = wb.create_sheet("Hướng dẫn")
+    instructions = [
+        ["HƯỚNG DẪN IMPORT USERS"],
+        [""],
+        ["Các cột bắt buộc (có dấu *):"],
+        ["- Mã nhân viên: Mã duy nhất của nhân viên (VD: 10001, 20001)"],
+        ["- Họ và tên: Tên đầy đủ của nhân viên"],
+        ["- Phòng ban: Tên phòng ban (nếu chưa có sẽ tự động tạo mới)"],
+        [""],
+        ["Các cột tùy chọn:"],
+        ["- Mật khẩu: Mặc định là 123456 nếu để trống"],
+        ["- Quyền: user hoặc admin (mặc định: user)"],
+        ["- Trạng thái: working, business_trip, resigned (mặc định: working)"],
+        ["- Quyền phê duyệt: true hoặc false (mặc định: false)"],
+        ["- Quyền đăng ký: true hoặc false (mặc định: false)"],
+        [""],
+        ["Lưu ý:"],
+        ["- Không xóa dòng tiêu đề"],
+        ["- Mã nhân viên không được trùng"],
+        ["- Phòng ban chưa tồn tại sẽ được tự động tạo mới"],
+        ["- Xóa các dòng ví dụ trước khi import dữ liệu thật"]
+    ]
+    
+    for row_idx, instruction in enumerate(instructions, start=1):
+        ws_instructions.cell(row=row_idx, column=1, value=instruction[0])
+        if row_idx == 1:
+            ws_instructions.cell(row=row_idx, column=1).font = Font(bold=True, size=14)
+    
+    # Adjust column widths
+    ws.column_dimensions['A'].width = 15
+    ws.column_dimensions['B'].width = 25
+    ws.column_dimensions['C'].width = 20
+    ws.column_dimensions['D'].width = 12
+    ws.column_dimensions['E'].width = 12
+    ws.column_dimensions['F'].width = 15
+    ws.column_dimensions['G'].width = 18
+    ws.column_dimensions['H'].width = 18
+    
+    ws_instructions.column_dimensions['A'].width = 60
+    
+    # Save to BytesIO
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=f'users_template_{datetime.now().strftime("%Y%m%d")}.xlsx'
+    )
+
+
+@app.route('/admin/users/import', methods=['POST'])
+@login_required
+def import_users_excel():
+    """Import users from Excel file"""
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    if 'file' not in request.files:
+        return {'success': False, 'message': 'Không có file được tải lên'}, 400
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        return {'success': False, 'message': 'Không có file được chọn'}, 400
+    
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        return {'success': False, 'message': 'File phải là định dạng Excel (.xlsx hoặc .xls)'}, 400
+    
+    import openpyxl
+    from models import Department
+    
     try:
-        db.create_all()
-        if Position.query.count() == 0:
-            default_positions = [
-                {'code': '1', 'name': 'Nhân viên'},
-                {'code': '2', 'name': 'Công nhân'},
-                {'code': '3', 'name': 'Trưởng phòng'},
-                {'code': '4', 'name': 'Phó phòng'},
-                {'code': '5', 'name': 'Giám sát'},
-                {'code': '6', 'name': 'Trưởng nhóm'},
-                {'code': '7', 'name': 'Quản lý'},
-            ]
-            for pos_data in default_positions:
-                position = Position(**pos_data)
-                db.session.add(position)
+        wb = openpyxl.load_workbook(file, data_only=True)
+        ws = wb.active
+        
+        # Skip header row
+        rows = list(ws.iter_rows(min_row=2, values_only=True))
+        
+        if not rows:
+            return {'success': False, 'message': 'File Excel không có dữ liệu'}, 400
+        
+        success_count = 0
+        error_count = 0
+        errors = []
+        
+        for row_idx, row in enumerate(rows, start=2):
+            try:
+                # Skip empty rows
+                if not any(row):
+                    continue
+                
+                employee_id = str(row[0]).strip() if row[0] else None
+                name = str(row[1]).strip() if row[1] else None
+                department_name = str(row[2]).strip() if row[2] else None
+                password = str(row[3]).strip() if row[3] else '123456'
+                role = str(row[4]).strip().lower() if row[4] else 'user'
+                work_status = str(row[5]).strip().lower() if row[5] else 'working'
+                can_approve = str(row[6]).strip().lower() == 'true' if row[6] else False
+                can_register = str(row[7]).strip().lower() == 'true' if row[7] else False
+                
+                # Validate required fields
+                if not employee_id or not name or not department_name:
+                    errors.append(f"Dòng {row_idx}: Thiếu thông tin bắt buộc (Mã NV, Tên, Phòng ban)")
+                    error_count += 1
+                    continue
+                
+                # Check if user already exists
+                existing_user = User.query.filter_by(employee_id=employee_id).first()
+                if existing_user:
+                    errors.append(f"Dòng {row_idx}: Mã nhân viên {employee_id} đã tồn tại")
+                    error_count += 1
+                    continue
+                
+                # Find or create department
+                department = Department.query.filter_by(name=department_name).first()
+                if not department:
+                    # Auto-create department if not exists
+                    department = Department(
+                        code=department_name.upper().replace(' ', '_')[:50],  # Generate code from name
+                        name=department_name,
+                        description=f'Tự động tạo từ import'
+                    )
+                    db.session.add(department)
+                    db.session.flush()  # Get department.id without committing
+                
+                # Validate role
+                if role not in ['user', 'admin']:
+                    role = 'user'
+                
+                # Validate work_status
+                if work_status not in ['working', 'business_trip', 'resigned']:
+                    work_status = 'working'
+                
+                # Create new user
+                new_user = User(
+                    employee_id=employee_id,
+                    name=name,
+                    department_id=department.id,
+                    role=role,
+                    work_status=work_status,
+                    is_active=True,
+                    can_approve=can_approve,
+                    can_register=can_register
+                )
+                new_user.set_password(password)
+                
+                db.session.add(new_user)
+                success_count += 1
+                
+            except Exception as e:
+                errors.append(f"Dòng {row_idx}: Lỗi - {str(e)}")
+                error_count += 1
+                continue
+        
+        # Commit all changes
+        if success_count > 0:
             db.session.commit()
-            flash('Đã tạo 7 chức vụ mặc định', 'success')
+        
+        # Prepare response message
+        message = f"Import thành công {success_count} user"
+        if error_count > 0:
+            message += f", {error_count} lỗi"
+        
+        return {
+            'success': True,
+            'message': message,
+            'success_count': success_count,
+            'error_count': error_count,
+            'errors': errors[:10]  # Limit to first 10 errors
+        }
+        
     except Exception as e:
-        print(f"Error creating positions: {e}")
-    
-    positions = Position.query.order_by(Position.code).all()
-    return render_template('admin_positions.html', positions=positions)
+        db.session.rollback()
+        return {'success': False, 'message': f'Lỗi khi đọc file: {str(e)}'}, 500
 
-@app.route('/admin/positions/employee-counts')
-@login_required
-def get_position_employee_counts():
-    """Get employee counts for each position"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    from models import Position
-    from sqlalchemy import func
-    
-    # Get count of users for each position
-    position_counts = db.session.query(
-        Position.id,
-        func.count(User.id).label('employee_count')
-    ).outerjoin(User, User.position_id == Position.id).group_by(Position.id).all()
-    
-    counts = {pos_id: count for pos_id, count in position_counts}
-    
-    return {'success': True, 'counts': counts}
 
-@app.route('/admin/positions/list')
-@login_required
-def list_positions():
-    """Get positions list as JSON"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    from models import Position
-    positions = Position.query.all()
-    
-    # Convert to list and sort by numeric value of code
-    positions_list = [{'id': p.id, 'code': p.code, 'name': p.name, 'description': p.description or ''} for p in positions]
-    
-    # Sort by numeric value of code
-    def sort_key(pos):
-        try:
-            # Extract numeric part from code
-            import re
-            numeric_part = re.findall(r'\d+', pos['code'])
-            if numeric_part:
-                return int(numeric_part[0])
-            else:
-                return float('inf')  # Non-numeric codes go to end
-        except:
-            return float('inf')
-    
-    positions_list.sort(key=sort_key)
-    
-    return positions_list
 
-@app.route('/admin/positions/add', methods=['POST'])
-@login_required
-def add_position():
-    """Add new position"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    from models import Position
-    data = request.json
-    code = data.get('code', '').strip().upper()
-    name = data.get('name', '').strip()
-    description = data.get('description', '').strip()
-    
-    if not code or not name:
-        return {'success': False, 'message': 'Vui lòng điền đầy đủ thông tin'}, 400
-    
-    # Check if code already exists
-    existing = Position.query.filter_by(code=code).first()
-    if existing:
-        return {'success': False, 'message': 'Mã chức vụ đã tồn tại'}, 400
-    
-    position = Position(code=code, name=name, description=description)
-    db.session.add(position)
-    db.session.commit()
-    
-    return {'success': True, 'message': f'Đã thêm chức vụ {name}'}
-
-@app.route('/admin/positions/<int:position_id>/edit', methods=['POST'])
-@login_required
-def edit_position(position_id):
-    """Edit position"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    from models import Position
-    position = Position.query.get_or_404(position_id)
-    
-    data = request.json
-    code = data.get('code', '').strip().upper()
-    name = data.get('name', '').strip()
-    description = data.get('description', '').strip()
-    
-    if not code or not name:
-        return {'success': False, 'message': 'Vui lòng điền đầy đủ thông tin'}, 400
-    
-    # Check if code already exists (excluding current position)
-    existing = Position.query.filter(Position.code == code, Position.id != position_id).first()
-    if existing:
-        return {'success': False, 'message': 'Mã chức vụ đã tồn tại'}, 400
-    
-    position.code = code
-    position.name = name
-    position.description = description
-    position.updated_at = datetime.utcnow()
-    db.session.commit()
-    
-    return {'success': True, 'message': f'Đã cập nhật chức vụ {name}'}
-
-@app.route('/admin/positions/<int:position_id>/delete', methods=['POST'])
-@login_required
-def delete_position(position_id):
-    """Delete position"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    from models import Position
-    position = Position.query.get_or_404(position_id)
-    
-    # Check if any users are using this position
-    users_count = User.query.filter_by(position=position.name).count()
-    if users_count > 0:
-        return {'success': False, 'message': f'Không thể xóa. Có {users_count} nhân viên đang sử dụng chức vụ này'}, 400
-    
-    db.session.delete(position)
-    db.session.commit()
-    
-    return {'success': True, 'message': f'Đã xóa chức vụ {position.name}'}
-
-# ============= END POSITION MANAGEMENT ROUTES =============
-
-# ============= DEPARTMENT MANAGEMENT ROUTES =============
 
 @app.route('/admin/departments')
 @login_required
@@ -1098,7 +1206,6 @@ def list_overtime_requests():
                     'employee_name': r.employee_name or '',
                     'employee_id': r.employee_id or '',
                     'department': r.department or '',
-                    'position': r.position or '',
                     'overtime_date': r.overtime_date.strftime('%Y-%m-%d') if r.overtime_date else '',
                     'start_time': r.start_time.strftime('%H:%M') if r.start_time else '',
                     'end_time': r.end_time.strftime('%H:%M') if r.end_time else '',
@@ -1131,6 +1238,29 @@ def list_overtime_requests():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 # ============= END OVERTIME APPROVAL ROUTES =============
+
+@app.route('/admin/overtime-requests/<int:request_id>/delete', methods=['POST'])
+@login_required
+def delete_overtime_request(request_id):
+    """Delete an overtime request (admin only)"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Bạn không có quyền xóa yêu cầu này'}), 403
+    
+    try:
+        overtime_request = OvertimeRequest.query.get(request_id)
+        if not overtime_request:
+            return jsonify({'success': False, 'message': 'Không tìm thấy yêu cầu'}), 404
+        
+        db.session.delete(overtime_request)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Đã xóa yêu cầu thành công'})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting overtime request: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': 'Có lỗi xảy ra khi xóa yêu cầu'}), 500
 
 # ============= MANAGER OVERTIME APPROVAL ROUTES =============
 @app.route('/manager/overtime-approvals')
@@ -1217,7 +1347,6 @@ def get_manager_overtime_requests():
                 'employee_name': r.employee_name,
                 'employee_id': r.employee_id,
                 'department': r.department,
-                'position': r.position or '',
                 'overtime_date': r.overtime_date.strftime('%Y-%m-%d'),
                 'start_time': r.start_time.strftime('%H:%M') if r.start_time else '00:00',
                 'end_time': r.end_time.strftime('%H:%M') if r.end_time else '00:00',
@@ -1643,167 +1772,31 @@ def admin_stats():
         flash('Không có quyền truy cập', 'error')
         return redirect(url_for('dashboard'))
     
+    # Tự động chạy auto-register 30 ngày mỗi khi vào trang thống kê
+    try:
+        print("\n[ADMIN STATS] Tự động chạy auto-register 30 ngày...")
+        auto_register_meals_for_30_days()
+    except Exception as e:
+        print(f"[ADMIN STATS] Lỗi khi chạy auto-register: {str(e)}")
+    
     return render_template('admin_stats.html')
 
 
-@app.route('/admin/approval-hierarchy')
+@app.route('/admin/auto-register/run', methods=['POST'])
 @login_required
-def admin_approval_hierarchy():
-    """Admin approval hierarchy management page"""
-    if current_user.role != 'admin':
-        flash('Không có quyền truy cập', 'error')
-        return redirect(url_for('dashboard'))
-    
-    from models import Department, Position
-    
-    # Get all departments and positions
-    departments = Department.query.order_by(Department.name.asc()).all()
-    
-    # Sort positions numerically by extracting numbers from code
-    positions_raw = Position.query.all()
-    import re
-    def extract_number(code):
-        match = re.search(r'\d+', str(code))
-        return int(match.group()) if match else 0
-    
-    positions = sorted(positions_raw, key=lambda x: extract_number(x.code))
-    
-    return render_template('admin_approval_hierarchy.html', 
-                         departments=departments,
-                         positions=positions)
-
-
-@app.route('/admin/approval-hierarchy/load/<int:department_id>')
-@login_required
-def load_approval_matrix(department_id):
-    """Load approval matrix for a department"""
+def run_auto_register():
+    """Manually trigger auto-register for 30 days"""
     if current_user.role != 'admin':
         return {'success': False, 'message': 'Không có quyền'}, 403
     
     try:
-        from models import ApprovalHierarchy, Position
-        
-        # Get all approval rules for this department
-        rules = ApprovalHierarchy.query.filter_by(department_id=department_id).all()
-        
-        # Convert to matrix format
-        matrix = {}
-        for rule in rules:
-            approver_code = rule.approver_position.code if rule.approver_position else str(rule.approver_position_id)
-            approvee_code = rule.approvee_position.code if rule.approvee_position else str(rule.approvee_position_id)
-            key = f"{approver_code}-{approvee_code}"
-            matrix[key] = rule.can_approve
-        
-        return {'success': True, 'matrix': matrix}
-        
+        print("\n[MANUAL TRIGGER] Admin chạy thủ công auto-register 30 ngày...")
+        auto_register_meals_for_30_days()
+        return {'success': True, 'message': 'Đã chạy tự động đăng ký 30 ngày thành công! Xem console để biết chi tiết.'}
     except Exception as e:
+        print(f"[MANUAL TRIGGER] Lỗi: {str(e)}")
         return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
 
-
-@app.route('/admin/approval-hierarchy/save', methods=['POST'])
-@login_required
-def save_approval_matrix():
-    """Save approval matrix for a department"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    try:
-        from models import ApprovalHierarchy, Position
-        
-        data = request.get_json()
-        department_id = data.get('department_id')
-        matrix = data.get('matrix', {})
-        
-        if not department_id:
-            return {'success': False, 'message': 'Thiếu thông tin phòng ban'}, 400
-        
-        # Get all positions to map codes to IDs
-        positions = Position.query.all()
-        position_map = {pos.code: pos.id for pos in positions}
-        
-        # Delete existing rules for this department
-        ApprovalHierarchy.query.filter_by(department_id=department_id).delete()
-        
-        # Create new rules based on matrix
-        for key, can_approve in matrix.items():
-            if '-' not in key:
-                continue
-                
-            approver_code, approvee_code = key.split('-', 1)
-            
-            if approver_code not in position_map or approvee_code not in position_map:
-                continue
-            
-            # Only create rule if it's True (can approve)
-            if can_approve:
-                rule = ApprovalHierarchy(
-                    department_id=department_id,
-                    approver_position_id=position_map[approver_code],
-                    approvee_position_id=position_map[approvee_code],
-                    can_approve=True
-                )
-                db.session.add(rule)
-        
-        db.session.commit()
-        return {'success': True, 'message': 'Đã lưu cấu hình thành công'}
-        
-    except Exception as e:
-        db.session.rollback()
-        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
-
-
-@app.route('/admin/approval-hierarchy/copy', methods=['POST'])
-@login_required
-def copy_approval_matrix():
-    """Copy approval matrix from one department to another"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    try:
-        from models import ApprovalHierarchy, Position
-        
-        data = request.get_json()
-        source_dept_id = data.get('source_department_id')
-        target_dept_id = data.get('target_department_id')
-        
-        if not source_dept_id or not target_dept_id:
-            return {'success': False, 'message': 'Thiếu thông tin phòng ban'}, 400
-        
-        if source_dept_id == target_dept_id:
-            return {'success': False, 'message': 'Không thể sao chép từ chính phòng ban này'}, 400
-        
-        # Get source rules
-        source_rules = ApprovalHierarchy.query.filter_by(department_id=source_dept_id).all()
-        
-        if not source_rules:
-            return {'success': False, 'message': 'Phòng ban nguồn chưa có cấu hình nào'}, 400
-        
-        # Delete existing rules for target department
-        ApprovalHierarchy.query.filter_by(department_id=target_dept_id).delete()
-        
-        # Copy rules to target department
-        matrix = {}
-        for rule in source_rules:
-            new_rule = ApprovalHierarchy(
-                department_id=target_dept_id,
-                approver_position_id=rule.approver_position_id,
-                approvee_position_id=rule.approvee_position_id,
-                can_approve=rule.can_approve
-            )
-            db.session.add(new_rule)
-            
-            # Build matrix for response
-            approver_code = rule.approver_position.code if rule.approver_position else str(rule.approver_position_id)
-            approvee_code = rule.approvee_position.code if rule.approvee_position else str(rule.approvee_position_id)
-            key = f"{approver_code}-{approvee_code}"
-            matrix[key] = rule.can_approve
-        
-        db.session.commit()
-        return {'success': True, 'matrix': matrix, 'message': 'Đã sao chép cấu hình thành công'}
-        
-    except Exception as e:
-        db.session.rollback()
-        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
 
 @app.route('/admin/stats/data')
 @login_required
@@ -1813,85 +1806,35 @@ def get_stats_data():
         return {'success': False, 'message': 'Không có quyền'}, 403
     
     from datetime import datetime, timedelta
-    from sqlalchemy import func
+    from sqlalchemy import func, or_
     from models import Menu
     
-    period = request.args.get('period', 'week')  # week, tomorrow, month
+    # Lấy date range từ request parameters (từ bộ lọc người dùng chọn)
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
     
-    # Calculate date range
     today = datetime.now().date()
-    if period == 'tomorrow':
-        tomorrow = today + timedelta(days=1)
-        start_date = tomorrow
-        end_date = tomorrow
-    elif period == 'week':
-        # Current week (Monday to Sunday)
+    
+    # Nếu có date_from và date_to từ bộ lọc, dùng chúng
+    if date_from and date_to:
+        try:
+            start_date = datetime.strptime(date_from, '%Y-%m-%d').date()
+            end_date = datetime.strptime(date_to, '%Y-%m-%d').date()
+        except:
+            # Nếu parse lỗi, dùng tuần hiện tại
+            start_date = today - timedelta(days=today.weekday())
+            end_date = start_date + timedelta(days=6)
+    else:
+        # Nếu không có bộ lọc, mặc định lấy tuần hiện tại
         start_date = today - timedelta(days=today.weekday())
         end_date = start_date + timedelta(days=6)
-    else:  # month
-        start_date = today.replace(day=1)
-        # Last day of month
-        if today.month == 12:
-            end_date = today.replace(day=31)
-        else:
-            end_date = (today.replace(month=today.month + 1, day=1) - timedelta(days=1))
     
-    # AUTO-REGISTER: Tự động đăng ký cho user chưa đăng ký trong khoảng thời gian này
-    # Chỉ áp dụng cho nhân viên có mã bắt đầu bằng 10 hoặc 20
-    from sqlalchemy import or_
-    auto_registered_count = 0
-    current_date = start_date
+    period = request.args.get('period', 'custom')  # Để biết loại period cho chart
     
-    while current_date <= end_date:
-        # Chỉ đăng ký cho ngày hôm nay trở đi (không đăng ký cho quá khứ)
-        if current_date >= today:
-            # Lấy menu bình thường cho ngày này
-            normal_menu = Menu.query.filter(
-                Menu.date == current_date,
-                Menu.is_special == False,
-                Menu.is_active == True,
-                Menu.meal_type == 'lunch'
-            ).first()
-            
-            if normal_menu:
-                # Lấy tất cả user có trạng thái hoạt động và mã bắt đầu bằng 10 hoặc 20
-                active_users = User.query.filter(
-                    User.work_status.in_(['working', 'business_trip']),
-                    User.can_register == True,
-                    or_(
-                        User.employee_id.like('10%'),
-                        User.employee_id.like('20%')
-                    )
-                ).all()
-                
-                for user in active_users:
-                    # Kiểm tra xem user đã đăng ký chưa
-                    existing = MealRegistration.query.filter_by(
-                        user_id=user.id,
-                        date=current_date
-                    ).first()
-                    
-                    if not existing:
-                        # Tự động đăng ký suất ăn bình thường
-                        new_registration = MealRegistration(
-                            user_id=user.id,
-                            date=current_date,
-                            meal_id=normal_menu.id,
-                            meal_type='lunch',
-                            has_meal=True,
-                            notes='Tự động đăng ký bởi hệ thống'
-                        )
-                        db.session.add(new_registration)
-                        auto_registered_count += 1
-        
-        current_date += timedelta(days=1)
+    # AUTO-REGISTER đã được tắt - sử dụng nút "Chạy Auto 30 ngày" hoặc đợi 16:00
+    # Hoặc auto-register sẽ chạy khi tạo/edit user
     
-    # Commit tất cả đăng ký tự động
-    if auto_registered_count > 0:
-        db.session.commit()
-        print(f"✅ AUTO-REGISTER: Đã tự động đăng ký {auto_registered_count} suất ăn")
-    
-    # Get registrations for the period with proper joins - only employee_id starting with 10 or 20
+    # Get registrations for the period with proper joins - only working users with employee_id starting with 10 or 20
     registrations = MealRegistration.query.join(
         User,
         MealRegistration.user_id == User.id
@@ -1902,6 +1845,7 @@ def get_stats_data():
         MealRegistration.date >= start_date,
         MealRegistration.date <= end_date,
         MealRegistration.has_meal == True,
+        User.work_status == 'working',  # CHỈ lấy user đang làm việc
         or_(
             User.employee_id.like('10%'),
             User.employee_id.like('20%')
@@ -2757,7 +2701,6 @@ def overtime():
             existing_request.user_id = current_user.id
             existing_request.employee_id = current_user.employee_id
             existing_request.employee_name = current_user.name
-            existing_request.position = current_user.pos.name if current_user.pos else 'Chưa xác định'
             existing_request.total_hours = num_people  # Store number of people in total_hours field
             existing_request.reason = reason
             existing_request.status = 'pending'
@@ -2774,7 +2717,6 @@ def overtime():
                 employee_id=current_user.employee_id,
                 employee_name=current_user.name,
                 department=department_name,
-                position=current_user.pos.name if current_user.pos else 'Chưa xác định',
                 overtime_date=overtime_date,
                 start_time=time(17, 0),  # Dummy value
                 end_time=time(19, 0),    # Dummy value
@@ -2888,7 +2830,8 @@ def self_approve_overtime_request(request_id):
 @login_required
 def leave():
     # Check if user has permission to register leave
-    if not current_user.can_register:
+    # Managers (can_approve=True) automatically have registration permission
+    if not current_user.can_register and not current_user.can_approve:
         flash('Bạn không có quyền đăng ký nghỉ phép', 'error')
         return redirect(url_for('dashboard'))
     
@@ -2928,7 +2871,6 @@ def leave():
             employee_id=current_user.employee_id,
             employee_name=current_user.name,
             department=current_user.dept.name if current_user.dept else 'Chưa xác định',
-            position=current_user.pos.name if current_user.pos else 'Chưa xác định',
             leave_type=leave_type,
             start_date=start_date_obj,
             end_date=end_date_obj,
@@ -3043,7 +2985,6 @@ def exit_entry():
             employee_id=current_user.employee_id,
             employee_name=current_user.name,
             department=current_user.dept.name if current_user.dept else 'Chưa xác định',
-            position=current_user.pos.name if current_user.pos else 'Chưa xác định',
             request_date=request_date_obj,
             exit_time=exit_time_obj,
             entry_time=entry_time_obj,
@@ -3447,21 +3388,106 @@ def service_worker():
     return app.send_static_file('service-worker.js')
 
 # ============= AUTO REGISTER MEALS SCHEDULER =============
-def auto_register_meals_for_tomorrow():
+def auto_register_meals_for_user(user_id, days=30):
     """
-    Tự động đăng ký suất ăn bình thường cho user chưa đăng ký
+    Tự động đăng ký suất ăn cho 1 user cụ thể
+    Dùng khi tạo user mới hoặc kích hoạt lại user
+    
+    Args:
+        user_id: ID của user cần đăng ký
+        days: Số ngày cần đăng ký (mặc định 30)
+    
+    Returns:
+        dict: Kết quả đăng ký {success: bool, registered: int, skipped: int, message: str}
+    """
+    try:
+        from models import Menu, MealRegistration
+        
+        user = User.query.get(user_id)
+        if not user:
+            return {'success': False, 'registered': 0, 'skipped': 0, 'message': 'User không tồn tại'}
+        
+        # Kiểm tra điều kiện - chỉ cần work_status = 'working'
+        if user.work_status != 'working':
+            return {'success': False, 'registered': 0, 'skipped': 0, 'message': 'User không đang làm việc'}
+        
+        # Kiểm tra mã nhân viên
+        if not (user.employee_id.startswith('10') or user.employee_id.startswith('20')):
+            return {'success': False, 'registered': 0, 'skipped': 0, 'message': 'Mã nhân viên không thuộc 10xx hoặc 20xx'}
+        
+        today = datetime.now().date()
+        registered_count = 0
+        skipped_count = 0
+        
+        # Lặp qua số ngày cần đăng ký
+        for day_offset in range(1, days + 1):
+            target_date = today + timedelta(days=day_offset)
+            
+            # Kiểm tra đã có đăng ký chưa
+            existing = MealRegistration.query.filter_by(
+                user_id=user.id,
+                date=target_date
+            ).first()
+            
+            if existing:
+                skipped_count += 1
+                continue
+            
+            # Lấy menu bình thường
+            normal_menu = Menu.query.filter(
+                Menu.date == target_date,
+                Menu.is_special == False,
+                Menu.is_active == True,
+                Menu.meal_type == 'lunch'
+            ).first()
+            
+            if not normal_menu:
+                skipped_count += 1
+                continue
+            
+            # Tạo đăng ký mới
+            new_registration = MealRegistration(
+                user_id=user.id,
+                date=target_date,
+                meal_id=normal_menu.id,
+                meal_type='lunch',
+                has_meal=True,
+                notes='Tự động đăng ký bởi hệ thống'
+            )
+            db.session.add(new_registration)
+            registered_count += 1
+        
+        db.session.commit()
+        
+        return {
+            'success': True,
+            'registered': registered_count,
+            'skipped': skipped_count,
+            'message': f'Đã đăng ký {registered_count} ngày, bỏ qua {skipped_count} ngày'
+        }
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'registered': 0, 'skipped': 0, 'message': f'Lỗi: {str(e)}'}
+
+
+def auto_register_meals_for_30_days():
+    """
+    Tự động đăng ký suất ăn bình thường cho 30 ngày tới
     Chỉ áp dụng cho nhân viên có mã bắt đầu bằng 10 hoặc 20
     Chạy tự động lúc 16h hàng ngày
     """
     with app.app_context():
         try:
             from sqlalchemy import or_
-            tomorrow = datetime.now().date() + timedelta(days=1)
-            print(f"\n=== [AUTO REGISTER] Bắt đầu tự động đăng ký suất ăn cho ngày {tomorrow.strftime('%d/%m/%Y')} ===")
+            today = datetime.now().date()
+            start_date = today + timedelta(days=1)  # Bắt đầu từ ngày mai
+            end_date = today + timedelta(days=30)   # Đến 30 ngày sau
             
-            # Lấy tất cả user đang hoạt động và có mã bắt đầu bằng 10 hoặc 20
+            print(f"\n=== [AUTO REGISTER] Bắt đầu tự động đăng ký 30 ngày ({start_date.strftime('%d/%m/%Y')} → {end_date.strftime('%d/%m/%Y')}) ===")
+            
+            # Lấy tất cả user đang làm việc và có mã bắt đầu bằng 10 hoặc 20
             active_users = User.query.filter(
-                User.is_active == True,
                 User.work_status == 'working',
                 or_(
                     User.employee_id.like('10%'),
@@ -3469,52 +3495,65 @@ def auto_register_meals_for_tomorrow():
                 )
             ).all()
             
-            print(f"[AUTO REGISTER] Tìm thấy {len(active_users)} user đang hoạt động (mã 10xx, 20xx)")
+            print(f"[AUTO REGISTER] Tìm thấy {len(active_users)} user đang làm việc (mã 10xx, 20xx)")
             
-            # Lấy menu bình thường cho ngày mai
             from models import Menu, MealRegistration
-            normal_menu = Menu.query.filter(
-                Menu.date == tomorrow,
-                Menu.is_special == False,
-                Menu.is_active == True,
-                Menu.meal_type == 'lunch'
-            ).first()
             
-            if not normal_menu:
-                print(f"[AUTO REGISTER] ⚠️  Không tìm thấy menu bình thường cho ngày {tomorrow.strftime('%d/%m/%Y')}")
-                return
+            total_registered = 0
+            total_skipped = 0
+            days_processed = 0
             
-            print(f"[AUTO REGISTER] Menu bình thường: {normal_menu.dish_name}")
-            
-            registered_count = 0
-            auto_registered_count = 0
-            
-            for user in active_users:
-                # Kiểm tra xem user đã đăng ký chưa
-                existing_registration = MealRegistration.query.filter_by(
-                    user_id=user.id,
-                    date=tomorrow
+            # Lặp qua 30 ngày
+            for day_offset in range(1, 31):
+                target_date = today + timedelta(days=day_offset)
+                
+                # Lấy menu bình thường cho ngày này
+                normal_menu = Menu.query.filter(
+                    Menu.date == target_date,
+                    Menu.is_special == False,
+                    Menu.is_active == True,
+                    Menu.meal_type == 'lunch'
                 ).first()
                 
-                if existing_registration:
-                    registered_count += 1
-                else:
-                    # Tự động đăng ký suất ăn bình thường
-                    new_registration = MealRegistration(
+                if not normal_menu:
+                    print(f"[AUTO REGISTER] Ngày {target_date.strftime('%d/%m')}: Không có menu bình thường - Bỏ qua")
+                    continue
+                
+                day_registered = 0
+                day_skipped = 0
+                
+                for user in active_users:
+                    # Kiểm tra xem user đã đăng ký chưa (dù bình thường hay cải thiện)
+                    existing_registration = MealRegistration.query.filter_by(
                         user_id=user.id,
-                        date=tomorrow,
-                        meal_id=normal_menu.id,
-                        meal_type='lunch',
-                        has_meal=True,
-                        notes='Tự động đăng ký bởi hệ thống'
-                    )
-                    db.session.add(new_registration)
-                    auto_registered_count += 1
+                        date=target_date
+                    ).first()
+                    
+                    if existing_registration:
+                        day_skipped += 1
+                    else:
+                        # Tự động đăng ký suất ăn bình thường
+                        new_registration = MealRegistration(
+                            user_id=user.id,
+                            date=target_date,
+                            meal_id=normal_menu.id,
+                            meal_type='lunch',
+                            has_meal=True,
+                            notes='Tự động đăng ký bởi hệ thống'
+                        )
+                        db.session.add(new_registration)
+                        day_registered += 1
+                
+                total_registered += day_registered
+                total_skipped += day_skipped
+                days_processed += 1
+                
+                print(f"[AUTO REGISTER] Ngày {target_date.strftime('%d/%m')}: {normal_menu.dish_name[:30]} | Đã có: {day_skipped} | Tự động: {day_registered}")
             
             db.session.commit()
             
-            print(f"[AUTO REGISTER] ✓ Hoàn thành!")
-            print(f"[AUTO REGISTER] Tổng: {len(active_users)} | Đã đăng ký: {registered_count} | Tự động: {auto_registered_count}")
+            print(f"\n[AUTO REGISTER] ✓ Hoàn thành!")
+            print(f"[AUTO REGISTER] Tổng: {days_processed} ngày | {len(active_users)} users | Đã có: {total_skipped} | Tự động: {total_registered}")
             
         except Exception as e:
             print(f"[AUTO REGISTER] ❌ Lỗi: {str(e)}")
@@ -3523,10 +3562,10 @@ def auto_register_meals_for_tomorrow():
 # Initialize scheduler
 scheduler = BackgroundScheduler()
 scheduler.add_job(
-    func=auto_register_meals_for_tomorrow,
+    func=auto_register_meals_for_30_days,
     trigger=CronTrigger(hour=16, minute=0),  # Chạy lúc 16:00 hàng ngày
     id='auto_register_meals',
-    name='Tự động đăng ký suất ăn',
+    name='Tự động đăng ký suất ăn 30 ngày',
     replace_existing=True
 )
 scheduler.start()

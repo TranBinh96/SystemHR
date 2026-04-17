@@ -6,7 +6,7 @@
     <title>{% block title %}Admin Panel{% endblock %} - OKI VIETNAM HR</title>
     <meta name="theme-color" content="#136dec"/>
     <link rel="manifest" href="/static/manifest.json"/>
-    <link rel="icon" type="image/svg+xml" href="/static/icon.svg"/>
+    <link rel="icon" type="image/png" href="/static/icon.png"/>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -29,8 +29,53 @@
     </script>
     <style>
         body { font-family: 'Manrope', sans-serif; }
-        ::-webkit-scrollbar { display: none; }
-        * { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Custom Scrollbar - Áp dụng toàn bộ hệ thống */
+        * {
+            scrollbar-width: thin !important;
+            scrollbar-color: rgba(203, 213, 225, 0.4) transparent !important;
+        }
+        
+        *::-webkit-scrollbar {
+            width: 8px !important;
+            height: 8px !important;
+        }
+        
+        *::-webkit-scrollbar-track {
+            background: transparent !important;
+        }
+        
+        *::-webkit-scrollbar-thumb {
+            background-color: rgba(203, 213, 225, 0.4) !important;
+            border-radius: 4px !important;
+            border: 2px solid transparent !important;
+            background-clip: padding-box !important;
+        }
+        
+        *::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(203, 213, 225, 0.6) !important;
+        }
+        
+        /* Dark mode scrollbar */
+        .dark *::-webkit-scrollbar-thumb {
+            background-color: rgba(148, 163, 184, 0.3) !important;
+        }
+        
+        .dark *::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(148, 163, 184, 0.5) !important;
+        }
+        
+        /* Body và html scrollbar */
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            width: 8px !important;
+        }
+        
+        html::-webkit-scrollbar-thumb,
+        body::-webkit-scrollbar-thumb {
+            background-color: rgba(203, 213, 225, 0.4) !important;
+            border-radius: 4px !important;
+        }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
@@ -77,18 +122,6 @@
                                     <a href="{{ url_for('admin_departments') }}" class="{% if request.endpoint == 'admin_departments' %}text-blue-600 bg-blue-50 dark:bg-blue-900/20 border-r-2 border-blue-500{% else %}text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800{% endif %} group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium">
                                         <span class="material-symbols-outlined {% if request.endpoint == 'admin_departments' %}text-blue-600{% else %}text-slate-500{% endif %}">corporate_fare</span>
                                         <span>Phòng ban</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ url_for('admin_positions') }}" class="{% if request.endpoint == 'admin_positions' %}text-blue-600 bg-blue-50 dark:bg-blue-900/20 border-r-2 border-blue-500{% else %}text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800{% endif %} group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium">
-                                        <span class="material-symbols-outlined {% if request.endpoint == 'admin_positions' %}text-blue-600{% else %}text-slate-500{% endif %}">badge</span>
-                                        <span>Chức vụ</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ url_for('admin_approval_hierarchy') }}" class="{% if request.endpoint == 'admin_approval_hierarchy' %}text-blue-600 bg-blue-50 dark:bg-blue-900/20 border-r-2 border-blue-500{% else %}text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800{% endif %} group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium">
-                                        <span class="material-symbols-outlined {% if request.endpoint == 'admin_approval_hierarchy' %}text-blue-600{% else %}text-slate-500{% endif %}">approval</span>
-                                        <span>Thiết lập phê duyệt</span>
                                     </a>
                                 </li>
                             </ul>

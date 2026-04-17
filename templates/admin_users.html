@@ -810,15 +810,15 @@
                 .then(data => {
                     if (data.success) {
                         showNotification(data.message, 'success');
-                        location.reload();
+                        refreshTableData();
                     } else {
                         showNotification(data.message, 'error');
-                        location.reload();
+                        refreshTableData();
                     }
                 })
                 .catch(error => {
                     showNotification('{{ t.error_occurred }}', 'error');
-                    location.reload();
+                    refreshTableData();
                 });
             });
         }
@@ -843,7 +843,7 @@
                         if (card) card.remove();
                         
                         showNotification(data.message, 'success');
-                        setTimeout(() => location.reload(), 1000);
+                        setTimeout(() => refreshTableData(), 500);
                     } else {
                         showNotification(data.message, 'error');
                     }
@@ -1215,7 +1215,7 @@
                     if (data.success) {
                         showNotification(data.message, 'success');
                         closeAddUserModal();
-                        setTimeout(() => location.reload(), 1000);
+                        setTimeout(() => refreshTableData(), 500);
                     } else {
                         showNotification(data.message, 'error');
                     }
@@ -1253,7 +1253,7 @@
                     if (data.success) {
                         showNotification(data.message, 'success');
                         closeAddUserModal();
-                        setTimeout(() => location.reload(), 1000);
+                        setTimeout(() => refreshTableData(), 500);
                     } else {
                         showNotification(data.message, 'error');
                     }
@@ -1296,7 +1296,7 @@
                     if (data.success) {
                         showNotification(data.message, 'success');
                         closeEditModal();
-                        setTimeout(() => location.reload(), 1000);
+                        setTimeout(() => refreshTableData(), 500);
                     } else {
                         showNotification(data.message, 'error');
                     }
@@ -1333,7 +1333,7 @@
                     if (data.success) {
                         showNotification(data.message, 'success');
                         closeEditModal();
-                        setTimeout(() => location.reload(), 1000);
+                        setTimeout(() => refreshTableData(), 500);
                     } else {
                         showNotification(data.message, 'error');
                     }
@@ -2858,10 +2858,10 @@
 
                 if (result.success) {
                     showNotification(result.message, 'success');
-                    // Reload page after 1.5 seconds
+                    // Refresh table after 500ms
                     setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
+                        refreshTableData();
+                    }, 500);
                 } else {
                     showNotification(result.message || 'Import thất bại', 'error');
                 }

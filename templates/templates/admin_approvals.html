@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Phê Duyệt - OKI VIETNAM HR</title>
+    <meta name="theme-color" content="#136dec"/>
+    <link rel="manifest" href="/static/manifest.json"/>
+    <link rel="icon" type="image/png" href="/static/icon.png"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#136dec',
+                        'background-light': '#f6f7f8',
+                        'background-dark': '#101822'
+                    },
+                    fontFamily: {
+                        display: ['Manrope', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Manrope', sans-serif; }
+        ::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark">
+    <div class="min-h-screen">
+        <!-- Sidebar Desktop -->
+        <aside class="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
+            <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-slate-900 px-6 pb-4 border-r border-slate-200 dark:border-slate-800">
+                <div class="flex h-20 shrink-0 items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-2xl" style="font-variation-settings: 'FILL' 1;">admin_panel_settings</span>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-slate-900 dark:text-slate-100">OKI VIETNAM</h1>
+                        <p class="text-xs text-slate-500">Admin Panel</p>
+                    </div>
+                </div>
+                <nav class="flex flex-1 flex-col">
+                    <ul role="list" class="flex flex-1 flex-col gap-y-7">
+                        <li>
+                            <ul role="list" class="-mx-2 space-y-1">
+                                <li>
+                                    <a href="{{ url_for('admin_dashboard') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">dashboard</span>
+                                        Bảng Điều Khiển
+                                    </a>
+                                </li>
+                                <li>
+                                    <button onclick="switchTab('overtime')" class="w-full text-left bg-primary/10 text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">schedule</span>
+                                        Tăng Ca
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="switchTab('leave')" class="w-full text-left text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">event_busy</span>
+                                        Xin Nghỉ
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="switchTab('business')" class="w-full text-left text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">business_center</span>
+                                        Công Tác
+                                    </button>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="mt-auto">
+                            <a href="{{ url_for('profile') }}" class="block p-3 bg-slate-50 dark:bg-slate-800 rounded-lg mb-3 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                                <p class="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">Xin chào</p>
+                                <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ user }}</p>
+                                <p class="text-xs text-slate-500">Admin</p>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="lg:pl-72">
+            <!-- Top Header -->
+            <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+                <div class="flex h-16 items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
+                    <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+                        <div class="flex flex-1 items-center">
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Phê Duyệt</h2>
+                        </div>
+                        <div class="flex items-center gap-x-4 lg:gap-x-6">
+                            <select onchange="window.location.href='/set-language/' + this.value" class="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm font-medium">
+                                <option value="vi" {% if current_lang == 'vi' %}selected{% endif %}>🇻🇳 Tiếng Việt</option>
+                                <option value="en" {% if current_lang == 'en' %}selected{% endif %}>🇬🇧 English</option>
+                                <option value="ja" {% if current_lang == 'ja' %}selected{% endif %}>🇯🇵 日本語</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="pt-6 pb-24 lg:pt-10 lg:pb-10">
+                <div class="px-4 sm:px-6 lg:px-8">
+                    <!-- Tabs -->
+                    <div class="border-b border-slate-200 dark:border-slate-800 mb-6">
+                        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                            <button onclick="switchTab('overtime')" id="tab-overtime" class="tab-button border-primary text-primary whitespace-nowrap border-b-2 py-4 px-1 text-sm font-semibold">
+                                Tăng Ca
+                            </button>
+                            <button onclick="switchTab('business')" id="tab-business" class="tab-button border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-semibold">
+                                Công Tác
+                            </button>
+                            <button onclick="switchTab('leave')" id="tab-leave" class="tab-button border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-semibold">
+                                Xin Nghỉ
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab Content: Tăng Ca -->
+                    <div id="content-overtime" class="tab-content">
+                        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <div class="p-6">
+                                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Danh sách yêu cầu tăng ca</h3>
+                                <div class="text-center py-12">
+                                    <span class="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700">schedule</span>
+                                    <p class="mt-4 text-slate-500 dark:text-slate-400">Chưa có yêu cầu tăng ca nào</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Content: Công Tác -->
+                    <div id="content-business" class="tab-content hidden">
+                        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <div class="p-6">
+                                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Danh sách yêu cầu công tác</h3>
+                                <div class="text-center py-12">
+                                    <span class="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700">business_center</span>
+                                    <p class="mt-4 text-slate-500 dark:text-slate-400">Chưa có yêu cầu công tác nào</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Content: Xin Nghỉ -->
+                    <div id="content-leave" class="tab-content hidden">
+                        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <div class="p-6">
+                                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Danh sách yêu cầu xin nghỉ</h3>
+                                <div class="text-center py-12">
+                                    <span class="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700">event_busy</span>
+                                    <p class="mt-4 text-slate-500 dark:text-slate-400">Chưa có yêu cầu xin nghỉ nào</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Bottom Nav Mobile -->
+        <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe shadow-2xl z-50">
+            <div class="flex justify-around items-center h-20 px-4">
+                <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_dashboard') }}">
+                    <span class="material-symbols-outlined text-2xl">dashboard</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">Bảng Điều Khiển</span>
+                </a>
+                <button onclick="switchTab('overtime')" id="mobile-tab-overtime" class="flex flex-col items-center gap-1 text-primary">
+                    <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">schedule</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">Tăng Ca</span>
+                </button>
+                <button onclick="switchTab('leave')" id="mobile-tab-leave" class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500">
+                    <span class="material-symbols-outlined text-2xl">event_busy</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">Xin Nghỉ</span>
+                </button>
+                <button onclick="switchTab('business')" id="mobile-tab-business" class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500">
+                    <span class="material-symbols-outlined text-2xl">business_center</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">Công Tác</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Remove active state from all sidebar buttons
+            document.querySelectorAll('aside button').forEach(button => {
+                button.classList.remove('bg-primary/10', 'text-primary');
+                button.classList.add('text-slate-700', 'dark:text-slate-300');
+                const icon = button.querySelector('.material-symbols-outlined');
+                if (icon) icon.style.fontVariationSettings = "'FILL' 0";
+            });
+            
+            // Remove active state from all tabs
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('border-primary', 'text-primary');
+                button.classList.add('border-transparent', 'text-slate-500');
+            });
+            
+            // Remove active state from mobile nav
+            document.querySelectorAll('nav button[id^="mobile-tab-"]').forEach(button => {
+                button.classList.remove('text-primary');
+                button.classList.add('text-slate-400', 'dark:text-slate-500');
+                const icon = button.querySelector('.material-symbols-outlined');
+                if (icon) icon.style.fontVariationSettings = "'FILL' 0";
+            });
+            
+            // Show selected tab content
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            
+            // Add active state to selected tab
+            const activeTab = document.getElementById('tab-' + tabName);
+            activeTab.classList.remove('border-transparent', 'text-slate-500');
+            activeTab.classList.add('border-primary', 'text-primary');
+            
+            // Add active state to sidebar button
+            const sidebarButtons = document.querySelectorAll('aside button');
+            sidebarButtons.forEach(button => {
+                if (button.textContent.trim().includes(getTabLabel(tabName))) {
+                    button.classList.remove('text-slate-700', 'dark:text-slate-300');
+                    button.classList.add('bg-primary/10', 'text-primary');
+                    const icon = button.querySelector('.material-symbols-outlined');
+                    if (icon) icon.style.fontVariationSettings = "'FILL' 1";
+                }
+            });
+            
+            // Add active state to mobile nav button
+            const mobileButton = document.getElementById('mobile-tab-' + tabName);
+            if (mobileButton) {
+                mobileButton.classList.remove('text-slate-400', 'dark:text-slate-500');
+                mobileButton.classList.add('text-primary');
+                const icon = mobileButton.querySelector('.material-symbols-outlined');
+                if (icon) icon.style.fontVariationSettings = "'FILL' 1";
+            }
+        }
+        
+        function getTabLabel(tabName) {
+            const labels = {
+                'overtime': 'Tăng Ca',
+                'leave': 'Xin Nghỉ',
+                'business': 'Công Tác'
+            };
+            return labels[tabName] || '';
+        }
+    </script>
+</body>
+</html>

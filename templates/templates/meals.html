@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký suất ăn - {{ t.app_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .meal-card-selected {
+            border: 3px solid #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        @keyframes slide-in {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .animate-slide-in {
+            animation: slide-in 0.3s ease-out;
+            transition: all 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <!-- Sidebar (Desktop) -->
+    <aside class="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
+        <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-slate-900 px-6 pb-4 border-r border-slate-200 dark:border-slate-800">
+            <div class="flex h-20 shrink-0 items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-2xl" style="font-variation-settings: 'FILL' 1;">badge</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900 dark:text-slate-100">OKI VIETNAM</h1>
+                    <p class="text-xs text-slate-500">HR System</p>
+                </div>
+            </div>
+            <nav class="flex flex-1 flex-col">
+                <ul role="list" class="flex flex-1 flex-col gap-y-7">
+                    <li>
+                        <!-- Bảng điều khiển -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Bảng điều khiển</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            <li>
+                                <a href="{{ url_for('dashboard') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined text-slate-700 group-hover:text-primary">home</span>
+                                    Bảng điều khiển
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li>
+                        <!-- Phê duyệt -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Phê duyệt</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            {% if is_manager %}
+                            <li>
+                                <a href="{{ url_for('manager_overtime_approvals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined text-slate-700 group-hover:text-primary">task_alt</span>
+                                    Phê Duyệt
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    
+                    <li>
+                        <!-- Đăng ký -->
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Đăng ký</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            {% if current_user.can_register or current_user.can_approve %}
+                            <li>
+                                <a href="{{ url_for('overtime') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined text-slate-700 group-hover:text-primary">schedule</span>
+                                    Làm thêm
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('leave') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                    <span class="material-symbols-outlined text-slate-700 group-hover:text-primary">event_busy</span>
+                                    Nghỉ phép
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li>
+                                <a href="{{ url_for('meals') }}" class="text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold" style="background-color: rgba(19, 109, 236, 0.1);">
+                                    <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+                                    Suất ăn
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+
+                    <li class="mt-auto">
+                        <a href="{{ url_for('profile') }}" class="block p-3 bg-slate-50 dark:bg-slate-800 rounded-lg mb-3 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                            <p class="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">Xin chào</p>
+                            <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ session.get('user_name', 'Administrator') }}</p>
+                            <p class="text-xs text-slate-500">{{ session.get('employee_id', 'None') }}</p>
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="group -mx-2 flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                            <span class="material-symbols-outlined">logout</span>
+                            Đăng xuất
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Main Content with left padding for sidebar on desktop -->
+    <div class="lg:pl-72">
+        <!-- Header -->
+        <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex h-16 items-center justify-between px-4">
+                <div class="flex items-center gap-3">
+                    <a href="{{ url_for('dashboard') }}" class="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </a>
+                    <h1 class="text-xl font-bold text-slate-900 dark:text-slate-100">Đăng ký suất ăn</h1>
+                </div>
+                <select onchange="window.location.href='/set-language/' + this.value" class="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg text-sm font-medium">
+                    <option value="vi" {% if current_lang == 'vi' %}selected{% endif %}>🇻🇳 VI</option>
+                    <option value="en" {% if current_lang == 'en' %}selected{% endif %}>🇬🇧 EN</option>
+                    <option value="ja" {% if current_lang == 'ja' %}selected{% endif %}>🇯🇵 JA</option>
+                </select>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="p-4 pb-24 lg:pb-6 min-h-screen">
+            <!-- Week Navigator -->
+            <div class="mb-4 flex items-center justify-center bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-800 p-2 w-fit mx-auto">
+                <button onclick="changeWeek(-1)" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                <div class="px-4 text-sm font-bold min-w-[200px] text-center" id="weekDisplay">Tuần này</div>
+                <button onclick="changeWeek(1)" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+            </div>
+
+            <!-- Day Picker -->
+            <div class="mb-6 grid grid-cols-7 gap-2">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <!-- Selected Date Display -->
+            <div class="mb-4 text-center">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100" id="selectedDateTitle">Chọn ngày để xem thực đơn</h2>
+                <p class="text-sm text-slate-500" id="selectedDateSubtitle"></p>
+            </div>
+
+            <!-- Meals Display -->
+            <div id="mealsContainer" class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-12">
+                <span class="material-symbols-outlined text-6xl text-slate-300 mb-4 block">restaurant_menu</span>
+                <p class="text-slate-500">Chọn một ngày để xem thực đơn</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bottom Navigation (Mobile Only) -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 shadow-2xl z-50">
+        <div class="flex justify-around items-center h-20 px-4">
+            <a class="flex flex-col items-center gap-1 text-slate-400" href="{{ url_for('dashboard') }}">
+                <span class="material-symbols-outlined text-2xl">home</span>
+                <span class="text-[10px] font-bold uppercase">Trang chủ</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-green-600" href="{{ url_for('meals') }}">
+                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">restaurant</span>
+                <span class="text-[10px] font-bold uppercase">Suất ăn</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-slate-400" href="{{ url_for('overtime') }}">
+                <span class="material-symbols-outlined text-2xl">schedule</span>
+                <span class="text-[10px] font-bold uppercase">Tăng ca</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-slate-400" href="{{ url_for('profile') }}">
+                <span class="material-symbols-outlined text-2xl">person</span>
+                <span class="text-[10px] font-bold uppercase">Cá nhân</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        // Initialize week offset: if today is Sunday, show current week (offset -1), otherwise show next week (offset 0)
+        const today = new Date();
+        let currentWeekOffset = 0;
+        let selectedDate = null;
+        let selectedMealId = null;
+        
+        // User information for QR code
+        const userName = "{{ current_user.name if current_user.is_authenticated else '' }}";
+        const employeeId = "{{ current_user.employee_id if current_user.is_authenticated else '' }}";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateWeekDisplay();
+            updateDayPicker();
+            
+            // Auto-select today's date
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            selectDay(todayStr);
+        });
+
+        function updateWeekDisplay() {
+            const today = new Date();
+            today.setDate(today.getDate() + (currentWeekOffset * 7));
+            const weekStart = new Date(today);
+            const dayOfWeek = today.getDay();
+            const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            weekStart.setDate(today.getDate() - daysToMonday);
+            
+            const monthNames = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+                              'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+            
+            document.getElementById('weekDisplay').textContent = 
+                `Tuần ${getWeekNumber(weekStart)}, ${monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
+        }
+
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+        }
+
+        function changeWeek(offset) {
+            currentWeekOffset += offset;
+            updateWeekDisplay();
+            updateDayPicker();
+            
+            // Auto-select first day of the new week (Monday)
+            const today = new Date();
+            today.setDate(today.getDate() + (currentWeekOffset * 7));
+            const weekStart = new Date(today);
+            const dayOfWeek = today.getDay();
+            const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            weekStart.setDate(today.getDate() - daysToMonday); // Monday
+            const mondayStr = weekStart.toISOString().split('T')[0];
+            
+            selectDay(mondayStr);
+        }
+
+        function updateDayPicker() {
+            const today = new Date();
+            today.setDate(today.getDate() + (currentWeekOffset * 7));
+            const weekStart = new Date(today);
+            const dayOfWeek = today.getDay();
+            const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            weekStart.setDate(today.getDate() - daysToMonday);
+            
+            const dayNames = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+            const container = document.querySelector('.grid.grid-cols-7.gap-2');
+            
+            let html = '';
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(weekStart);
+                day.setDate(weekStart.getDate() + i);
+                const dateStr = day.toISOString().split('T')[0];
+                const dayNum = day.getDate();
+                
+                html += `
+                    <button onclick="selectDay('${dateStr}')" 
+                            id="day-${dateStr}"
+                            class="day-btn flex flex-col items-center p-3 bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-200 dark:border-slate-800 hover:border-green-500 transition-all">
+                        <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">${dayNames[i]}</span>
+                        <span class="text-xl font-black">${dayNum}</span>
+                    </button>
+                `;
+            }
+            
+            container.innerHTML = html;
+            
+            // Load week registrations to color the days
+            loadWeekRegistrations();
+        }
+        
+        function loadWeekRegistrations() {
+            fetch(`/meals/week-registrations?offset=${currentWeekOffset}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update day button colors based on registrations
+                        Object.keys(data.registrations).forEach(date => {
+                            const reg = data.registrations[date];
+                            const btn = document.getElementById(`day-${date}`);
+                            if (btn) {
+                                // Skip if this is the selected day (it has green-600 background)
+                                if (date === selectedDate) {
+                                    return;
+                                }
+                                
+                                // Reset to default white first
+                                btn.classList.remove('bg-green-100', 'border-green-300');
+                                btn.classList.add('bg-white', 'dark:bg-slate-900', 'border-slate-200');
+                                
+                                // Only add green color if registered with special meal (Cải Thiện)
+                                if (reg.has_registration && reg.is_special) {
+                                    btn.classList.remove('bg-white', 'dark:bg-slate-900', 'border-slate-200');
+                                    btn.classList.add('bg-green-100', 'border-green-300');
+                                }
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading week registrations:', error);
+                });
+        }
+
+        function selectDay(date) {
+            selectedDate = date;
+            
+            // Update day buttons - remove selected state from all
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                btn.classList.remove('bg-green-600', 'text-white', 'border-green-600');
+            });
+            
+            // Reload week registrations to restore proper colors
+            loadWeekRegistrations();
+            
+            // Then apply selected state
+            const selectedBtn = document.getElementById(`day-${date}`);
+            if (selectedBtn) {
+                selectedBtn.classList.remove('bg-white', 'dark:bg-slate-900', 'border-slate-200', 'bg-green-100', 'border-green-300');
+                selectedBtn.classList.add('bg-green-600', 'text-white', 'border-green-600');
+            }
+            
+            // Update title
+            const dateObj = new Date(date);
+            const dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+            document.getElementById('selectedDateTitle').textContent = `Thực đơn cho ${dayNames[dateObj.getDay()]}`;
+            document.getElementById('selectedDateSubtitle').textContent = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
+            
+            // Load meals
+            loadMealsForDate(date);
+        }
+
+        function loadMealsForDate(date) {
+            fetch(`/meals/menu/${date}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayMeals(data.menus, data.selected_meal_id, data.is_locked);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function displayMeals(menus, selectedId, isLocked) {
+            const container = document.getElementById('mealsContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (menus.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'block';
+                emptyState.innerHTML = `
+                    <span class="material-symbols-outlined text-6xl text-slate-300 mb-4 block">restaurant_menu</span>
+                    <p class="text-slate-500">Chưa có thực đơn cho ngày này</p>
+                `;
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            // Check if registration is allowed for selected date
+            const now = new Date();
+            const selected = new Date(selectedDate);
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const selectedDay = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+            const currentHour = now.getHours();
+            
+            // Calculate tomorrow
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            // Registration rules:
+            // - Can only register for tomorrow (not today or past dates)
+            // - Can register for tomorrow only before 4 PM (16h) today
+            let canRegister = true;
+            
+            // Block past dates and today (before today or today)
+            if (selectedDay <= today) {
+                canRegister = false;
+            }
+            // Block tomorrow if after 16h today
+            else if (selectedDay.getTime() === tomorrow.getTime() && currentHour >= 16) {
+                canRegister = false;
+            }
+            
+            // Combine both checks
+            const isDisabled = !canRegister || isLocked;
+            
+            // No warning banner - removed per user request
+            let warningBanner = '';
+            
+            // If no meal selected, auto-select "Bình Thường" (is_special = false) ONLY on first load
+            if (!selectedId && !window.hasAutoSelected && !isDisabled) {
+                const normalMeal = menus.find(m => !m.is_special);
+                if (normalMeal) {
+                    selectedId = normalMeal.id;
+                    selectedMealId = normalMeal.id;
+                    window.hasAutoSelected = true; // Mark as auto-selected
+                    // Auto register the normal meal
+                    registerMeal(selectedDate, normalMeal.id);
+                }
+            } else {
+                selectedMealId = selectedId;
+            }
+            
+            // Check if selected date is today
+            const currentDate = new Date();
+            const currentDateStr = currentDate.toISOString().split('T')[0];
+            const isToday = selectedDate === currentDateStr;
+            
+            // Add QR code ticket card if special meal is selected and it's today
+            const selectedMeal = menus.find(m => m.id === selectedId);
+            let qrCardHtml = '';
+            if (isToday && selectedMeal && selectedMeal.is_special) {
+                qrCardHtml = `
+                    <div class="col-span-2 lg:col-span-1 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl border-2 border-green-200 dark:border-green-800 p-4 shadow-lg flex flex-col">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-white text-lg" style="font-variation-settings: 'FILL' 1">confirmation_number</span>
+                            </div>
+                            <h3 class="text-sm font-bold text-green-700 dark:text-green-400">Phiếu Suất Ăn Cải Thiện</h3>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 rounded-xl p-3 flex flex-col items-center gap-3 flex-1">
+                            <div class="bg-white p-2 rounded-lg shadow-sm">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(employeeId)}" 
+                                     alt="QR Code" 
+                                     class="w-32 h-32 lg:w-36 lg:h-36">
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs lg:text-sm font-bold text-slate-900 dark:text-slate-100">${userName}</p>
+                                <p class="text-xs text-slate-600 dark:text-slate-400">Mã: ${employeeId}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = qrCardHtml + warningBanner + menus.map(meal => {
+                const isSelected = meal.id === selectedId;
+                const typeLabel = meal.is_special ? 'Cải Thiện' : 'Bình Thường';
+                const typeColor = meal.is_special ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700';
+                
+                return `
+                    <div id="meal-${meal.id}"
+                         class="meal-card bg-white dark:bg-slate-800 rounded-xl border-2 ${isSelected ? 'meal-card-selected border-green-500' : 'border-slate-200'} overflow-hidden ${isDisabled ? 'opacity-60' : 'hover:shadow-lg'} transition-all">
+                        ${meal.image_url ? `
+                            <img src="${meal.image_url}" alt="${meal.dish_name}" class="w-full h-32 lg:h-48 object-cover">
+                        ` : `
+                            <div class="w-full h-32 lg:h-48 bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-4xl lg:text-6xl text-slate-400">restaurant</span>
+                            </div>
+                        `}
+                        <div class="p-3 lg:p-4">
+                            <div class="flex items-start justify-between mb-2">
+                                <h3 class="text-sm lg:text-lg font-bold text-slate-900 dark:text-slate-100 flex-1 line-clamp-2">${meal.dish_name}</h3>
+                                ${isSelected ? '<span class="material-symbols-outlined text-green-600 text-lg lg:text-2xl" style="font-variation-settings: \'FILL\' 1">check_circle</span>' : ''}
+                            </div>
+                            <p class="text-xs lg:text-sm text-slate-600 dark:text-slate-400 mb-2 lg:mb-3 line-clamp-2">${meal.description || 'Không có mô tả'}</p>
+                            <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2 lg:gap-3">
+                                <span class="inline-block px-2 lg:px-3 py-1 rounded-full text-[10px] lg:text-xs font-bold ${typeColor} text-center">${typeLabel}</span>
+                                ${isDisabled ? `
+                                    <button disabled class="flex items-center justify-center gap-1 lg:gap-2 px-3 lg:px-4 py-1.5 lg:py-2 bg-slate-300 text-slate-500 rounded-lg font-bold text-xs lg:text-sm cursor-not-allowed">
+                                        <span class="material-symbols-outlined text-base lg:text-lg">lock</span>
+                                        <span>Đã khóa</span>
+                                    </button>
+                                ` : isSelected ? `
+                                    <button onclick="cancelMeal(event, ${meal.id})" 
+                                            class="flex items-center justify-center gap-1 lg:gap-2 px-3 lg:px-4 py-1.5 lg:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold text-xs lg:text-sm transition-colors">
+                                        <span class="material-symbols-outlined text-base lg:text-lg">close</span>
+                                        <span>Hủy</span>
+                                    </button>
+                                ` : `
+                                    <button onclick="selectMeal(event, ${meal.id})" 
+                                            class="flex items-center justify-center gap-1 lg:gap-2 px-3 lg:px-4 py-1.5 lg:py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold text-xs lg:text-sm transition-colors">
+                                        <span class="material-symbols-outlined text-base lg:text-lg">check</span>
+                                        <span>Đăng ký</span>
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectMeal(event, mealId) {
+            event.stopPropagation();
+            if (!selectedDate) return;
+            
+            selectedMealId = mealId;
+            
+            // Register meal
+            registerMeal(selectedDate, mealId);
+        }
+        
+        function cancelMeal(event, mealId) {
+            event.stopPropagation();
+            if (!selectedDate) return;
+            
+            // Find the normal meal (Bình Thường)
+            fetch(`/meals/menu/${selectedDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const normalMeal = data.menus.find(m => !m.is_special);
+                        
+                        if (normalMeal) {
+                            // Register normal meal instead of canceling
+                            registerMeal(selectedDate, normalMeal.id);
+                        } else {
+                            // If no normal meal, then cancel
+                            fetch('/meals/cancel', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({date: selectedDate})
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    selectedMealId = null;
+                                    loadMealsForDate(selectedDate);
+                                    loadWeekRegistrations();
+                                }
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi hủy đăng ký:', error);
+                });
+        }
+
+        function registerMeal(date, mealId) {
+            fetch('/meals/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({date, meal_id: mealId})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload meals to update UI
+                    loadMealsForDate(selectedDate);
+                    // Reload week registrations to update day colors
+                    loadWeekRegistrations();
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi khi đăng ký:', error);
+            });
+        }
+    </script>
+</body>
+</html>

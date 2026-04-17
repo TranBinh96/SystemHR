@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>{{ t.dashboard }} - OKI VIETNAM HR</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#136dec"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-title" content="OKI HR"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <link rel="manifest" href="/static/manifest.json"/>
+    <link rel="apple-touch-icon" href="/static/icon.png"/>
+    <link rel="icon" type="image/png" href="/static/icon.png"/>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#136dec',
+                        'background-light': '#f6f7f8',
+                        'background-dark': '#101822'
+                    },
+                    fontFamily: {
+                        display: ['Manrope', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        /* Hide scrollbar */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        * {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+    <script>
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed'));
+            });
+        }
+    </script>
+</head>
+<body class="bg-white">
+    <div class="min-h-screen">
+        <!-- Sidebar (Desktop) -->
+        <aside class="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
+            <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-slate-900 px-6 pb-4 border-r border-slate-200 dark:border-slate-800">
+                <div class="flex h-20 shrink-0 items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-2xl" style="font-variation-settings: 'FILL' 1;">badge</span>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-slate-900 dark:text-slate-100">OKI VIETNAM</h1>
+                        <p class="text-xs text-slate-500">HR System</p>
+                    </div>
+                </div>
+                <nav class="flex flex-1 flex-col">
+                    <ul role="list" class="flex flex-1 flex-col gap-y-7">
+                        <li>
+                            <!-- Bảng điều khiển -->
+                            <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Bảng điều khiển</div>
+                            <ul role="list" class="-mx-2 space-y-1">
+                                <li>
+                                    <a href="{{ url_for('dashboard') }}" class="bg-primary/10 text-primary group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+                                        {{ t.dashboard }}
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <li>
+                            <!-- Phê duyệt -->
+                            <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Phê duyệt</div>
+                            <ul role="list" class="-mx-2 space-y-1">
+                                {% if is_manager %}
+                                <li>
+                                    <a href="{{ url_for('manager_overtime_approvals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">task_alt</span>
+                                        Phê Duyệt
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                        
+                        <li>
+                            <!-- Đăng ký -->
+                            <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-wider mb-2">Đăng ký</div>
+                            <ul role="list" class="-mx-2 space-y-1">
+                                {% if current_user.can_register or current_user.can_approve %}
+                                <li>
+                                    <a href="{{ url_for('overtime') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">schedule</span>
+                                        Làm thêm
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li>
+                                    <a href="{{ url_for('meals') }}" class="text-slate-700 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold">
+                                        <span class="material-symbols-outlined">restaurant</span>
+                                        {{ t.meals }}
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <li class="mt-auto">
+                            <a href="{{ url_for('profile') }}" class="block p-3 bg-slate-50 dark:bg-slate-800 rounded-lg mb-3 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                                <p class="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">{{ t.hello }}</p>
+                                <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ user }}</p>
+                                <p class="text-xs text-slate-500">{{ session.get('user_id') }}</p>
+                            </a>
+                            <a href="{{ url_for('logout') }}" class="group -mx-2 flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                <span class="material-symbols-outlined">logout</span>
+                                {{ t.logout }}
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="lg:pl-72">
+            <!-- Top Header -->
+            <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+                <div class="flex h-16 items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
+                    <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+                        <div class="flex flex-1 items-center">
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">{{ t.dashboard }}</h2>
+                        </div>
+                        <div class="flex items-center gap-x-4 lg:gap-x-6">
+                            <select onchange="window.location.href='/set-language/' + this.value" class="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm font-medium">
+                                <option value="vi" {% if current_lang == 'vi' %}selected{% endif %}>🇻🇳 Tiếng Việt</option>
+                                <option value="en" {% if current_lang == 'en' %}selected{% endif %}>🇬🇧 English</option>
+                                <option value="ja" {% if current_lang == 'ja' %}selected{% endif %}>🇯🇵 日本語</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="pt-6 pb-24 lg:pt-10 lg:pb-10">
+                <div class="px-4 sm:px-6 lg:px-8">
+                    {% if is_manager %}
+                    <!-- Phê Duyệt Section (Manager Only) -->
+                    <div class="mb-6">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-3">Phê Duyệt</h3>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <a href="{{ url_for('manager_overtime_approvals') }}" class="group relative bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-4 rounded-xl border-2 border-amber-200 dark:border-amber-800 shadow-sm hover:shadow-lg hover:border-amber-400 transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center group-hover:scale-110 transition-all shadow-lg flex-shrink-0">
+                                        <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings: 'FILL' 1;">schedule</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Tăng Ca</h3>
+                                            <span id="pending-overtime-badge" class="hidden px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] text-center">0</span>
+                                        </div>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Duyệt yêu cầu làm thêm</p>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="#" class="group relative bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-xl border-2 border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-lg hover:border-blue-400 transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center group-hover:scale-110 transition-all shadow-lg flex-shrink-0">
+                                        <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings: 'FILL' 1;">event_busy</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Đăng Ký Nghỉ</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Duyệt yêu cầu nghỉ phép</p>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="#" class="group relative bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl border-2 border-purple-200 dark:border-purple-800 shadow-sm hover:shadow-lg hover:border-purple-400 transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-purple-500 flex items-center justify-center group-hover:scale-110 transition-all shadow-lg flex-shrink-0">
+                                        <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings: 'FILL' 1;">flight_takeoff</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Công Tác</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Duyệt yêu cầu công tác</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Đăng Ký Section -->
+                    <div class="mb-6">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-3">Đăng Ký</h3>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            {% if current_user.can_register or current_user.can_approve %}
+                            <a href="{{ url_for('overtime') }}" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all flex-shrink-0">
+                                        <span class="material-symbols-outlined text-primary group-hover:text-white text-xl" style="font-variation-settings: 'FILL' 1;">schedule</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Làm Thêm</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Đăng ký tăng ca</p>
+                                    </div>
+                                </div>
+                            </a>
+                            {% endif %}
+
+                            <a href="{{ url_for('meals') }}" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all flex-shrink-0">
+                                        <span class="material-symbols-outlined text-primary group-hover:text-white text-xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Suất Ăn</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Đăng ký suất ăn</p>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="#" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all flex-shrink-0">
+                                        <span class="material-symbols-outlined text-primary group-hover:text-white text-xl" style="font-variation-settings: 'FILL' 1;">event_busy</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Nghỉ</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Đăng ký nghỉ phép</p>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="#" class="group relative bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:border-primary transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all flex-shrink-0">
+                                        <span class="material-symbols-outlined text-primary group-hover:text-white text-xl" style="font-variation-settings: 'FILL' 1;">flight_takeoff</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Công Tác</h3>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400">Đăng ký công tác</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+
+                </div>
+            </main>
+        </div>
+
+        <!-- Bottom Navigation Bar (Mobile Only) -->
+        <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe shadow-2xl z-50">
+            <div class="flex justify-around items-center h-20 px-4">
+                <a class="flex flex-col items-center gap-1 text-primary" href="{{ url_for('dashboard') }}">
+                    <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">home</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">{{ t.home }}</span>
+                </a>
+                <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('meals') }}">
+                    <span class="material-symbols-outlined text-2xl">lunch_dining</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">{{ t.meal_tab }}</span>
+                </a>
+                {% if current_user.can_register or current_user.can_approve %}
+                <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('overtime') }}">
+                    <span class="material-symbols-outlined text-2xl">history</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">{{ t.overtime_tab }}</span>
+                </a>
+                {% endif %}
+                <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('profile') }}">
+                    <span class="material-symbols-outlined text-2xl">person</span>
+                    <span class="text-[10px] font-bold uppercase tracking-tighter">{{ t.profile }}</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        // Load pending overtime requests count for managers
+        {% if is_manager %}
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/manager/overtime-requests')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const pendingCount = data.requests.filter(r => r.status === 'pending').length;
+                        const badge = document.getElementById('pending-overtime-badge');
+                        if (badge && pendingCount > 0) {
+                            badge.textContent = pendingCount;
+                            badge.classList.remove('hidden');
+                        }
+                    }
+                })
+                .catch(err => console.error('Error loading pending requests:', err));
+        });
+        {% endif %}
+    </script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Admin Dashboard - OKI VIETNAM HR</title>
+    <meta name="theme-color" content="#136dec"/>
+    <link rel="manifest" href="/static/manifest.json"/>
+    <link rel="icon" type="image/png" href="/static/icon.png"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#136dec',
+                        'background-light': '#f6f7f8',
+                        'background-dark': '#101822'
+                    },
+                    fontFamily: {
+                        display: ['Manrope', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Manrope', sans-serif; }
+        ::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark">
+    <div class="min-h-screen">
+        {% include 'includes/admin_sidebar.html' %}
+
+        <!-- Main Content -->
+        <div class="lg:pl-72">
+            <!-- Top Header -->
+            <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+                <div class="flex h-16 items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
+                    <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+                        <div class="flex flex-1 items-center">
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Bảng Điều Khiển</h2>
+                        </div>
+                        <div class="flex items-center gap-x-4 lg:gap-x-6">
+                            <select onchange="window.location.href='/set-language/' + this.value" class="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm font-medium">
+                                <option value="vi" {% if current_lang == 'vi' %}selected{% endif %}>🇻🇳 Tiếng Việt</option>
+                                <option value="en" {% if current_lang == 'en' %}selected{% endif %}>🇬🇧 English</option>
+                                <option value="ja" {% if current_lang == 'ja' %}selected{% endif %}>🇯🇵 日本語</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="pt-6 pb-24 lg:pt-10 lg:pb-10">
+                <div class="px-4 sm:px-6 lg:px-8">
+                    <!-- Stats Card -->
+                    <div class="bg-white dark:bg-slate-900 p-6 lg:p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow mb-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Tổng quan hệ thống</h3>
+                            <span class="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">Hôm nay</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Người dùng hoạt động -->
+                            <div class="flex items-start gap-4">
+                                <div class="w-14 h-14 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
+                                    <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-3xl">check_circle</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Người dùng hoạt động</p>
+                                    <p class="text-4xl font-black text-slate-900 dark:text-slate-100">{{ working_users or 0 }}</p>
+                                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">người đang làm việc</p>
+                                </div>
+                            </div>
+
+                            <!-- Tăng ca hôm nay -->
+                            <div class="flex items-start gap-4">
+                                <div class="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
+                                    <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-3xl">schedule</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Số người tăng ca</p>
+                                    <p class="text-4xl font-black text-slate-900 dark:text-slate-100">{{ overtime_count or 0 }}</p>
+                                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">người</p>
+                                </div>
+                            </div>
+
+                            <!-- Đăng ký cơm ngày mai -->
+                            <div class="flex items-start gap-4">
+                                <div class="w-14 h-14 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center flex-shrink-0">
+                                    <span class="material-symbols-outlined text-purple-600 dark:text-purple-400 text-3xl">restaurant</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Đăng ký cơm ngày mai</p>
+                                    <p class="text-4xl font-black text-slate-900 dark:text-slate-100">{{ total_meals or 0 }}</p>
+                                    <div class="flex flex-col gap-1 mt-1">
+                                        <span class="text-xs text-slate-400 dark:text-slate-500">Thường: <span class="font-bold text-slate-600 dark:text-slate-300">{{ normal_meals or 0 }}</span></span>
+                                        <span class="text-xs text-slate-400 dark:text-slate-500">Cải thiện: <span class="font-bold text-purple-600 dark:text-purple-400">{{ special_meals or 0 }}</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Menu Cards -->
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Menu chính</h3>
+                    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
+                        <a href="{{ url_for('admin_dashboard') }}" class="group relative bg-gradient-to-br from-blue-500 to-blue-600 p-4 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                            <div class="flex flex-col items-center text-center text-white">
+                                <span class="material-symbols-outlined text-4xl lg:text-5xl mb-2 lg:mb-3" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                                <h3 class="font-bold text-sm lg:text-lg mb-1">Bảng Điều Khiển</h3>
+                                <p class="text-xs lg:text-sm text-blue-100">Tổng quan hệ thống</p>
+                            </div>
+                        </a>
+                        <a href="{{ url_for('admin_users') }}" class="group relative bg-gradient-to-br from-green-500 to-green-600 p-4 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                            <div class="flex flex-col items-center text-center text-white">
+                                <span class="material-symbols-outlined text-4xl lg:text-5xl mb-2 lg:mb-3" style="font-variation-settings: 'FILL' 1;">group</span>
+                                <h3 class="font-bold text-sm lg:text-lg mb-1">Quản Lý Người Dùng</h3>
+                                <p class="text-xs lg:text-sm text-green-100">Thêm, sửa, xóa nhân viên</p>
+                                <p class="text-xs text-white/80 mt-2">Hoạt động: <span class="font-bold text-lg">{{ working_users or 0 }}</span></p>
+                            </div>
+                        </a>
+                        <a href="{{ url_for('admin_meals') }}" class="group relative bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                            <div class="flex flex-col items-center text-center text-white">
+                                <span class="material-symbols-outlined text-4xl lg:text-5xl mb-2 lg:mb-3" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+                                <h3 class="font-bold text-sm lg:text-lg mb-1">Thực Đơn</h3>
+                                <p class="text-xs lg:text-sm text-emerald-100">Quản lý suất ăn</p>
+                            </div>
+                        </a>
+                        <a href="{{ url_for('admin_stats') }}" class="group relative bg-gradient-to-br from-blue-500 to-blue-600 p-4 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                            <div class="flex flex-col items-center text-center text-white">
+                                <span class="material-symbols-outlined text-4xl lg:text-5xl mb-2 lg:mb-3" style="font-variation-settings: 'FILL' 1;">bar_chart</span>
+                                <h3 class="font-bold text-sm lg:text-lg mb-1">Thống Kê Suất Ăn</h3>
+                                <p class="text-xs lg:text-sm text-blue-100">Báo cáo và phân tích</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        {% include 'includes/admin_mobile_nav.html' %}
+    </div>
+</body>
+</html>

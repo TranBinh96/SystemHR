@@ -1,0 +1,25 @@
+<!-- Bottom Nav Mobile -->
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe shadow-2xl z-50">
+    <div class="flex justify-around items-center h-20 px-4">
+        <a class="flex flex-col items-center gap-1 {% if request.endpoint == 'admin_dashboard' %}text-primary{% else %}text-slate-400 dark:text-slate-500{% endif %}" href="{{ url_for('admin_dashboard') }}">
+            <span class="material-symbols-outlined text-2xl" {% if request.endpoint == 'admin_dashboard' %}style="font-variation-settings: 'FILL' 1"{% endif %}>dashboard</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Bảng Điều Khiển</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 {% if request.endpoint == 'admin_users' %}text-primary{% else %}text-slate-400 dark:text-slate-500{% endif %}" href="{{ url_for('admin_users') }}">
+            <span class="material-symbols-outlined text-2xl" {% if request.endpoint == 'admin_users' %}style="font-variation-settings: 'FILL' 1"{% endif %}>group</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Người Dùng</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 {% if request.endpoint == 'admin_overtime_approvals' %}text-primary{% else %}text-slate-400 dark:text-slate-500{% endif %}" href="{{ url_for('admin_overtime_approvals') }}">
+            <span class="material-symbols-outlined text-2xl" {% if request.endpoint == 'admin_overtime_approvals' %}style="font-variation-settings: 'FILL' 1"{% endif %}>schedule</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Làm Thêm</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 {% if request.endpoint == 'admin_meals' %}text-primary{% else %}text-slate-400 dark:text-slate-500{% endif %}" href="{{ url_for('admin_meals') }}">
+            <span class="material-symbols-outlined text-2xl" {% if request.endpoint == 'admin_meals' %}style="font-variation-settings: 'FILL' 1"{% endif %}>restaurant</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Thực Đơn</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('profile') }}">
+            <span class="material-symbols-outlined text-2xl">person</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Cá Nhân</span>
+        </a>
+    </div>
+</nav>

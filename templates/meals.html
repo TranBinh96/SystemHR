@@ -263,7 +263,11 @@
                 const day = new Date(startDate);
                 day.setDate(startDate.getDate() + i);
 
-                const dateStr = day.toISOString().split('T')[0];
+                // Dùng local date để tránh timezone offset
+                const yyyy = day.getFullYear();
+                const mm = String(day.getMonth() + 1).padStart(2, '0');
+                const dd = String(day.getDate()).padStart(2, '0');
+                const dateStr = `${yyyy}-${mm}-${dd}`;
                 const dayNum = day.getDate();
                 const dayName = dayNames[day.getDay()];
 

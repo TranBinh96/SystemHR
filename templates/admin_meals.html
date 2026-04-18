@@ -190,11 +190,11 @@
                 <!-- Week Navigator -->
                 <div class="mb-6 flex items-center justify-between">
                     <div class="flex items-center bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-800 p-1">
-                        <button onclick="changeWeek(-1)" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors">
+onclick="changeDays(-1)"
                             <span class="material-symbols-outlined text-lg">chevron_left</span>
                         </button>
                         <div class="px-4 text-sm font-bold" id="weekDisplay">Tuần này</div>
-                        <button onclick="changeWeek(1)" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors">
+onclick="changeDays(1)"
                             <span class="material-symbols-outlined text-lg">chevron_right</span>
                         </button>
                     </div>
@@ -385,8 +385,10 @@
             const monthNames = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
                               'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
             
-            document.getElementById('weekDisplay').textContent = 
-                `Tuần ${getWeekNumber(weekStart)}, ${monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
+const startDate = new Date();
+startDate.setDate(startDate.getDate() + (currentWeekOffset * 7));
+document.getElementById('weekDisplay').textContent = 
+    `7 ngày từ ${startDate.getDate()}/${startDate.getMonth() + 1}`;
         }
 
         function getWeekNumber(date) {
@@ -397,53 +399,54 @@
             return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
         }
 
-        function changeWeek(offset) {
+function changeDays(offset) {
             currentWeekOffset += offset;
             updateWeekDisplay();
-            updateDayPicker(); // Update day buttons for new week
-            clearFormInline(); // Clear form when changing week
-            selectedDate = null; // Reset selected date
+            updateDayPicker();
+            clearFormInline();
+            selectedDate = null;
             
-            // Clear table
             document.getElementById('mealsTableBody').innerHTML = '';
             document.getElementById('emptyState').style.display = 'block';
-            document.getElementById('selectedDateDisplay').textContent = 'Tuần hiện tại';
+            document.getElementById('selectedDateDisplay').textContent = '7 ngày tới';
             
             loadMenus();
         }
 
-        function updateDayPicker() {
+function updateDayPicker() {
             const today = new Date();
-            today.setDate(today.getDate() + (currentWeekOffset * 7));
-            const weekStart = new Date(today);
-            weekStart.setDate(today.getDate() - today.getDay() + 1); // Monday
+            const startDay = new Date(today.getTime() + (currentWeekOffset * 7 * 24 * 60 * 60 * 1000));
             
-            const dayNames = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+            const dayNames = ['Hôm nay', 'Ngày mai', 'T3', 'T4', 'T5', 'T6', 'T7'];
             const dayPickerContainer = document.querySelector('.grid.grid-cols-7.gap-2');
             
             let html = '';
             for (let i = 0; i < 7; i++) {
-                const day = new Date(weekStart);
-                day.setDate(weekStart.getDate() + i);
+                const day = new Date(startDay.getTime() + (i * 24 * 60 * 60 * 1000));
                 const dateStr = day.toISOString().split('T')[0];
-                const dayNum = day.getDate();
                 
+                // Skip if day is in past
+                if (day < today) {
+                    html += '<div class="flex flex-col items-center p-3 opacity-50 pointer-events-none">';
+                    html += `<span class="text-[10px] uppercase font-bold tracking-widest text-slate-400 line-through">${dayNames[i] || 'Quá khứ'}</span>`;
+                    html += `<span class="text-xl font-black text-slate-400 line-through">${day.getDate()}</span>`;
+                    html += '</div>';
+                    continue;
+                }
+                
+                const dayNum = day.getDate();
                 html += `
                     <button onclick="selectDay('${dateStr}')" 
                             id="day-${dateStr}"
                             class="day-btn flex flex-col items-center p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-green-500 transition-colors">
-                        <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">${dayNames[i]}</span>
+                        <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">${dayNames[i % dayNames.length]}</span>
                         <span class="text-xl font-black">${dayNum}</span>
                     </button>
                 `;
             }
             
             dayPickerContainer.innerHTML = html;
-            
-            // Update colors after rendering new days
-            setTimeout(() => {
-                updateAllDayColors();
-            }, 100);
+            setTimeout(updateAllDayColors, 100);
         }
 
         function selectDay(date) {

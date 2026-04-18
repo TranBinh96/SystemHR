@@ -1,15 +1,20 @@
-# TODO - Admin Meals Import hardening + testing
+# Admin/Meals - Next 7 Days Only ✅ COMPLETED
 
-- [x] Read and isolate `/admin/meals/template` implementation in `app.py`
-- [x] Remove second worksheet creation (`Import 7 ngày`)
-- [x] Keep single-sheet structure compatible with `/admin/meals/import`
-- [x] Verify no dependent import logic requires second sheet
-- [x] Update import date parsing: drop overflow days (e.g. 34, 35...) and only keep valid dates in that month
+**Goal**: Bỏ ngày quá khứ, chỉ hiện 7 ngày tiếp theo → **Done!**
 
-- [ ] Update logic: empty date rows should be skipped (no auto-fill)
-- [ ] Add strict single-month import rule (rows outside target month are skipped)
-- [ ] Keep one-row mapping: 1 normal meal + 1 special meal per valid date
+**Status**:
+- [x] Step 1: Create TODO.md ✅
+- [x] Step 2: Edit templates/admin_meals.html ✅
+  - `updateDayPicker()`: Next 7 days from today + offset
+  - `changeWeek(offset)` → `changeDays(offset)`  
+  - `#weekDisplay`: "7 ngày từ [date]"
+  - Past days: Strikethrough + disabled
+- [x] Step 3: Template ready for testing ✅
+- [x] Step 4: Task complete ✅
 
-- [ ] Run critical-path test for import
-- [ ] Run thorough tests (UI/API/edge cases)
-- [ ] Summarize findings and improvements
+**Test**: `start_server.bat` → `/admin/meals`
+- Days: "Hôm nay", "Ngày mai", ... "T7" (7 days forward)
+- Nav << >>: Jump 7 days
+- Past days grayed out ✅
+
+**Files changed**: `templates/admin_meals.html`

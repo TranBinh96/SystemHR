@@ -1889,6 +1889,7 @@ def get_stats_data():
                 'meal_name': reg.menu.dish_name if reg.menu else 'N/A',
                 'meal_type': 'Cải Thiện' if (reg.menu and reg.menu.is_special) else 'Bình Thường',
                 'is_special': reg.menu.is_special if reg.menu else False,
+                'is_confirmed': reg.is_confirmed or False,
                 'notes': reg.notes or ''
             })
         except Exception as e:

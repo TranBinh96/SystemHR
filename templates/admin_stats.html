@@ -464,11 +464,29 @@
                     const mealTypeClass = r.is_special ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
                     const dotClass = r.is_special ? 'bg-blue-500' : 'bg-slate-400';
                     
+                    // Badge loại: nếu cải thiện thì hiện "Đã lấy" / "Chưa lấy", nếu bình thường thì hiện "Bình Thường"
+                    let badgeClass, dotBadgeClass, badgeLabel;
+                    if (r.is_special) {
+                        if (r.is_confirmed) {
+                            badgeClass = 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+                            dotBadgeClass = 'bg-green-500';
+                            badgeLabel = 'Đã lấy';
+                        } else {
+                            badgeClass = 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
+                            dotBadgeClass = 'bg-orange-400';
+                            badgeLabel = 'Chưa lấy';
+                        }
+                    } else {
+                        badgeClass = 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+                        dotBadgeClass = 'bg-slate-400';
+                        badgeLabel = 'Bình Thường';
+                    }
+                    
                     tableHTML += '<td class="px-4 py-3 text-center text-sm font-normal text-slate-900 dark:text-slate-100 border-r border-slate-200 dark:border-slate-700 ' + borderBottomClass + '" style="min-width: 220px; width: 220px;">' + r.user_name + '</td>';
                     tableHTML += '<td class="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400 font-normal border-r border-slate-200 dark:border-slate-700 ' + borderBottomClass + '" style="min-width: 120px; width: 120px;">' + r.employee_id + '</td>';
                     tableHTML += '<td class="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400 font-normal border-r border-slate-200 dark:border-slate-700 ' + borderBottomClass + '" style="min-width: 300px; width: 300px;">' + r.department + '</td>';
                     tableHTML += '<td class="px-4 py-3 text-center border-r border-slate-200 dark:border-slate-700 ' + borderBottomClass + '" style="min-width: 200px;"><div class="text-sm font-normal text-slate-900 dark:text-slate-100">' + r.meal_name + '</div></td>';
-                    tableHTML += '<td class="px-4 py-3 text-center ' + borderBottomClass + '" style="min-width: 180px; width: 180px;"><span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-normal ' + mealTypeClass + '"><span class="w-2 h-2 rounded-full ' + dotClass + '"></span>' + r.meal_type + '</span></td>';
+                    tableHTML += '<td class="px-4 py-3 text-center ' + borderBottomClass + '" style="min-width: 180px; width: 180px;"><span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-normal ' + badgeClass + '"><span class="w-2 h-2 rounded-full ' + dotBadgeClass + '"></span>' + badgeLabel + '</span></td>';
                     tableHTML += '</tr>';
                 });
             });

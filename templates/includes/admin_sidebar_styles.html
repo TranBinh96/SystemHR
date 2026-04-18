@@ -26,6 +26,7 @@
         display: none !important;
     }
     
+
     /* Tooltip styles - only show when sidebar is collapsed */
     #sidebar.collapsed nav a[data-tooltip]::after {
         content: attr(data-tooltip);
@@ -50,4 +51,30 @@
     #sidebar.collapsed nav a[data-tooltip]:focus::after {
         opacity: 1;
     }
-</style>
+
+    /* Small gray/white scrollbars for ALL pages */
+    *::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 3px;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background: #9CA3AF;
+        border-radius: 3px;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+        background: #6B7280;
+    }
+
+    /* Firefox */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #9CA3AF rgba(255, 255, 255, 0.5);
+    }
+

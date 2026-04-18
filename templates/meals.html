@@ -335,7 +335,8 @@
             }
             
             // Update title
-            const dateObj = new Date(date);
+            const [y, m, d] = date.split('-').map(Number);
+            const dateObj = new Date(y, m - 1, d);
             const dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
             document.getElementById('selectedDateTitle').textContent = `Thực đơn cho ${dayNames[dateObj.getDay()]}`;
             document.getElementById('selectedDateSubtitle').textContent = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;

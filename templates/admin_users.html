@@ -173,28 +173,15 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Hàng 3: Cấp bậc | Trạng thái -->
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Cấp bậc *</label>
-                                        <select id="positionInline" required
-                                                class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                            <option value="">Chọn cấp bậc</option>
-                                            {% for position in positions %}
-                                            <option value="{{ position.code }}">{{ position.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Trạng thái *</label>
-                                        <select id="workStatusInline" required
-                                                class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                            <option value="working">Hoạt động / Working</option>
-                                            <option value="business_trip">Công tác / Business Trip</option>
-                                            <option value="resigned">Nghỉ việc / Resigned</option>
-                                        </select>
-                                    </div>
+                                <!-- Hàng 3: Trạng thái -->
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Trạng thái *</label>
+                                    <select id="workStatusInline" required
+                                            class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="working">Hoạt động / Working</option>
+                                        <option value="business_trip">Công tác / Business Trip</option>
+                                        <option value="resigned">Nghỉ việc / Resigned</option>
+                                    </select>
                                 </div>
                                 
                                 <!-- Hàng 4: Quyền phê duyệt | Quyền đăng ký -->
@@ -574,10 +561,6 @@
             <a href="{{ url_for('admin_departments') }}" class="flex flex-col items-center py-2 px-1 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
                 <span class="material-symbols-outlined text-xl mb-1">corporate_fare</span>
                 <span class="text-xs font-medium">Phòng ban</span>
-            </a>
-            <a href="{{ url_for('admin_positions') }}" class="flex flex-col items-center py-2 px-1 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-xl mb-1">badge</span>
-                <span class="text-xs font-medium">Chức vụ</span>
             </a>
         </div>
     </div>
@@ -2640,10 +2623,6 @@
             <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_departments') }}">
                 <span class="material-symbols-outlined text-2xl">corporate_fare</span>
                 <span class="text-[10px] font-bold uppercase tracking-tighter">Phòng Ban</span>
-            </a>
-            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_positions') }}">
-                <span class="material-symbols-outlined text-2xl">badge</span>
-                <span class="text-[10px] font-bold uppercase tracking-tighter">Chức Vụ</span>
             </a>
             <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('profile') }}">
                 <span class="material-symbols-outlined text-2xl">settings</span>

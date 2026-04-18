@@ -79,18 +79,6 @@
                                         <span>Phòng ban</span>
                                     </a>
                                 </li>
-                                <li>
-                                    <a href="{{ url_for('admin_positions') }}" class="{% if request.endpoint == 'admin_positions' %}text-blue-600 bg-blue-50 dark:bg-blue-900/20 border-r-2 border-blue-500{% else %}text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800{% endif %} group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium">
-                                        <span class="material-symbols-outlined {% if request.endpoint == 'admin_positions' %}text-blue-600{% else %}text-slate-500{% endif %}">badge</span>
-                                        <span>Chức vụ</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ url_for('admin_approval_hierarchy') }}" class="{% if request.endpoint == 'admin_approval_hierarchy' %}text-blue-600 bg-blue-50 dark:bg-blue-900/20 border-r-2 border-blue-500{% else %}text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800{% endif %} group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-medium">
-                                        <span class="material-symbols-outlined {% if request.endpoint == 'admin_approval_hierarchy' %}text-blue-600{% else %}text-slate-500{% endif %}">approval</span>
-                                        <span>Thiết lập phê duyệt</span>
-                                    </a>
-                                </li>
                             </ul>
                         </li>
 

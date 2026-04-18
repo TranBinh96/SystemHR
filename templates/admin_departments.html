@@ -120,14 +120,6 @@
                                         <span class="material-symbols-outlined text-blue-600">corporate_fare</span>
                                         Phòng ban
                                     </a>
-                                    <a href="{{ url_for('admin_positions') }}" class="text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold transition-colors">
-                                        <span class="material-symbols-outlined text-slate-500">badge</span>
-                                        Chức vụ
-                                    </a>
-                                    <a href="{{ url_for('admin_approval_hierarchy') }}" class="text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold transition-colors">
-                                        <span class="material-symbols-outlined text-slate-500">approval</span>
-                                        Thiết lập phê duyệt
-                                    </a>
                                 </div>
                             </div>
 
@@ -1424,10 +1416,6 @@
             <a class="flex flex-col items-center gap-1 text-primary" href="{{ url_for('admin_departments') }}">
                 <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">corporate_fare</span>
                 <span class="text-[10px] font-bold uppercase tracking-tighter">Phòng Ban</span>
-            </a>
-            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_positions') }}">
-                <span class="material-symbols-outlined text-2xl">badge</span>
-                <span class="text-[10px] font-bold uppercase tracking-tighter">Chức Vụ</span>
             </a>
             <a class="flex flex-col items-center gap-1 text-red-500 dark:text-red-400" href="{{ url_for('logout') }}">
                 <span class="material-symbols-outlined text-2xl">logout</span>

@@ -65,26 +65,6 @@ def init_database():
             if new_tables:
                 print(f"🆕 New tables created: {', '.join(new_tables)}")
             
-            # Initialize default positions if positions table is new
-            if 'positions' in new_tables or 'positions' not in existing_tables:
-                from models import Position
-                if Position.query.count() == 0:
-                    print("Creating default positions...")
-                    default_positions = [
-                        {'code': '1', 'name': 'Nhân viên'},
-                        {'code': '2', 'name': 'Công nhân'},
-                        {'code': '3', 'name': 'Trưởng phòng'},
-                        {'code': '4', 'name': 'Phó phòng'},
-                        {'code': '5', 'name': 'Giám sát'},
-                        {'code': '6', 'name': 'Trưởng nhóm'},
-                        {'code': '7', 'name': 'Quản lý'},
-                    ]
-                    for pos_data in default_positions:
-                        position = Position(**pos_data)
-                        db.session.add(position)
-                    db.session.commit()
-                    print("✓ Default positions created")
-            
             # Check if we need to create default users
             if User.query.count() == 0:
                 print("Creating default users...")
@@ -366,24 +346,11 @@ def admin_users():
         flash('Bạn không có quyền truy cập trang này', 'error')
         return redirect(url_for('dashboard'))
     
-    from models import Position, Department
-    # Get all users and positions (sort positions numerically)
+    from models import Department
     users = User.query.order_by(User.created_at.desc()).all()
-    positions_raw = Position.query.all()
-    
-    # Sort positions numerically by extracting numbers from code
-    import re
-    def extract_number(code):
-        match = re.search(r'\d+', str(code))
-        return int(match.group()) if match else 0
-    
-    positions = sorted(positions_raw, key=lambda x: extract_number(x.code))
     departments = Department.query.order_by(Department.name.asc()).all()
     
-    # Create position lookup dictionary for template
-    position_dict = {str(pos.code): pos.name for pos in positions}
-    
-    return render_template('admin_users.html', users=users, positions=positions, departments=departments, position_dict=position_dict)
+    return render_template('admin_users.html', users=users, departments=departments)
 
 @app.route('/admin/users/list', methods=['GET'])
 @login_required
@@ -392,43 +359,21 @@ def admin_users_list():
     if current_user.role != 'admin':
         return {'success': False, 'message': 'Không có quyền'}, 403
     
-    from models import Position
     users = User.query.order_by(User.created_at.desc()).all()
-    positions_raw = Position.query.all()
-    
-    # Sort positions numerically by extracting numbers from code
-    import re
-    def extract_number(code):
-        match = re.search(r'\d+', str(code))
-        return int(match.group()) if match else 0
-    
-    positions = sorted(positions_raw, key=lambda x: extract_number(x.code))
-    
-    # Create position lookup map (convert both to string for comparison)
-    position_map = {str(pos.code): pos.name for pos in positions}
     
     users_data = []
     for user in users:
-        # Get position name from map, or 'Chưa xác định' if not found
-        position_code = str(user.position) if user.position else None
-        position_name = position_map.get(position_code, 'Chưa xác định') if position_code else 'Chưa xác định'
         users_data.append({
             'id': user.id,
             'employee_id': user.employee_id,
             'name': user.name,
-            'department': user.department,
-            'position_id': user.position_id,
-            'position_name': user.pos.name if user.pos else 'Chưa xác định',
+            'department': user.dept.name if user.dept else None,
             'role': user.role,
             'is_active': user.is_active,
             'work_status': user.work_status,
             'avatar_url': user.avatar_url,
             'can_approve': user.can_approve,
-            'can_register': user.can_register,
-            'gender': user.gender,
-            'phone': user.phone,
-            'citizen_id': user.citizen_id,
-            'hometown': user.hometown
+            'can_register': user.can_register
         })
     
     return {'success': True, 'users': users_data}
@@ -542,10 +487,6 @@ def edit_user(user_id):
             else:
                 user.department_id = None
         
-        # Handle position - store position_id
-        if 'position' in data:
-            user.position_id = data['position']  # This is the position ID
-        
         if 'role' in data:
             user.role = data['role']
         if 'work_status' in data:
@@ -645,7 +586,6 @@ def add_user():
     if current_user.role != 'admin':
         return {'success': False, 'message': 'Không có quyền'}, 403
     
-    from models import Position
     from werkzeug.utils import secure_filename
     import os
     from datetime import datetime
@@ -658,7 +598,7 @@ def add_user():
             data = request.form.to_dict()
         
         # Validate required fields
-        required_fields = ['employee_id', 'name', 'password', 'department', 'position']
+        required_fields = ['employee_id', 'name', 'password', 'department']
         for field in required_fields:
             if field not in data or not data[field]:
                 return {'success': False, 'message': f'Thiếu thông tin: {field}'}, 400
@@ -677,7 +617,6 @@ def add_user():
             employee_id=data['employee_id'],
             name=data['name'],
             department_id=department_id,  # Department foreign key
-            position_id=data['position'],  # Position ID
             role=data.get('role', 'user'),
             work_status=data.get('work_status', 'working'),
             is_active=True,  # Mặc định luôn active khi tạo mới
@@ -737,171 +676,6 @@ def reset_user_password(user_id):
     db.session.commit()
     
     return {'success': True, 'message': f'Đã reset mật khẩu của {user.name} về 123456'}
-
-# ============= POSITION MANAGEMENT ROUTES =============
-@app.route('/admin/positions')
-@login_required
-def admin_positions():
-    """Position management page - admin only"""
-    if current_user.role != 'admin':
-        flash('Bạn không có quyền truy cập trang này', 'error')
-        return redirect(url_for('dashboard'))
-    
-    from models import Position
-    
-    # Auto-create positions table and default data if not exists
-    try:
-        db.create_all()
-        if Position.query.count() == 0:
-            default_positions = [
-                {'code': '1', 'name': 'Nhân viên'},
-                {'code': '2', 'name': 'Công nhân'},
-                {'code': '3', 'name': 'Trưởng phòng'},
-                {'code': '4', 'name': 'Phó phòng'},
-                {'code': '5', 'name': 'Giám sát'},
-                {'code': '6', 'name': 'Trưởng nhóm'},
-                {'code': '7', 'name': 'Quản lý'},
-            ]
-            for pos_data in default_positions:
-                position = Position(**pos_data)
-                db.session.add(position)
-            db.session.commit()
-            flash('Đã tạo 7 chức vụ mặc định', 'success')
-    except Exception as e:
-        print(f"Error creating positions: {e}")
-    
-    positions = Position.query.order_by(Position.code).all()
-    return render_template('admin_positions.html', positions=positions)
-
-@app.route('/admin/positions/employee-counts')
-@login_required
-def get_position_employee_counts():
-    """Get employee counts for each position"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    from models import Position
-    from sqlalchemy import func
-    
-    # Get count of users for each position
-    position_counts = db.session.query(
-        Position.id,
-        func.count(User.id).label('employee_count')
-    ).outerjoin(User, User.position_id == Position.id).group_by(Position.id).all()
-    
-    counts = {pos_id: count for pos_id, count in position_counts}
-    
-    return {'success': True, 'counts': counts}
-
-@app.route('/admin/positions/list')
-@login_required
-def list_positions():
-    """Get positions list as JSON"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    from models import Position
-    positions = Position.query.all()
-    
-    # Convert to list and sort by numeric value of code
-    positions_list = [{'id': p.id, 'code': p.code, 'name': p.name, 'description': p.description or ''} for p in positions]
-    
-    # Sort by numeric value of code
-    def sort_key(pos):
-        try:
-            # Extract numeric part from code
-            import re
-            numeric_part = re.findall(r'\d+', pos['code'])
-            if numeric_part:
-                return int(numeric_part[0])
-            else:
-                return float('inf')  # Non-numeric codes go to end
-        except:
-            return float('inf')
-    
-    positions_list.sort(key=sort_key)
-    
-    return positions_list
-
-@app.route('/admin/positions/add', methods=['POST'])
-@login_required
-def add_position():
-    """Add new position"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    from models import Position
-    data = request.json
-    code = data.get('code', '').strip().upper()
-    name = data.get('name', '').strip()
-    description = data.get('description', '').strip()
-    
-    if not code or not name:
-        return {'success': False, 'message': 'Vui lòng điền đầy đủ thông tin'}, 400
-    
-    # Check if code already exists
-    existing = Position.query.filter_by(code=code).first()
-    if existing:
-        return {'success': False, 'message': 'Mã chức vụ đã tồn tại'}, 400
-    
-    position = Position(code=code, name=name, description=description)
-    db.session.add(position)
-    db.session.commit()
-    
-    return {'success': True, 'message': f'Đã thêm chức vụ {name}'}
-
-@app.route('/admin/positions/<int:position_id>/edit', methods=['POST'])
-@login_required
-def edit_position(position_id):
-    """Edit position"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    from models import Position
-    position = Position.query.get_or_404(position_id)
-    
-    data = request.json
-    code = data.get('code', '').strip().upper()
-    name = data.get('name', '').strip()
-    description = data.get('description', '').strip()
-    
-    if not code or not name:
-        return {'success': False, 'message': 'Vui lòng điền đầy đủ thông tin'}, 400
-    
-    # Check if code already exists (excluding current position)
-    existing = Position.query.filter(Position.code == code, Position.id != position_id).first()
-    if existing:
-        return {'success': False, 'message': 'Mã chức vụ đã tồn tại'}, 400
-    
-    position.code = code
-    position.name = name
-    position.description = description
-    position.updated_at = datetime.utcnow()
-    db.session.commit()
-    
-    return {'success': True, 'message': f'Đã cập nhật chức vụ {name}'}
-
-@app.route('/admin/positions/<int:position_id>/delete', methods=['POST'])
-@login_required
-def delete_position(position_id):
-    """Delete position"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    from models import Position
-    position = Position.query.get_or_404(position_id)
-    
-    # Check if any users are using this position
-    users_count = User.query.filter_by(position=position.name).count()
-    if users_count > 0:
-        return {'success': False, 'message': f'Không thể xóa. Có {users_count} nhân viên đang sử dụng chức vụ này'}, 400
-    
-    db.session.delete(position)
-    db.session.commit()
-    
-    return {'success': True, 'message': f'Đã xóa chức vụ {position.name}'}
-
-# ============= END POSITION MANAGEMENT ROUTES =============
 
 # ============= DEPARTMENT MANAGEMENT ROUTES =============
 
@@ -1645,165 +1419,6 @@ def admin_stats():
     
     return render_template('admin_stats.html')
 
-
-@app.route('/admin/approval-hierarchy')
-@login_required
-def admin_approval_hierarchy():
-    """Admin approval hierarchy management page"""
-    if current_user.role != 'admin':
-        flash('Không có quyền truy cập', 'error')
-        return redirect(url_for('dashboard'))
-    
-    from models import Department, Position
-    
-    # Get all departments and positions
-    departments = Department.query.order_by(Department.name.asc()).all()
-    
-    # Sort positions numerically by extracting numbers from code
-    positions_raw = Position.query.all()
-    import re
-    def extract_number(code):
-        match = re.search(r'\d+', str(code))
-        return int(match.group()) if match else 0
-    
-    positions = sorted(positions_raw, key=lambda x: extract_number(x.code))
-    
-    return render_template('admin_approval_hierarchy.html', 
-                         departments=departments,
-                         positions=positions)
-
-
-@app.route('/admin/approval-hierarchy/load/<int:department_id>')
-@login_required
-def load_approval_matrix(department_id):
-    """Load approval matrix for a department"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    try:
-        from models import ApprovalHierarchy, Position
-        
-        # Get all approval rules for this department
-        rules = ApprovalHierarchy.query.filter_by(department_id=department_id).all()
-        
-        # Convert to matrix format
-        matrix = {}
-        for rule in rules:
-            approver_code = rule.approver_position.code if rule.approver_position else str(rule.approver_position_id)
-            approvee_code = rule.approvee_position.code if rule.approvee_position else str(rule.approvee_position_id)
-            key = f"{approver_code}-{approvee_code}"
-            matrix[key] = rule.can_approve
-        
-        return {'success': True, 'matrix': matrix}
-        
-    except Exception as e:
-        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
-
-
-@app.route('/admin/approval-hierarchy/save', methods=['POST'])
-@login_required
-def save_approval_matrix():
-    """Save approval matrix for a department"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    try:
-        from models import ApprovalHierarchy, Position
-        
-        data = request.get_json()
-        department_id = data.get('department_id')
-        matrix = data.get('matrix', {})
-        
-        if not department_id:
-            return {'success': False, 'message': 'Thiếu thông tin phòng ban'}, 400
-        
-        # Get all positions to map codes to IDs
-        positions = Position.query.all()
-        position_map = {pos.code: pos.id for pos in positions}
-        
-        # Delete existing rules for this department
-        ApprovalHierarchy.query.filter_by(department_id=department_id).delete()
-        
-        # Create new rules based on matrix
-        for key, can_approve in matrix.items():
-            if '-' not in key:
-                continue
-                
-            approver_code, approvee_code = key.split('-', 1)
-            
-            if approver_code not in position_map or approvee_code not in position_map:
-                continue
-            
-            # Only create rule if it's True (can approve)
-            if can_approve:
-                rule = ApprovalHierarchy(
-                    department_id=department_id,
-                    approver_position_id=position_map[approver_code],
-                    approvee_position_id=position_map[approvee_code],
-                    can_approve=True
-                )
-                db.session.add(rule)
-        
-        db.session.commit()
-        return {'success': True, 'message': 'Đã lưu cấu hình thành công'}
-        
-    except Exception as e:
-        db.session.rollback()
-        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
-
-
-@app.route('/admin/approval-hierarchy/copy', methods=['POST'])
-@login_required
-def copy_approval_matrix():
-    """Copy approval matrix from one department to another"""
-    if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
-    
-    try:
-        from models import ApprovalHierarchy, Position
-        
-        data = request.get_json()
-        source_dept_id = data.get('source_department_id')
-        target_dept_id = data.get('target_department_id')
-        
-        if not source_dept_id or not target_dept_id:
-            return {'success': False, 'message': 'Thiếu thông tin phòng ban'}, 400
-        
-        if source_dept_id == target_dept_id:
-            return {'success': False, 'message': 'Không thể sao chép từ chính phòng ban này'}, 400
-        
-        # Get source rules
-        source_rules = ApprovalHierarchy.query.filter_by(department_id=source_dept_id).all()
-        
-        if not source_rules:
-            return {'success': False, 'message': 'Phòng ban nguồn chưa có cấu hình nào'}, 400
-        
-        # Delete existing rules for target department
-        ApprovalHierarchy.query.filter_by(department_id=target_dept_id).delete()
-        
-        # Copy rules to target department
-        matrix = {}
-        for rule in source_rules:
-            new_rule = ApprovalHierarchy(
-                department_id=target_dept_id,
-                approver_position_id=rule.approver_position_id,
-                approvee_position_id=rule.approvee_position_id,
-                can_approve=rule.can_approve
-            )
-            db.session.add(new_rule)
-            
-            # Build matrix for response
-            approver_code = rule.approver_position.code if rule.approver_position else str(rule.approver_position_id)
-            approvee_code = rule.approvee_position.code if rule.approvee_position else str(rule.approvee_position_id)
-            key = f"{approver_code}-{approvee_code}"
-            matrix[key] = rule.can_approve
-        
-        db.session.commit()
-        return {'success': True, 'matrix': matrix, 'message': 'Đã sao chép cấu hình thành công'}
-        
-    except Exception as e:
-        db.session.rollback()
-        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
 
 @app.route('/admin/stats/data')
 @login_required

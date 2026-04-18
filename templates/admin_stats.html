@@ -198,7 +198,7 @@
                                         </div>
                                         <div class="relative min-w-[240px]">
                                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                                            <input type="text" id="globalSearch" placeholder="Tìm tên, mã NV..." oninput="applyGlobalFilter()" class="w-full pl-10 pr-3 py-2 text-base border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                            <input type="text" id="globalSearch" placeholder="Tìm tên, mã NV, phòng ban, món ăn, ngày..." oninput="applyGlobalFilter()" class="w-full pl-10 pr-3 py-2 text-base border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                                         </div>
                                         <button onclick="clearFilters()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
                                             <span class="material-symbols-outlined text-base">close</span>
@@ -364,11 +364,23 @@
             const q = document.getElementById('globalSearch').value.toLowerCase().trim();
 
             filteredRegistrations = allRegistrations.filter(function(r) {
-                if (q && !r.user_name.toLowerCase().includes(q) &&
-                    !r.employee_id.toLowerCase().includes(q) &&
-                    !(r.department || '').toLowerCase().includes(q)) return false;
-                
-                return true;
+                if (!q) return true;
+
+                // Tính nhãn trạng thái để tìm kiếm được
+                let statusLabel;
+                if (r.is_special) {
+                    statusLabel = r.is_confirmed ? 'đã lấy' : 'chưa lấy';
+                } else {
+                    statusLabel = 'bình thường';
+                }
+
+                return r.user_name.toLowerCase().includes(q) ||
+                    r.employee_id.toLowerCase().includes(q) ||
+                    (r.department || '').toLowerCase().includes(q) ||
+                    (r.meal_name || '').toLowerCase().includes(q) ||
+                    (r.meal_type || '').toLowerCase().includes(q) ||
+                    (r.date || '').toLowerCase().includes(q) ||
+                    statusLabel.includes(q);
             });
             
             // Update summary cards based on filtered data

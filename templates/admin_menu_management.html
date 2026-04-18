@@ -1066,7 +1066,7 @@
                                 </div>
                                 <div class="mt-2 text-sm text-blue-700">
                                     <div>• Tổng số dòng: <strong>${previewData.total_rows}</strong></div>
-                                    <div>• Tổng số món: <strong>${previewData.total_meals}</strong> (${previewData.total_rows} × 2)</div>
+                                    <div>• Tổng số bản ghi món sẽ import: <strong>${previewData.total_meals}</strong></div>
                                     <div>• Từ ngày: <strong>${previewData.date_range.start}</strong> đến <strong>${previewData.date_range.end}</strong></div>
                                     ${previewData.updates > 0 ? `<div class="text-orange-600">• Sẽ cập nhật: <strong>${previewData.updates}</strong> món đã tồn tại</div>` : ''}
                                     ${previewData.errors.length > 0 ? `<div class="text-red-600">• Lỗi: <strong>${previewData.errors.length}</strong> dòng</div>` : ''}
@@ -1141,7 +1141,7 @@
                                     <button onclick="confirmImport(${is7Days})" 
                                             class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 flex items-center gap-2">
                                         <span class="material-symbols-outlined text-lg">check</span>
-                                        Xác nhận Import (${previewData.total_meals} món)
+                                        Xác nhận Import (${previewData.total_meals} bản ghi)
                                     </button>
                                 ` : `
                                     <button disabled 

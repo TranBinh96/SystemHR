@@ -189,7 +189,7 @@
             </div>
         </header>
 
-        <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden lg:max-w-none max-w-[430px] mx-auto bg-white dark:bg-slate-900 shadow-2xl lg:shadow-none">
+        <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden lg:max-w-none w-full mx-auto bg-white dark:bg-slate-900 shadow-2xl lg:shadow-none">
             <!-- Mobile Header -->
             <header class="lg:hidden sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
                 <div class="flex items-center p-4 justify-between">
@@ -220,23 +220,18 @@
                                 <p class="text-white/80 text-sm font-medium">{{ session.get('user_id') }}</p>
                                 <p class="text-white/60 text-xs mt-1">{{ t.dept_production }}</p>
                             </div>
+                            <div class="bg-white p-2 rounded-lg shadow-sm cursor-zoom-in"
+                                 onclick="openProfileQrModal()">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ (user.employee_id or '')|urlencode }}"
+                                     alt="QR Username"
+                                     class="w-20 h-20 rounded">
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Stats Grid -->
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                                    <span class="material-symbols-outlined text-blue-600 text-xl" style="font-variation-settings: 'FILL' 1;">schedule</span>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-slate-500 dark:text-slate-400">{{ t.overtime }}</p>
-                                    <p class="text-lg font-bold text-slate-900 dark:text-slate-100">{{ total_overtime_hours }}h</p>
-                                </div>
-                            </div>
-                        </div>
-                        <a href="{{ url_for('meals') }}?show_qr=1" class="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                    <!-- Meal Ticket Card -->
+                    <div class="mb-6">
+                        <a href="{{ url_for('meals') }}?show_qr=1" class="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer block">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
                                     <span class="material-symbols-outlined text-green-600 text-xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
@@ -250,7 +245,7 @@
                                     </p>
                                     {% else %}
                                     <p class="text-xs text-slate-500 dark:text-slate-400">{{ t.meals }}</p>
-                                    <p class="text-lg font-bold text-slate-900 dark:text-slate-100">{{ total_meals }}</p>
+                                    <p class="text-sm font-bold text-slate-900 dark:text-slate-100">Xem suất ăn</p>
                                     {% endif %}
                                 </div>
                             </div>
@@ -331,6 +326,17 @@
                         </div>
                     </div>
 
+                    <!-- Install App Button -->
+                    <button id="installAppBtn" onclick="handleInstallApp()" class="flex items-center justify-center gap-3 w-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold py-4 rounded-xl border-2 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors mb-3">
+                        <span class="material-symbols-outlined">download</span>
+                        Cài ứng dụng
+                    </button>
+
+                    <!-- iOS Install Hint -->
+                    <div id="iosInstallHint" class="hidden bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 rounded-xl border border-amber-200 dark:border-amber-800 p-3 mb-3 text-sm">
+                        Trên iPhone/iPad: bấm <strong>Share</strong> rồi chọn <strong>Add to Home Screen</strong>.
+                    </div>
+
                     <!-- Logout Button -->
                     <a href="{{ url_for('logout') }}" class="flex items-center justify-center gap-3 w-full bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold py-4 rounded-xl border-2 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
                         <span class="material-symbols-outlined">logout</span>
@@ -341,7 +347,7 @@
             </main>
 
             <!-- Bottom Navigation Bar (Mobile Only) -->
-            <nav class="lg:hidden fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe shadow-2xl z-50">
+            <nav class="lg:hidden fixed bottom-0 left-0 right-0 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe shadow-2xl z-50">
                 <div class="flex justify-around items-center h-20 px-4">
                     <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('dashboard') }}">
                         <span class="material-symbols-outlined text-2xl">home</span>
@@ -363,5 +369,84 @@
             </nav>
         </div>
     </div>
+    <script>
+        let deferredInstallPrompt = null;
+
+        function isIos() {
+            return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+        }
+
+        function isInStandaloneMode() {
+            return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+        });
+
+        function handleInstallApp() {
+            const iosHint = document.getElementById('iosInstallHint');
+
+            if (isInStandaloneMode()) {
+                if (iosHint) {
+                    iosHint.classList.remove('hidden');
+                    iosHint.textContent = 'Ứng dụng đã được cài trên màn hình chính.';
+                }
+                return;
+            }
+
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                deferredInstallPrompt.userChoice.finally(() => {
+                    deferredInstallPrompt = null;
+                });
+                return;
+            }
+
+            if (isIos()) {
+                if (iosHint) iosHint.classList.remove('hidden');
+                return;
+            }
+
+            if (iosHint) {
+                iosHint.classList.remove('hidden');
+                iosHint.textContent = 'Trình duyệt hiện tại không hỗ trợ cài đặt trực tiếp. Hãy dùng Chrome/Safari mới nhất.';
+            }
+        }
+
+        function openProfileQrModal() {
+            const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=600x600&data={{ (user.employee_id or '')|urlencode }}";
+            openQrModal(qrUrl);
+        }
+
+        function openQrModal(qrUrl) {
+            const existing = document.getElementById('qrZoomModal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'qrZoomModal';
+            modal.className = 'fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="relative bg-white rounded-2xl p-4 max-w-[90vw] max-h-[90vh]">
+                    <button onclick="closeQrModal()" class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white shadow flex items-center justify-center">
+                        <span class="material-symbols-outlined text-slate-700">close</span>
+                    </button>
+                    <img src="${qrUrl}" alt="QR Code Zoom" class="w-[70vw] max-w-[420px] h-auto object-contain">
+                </div>
+            `;
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeQrModal();
+            });
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeQrModal() {
+            const modal = document.getElementById('qrZoomModal');
+            if (modal) modal.remove();
+            document.body.style.overflow = '';
+        }
+    </script>
 </body>
 </html>

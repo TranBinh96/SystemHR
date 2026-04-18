@@ -2319,54 +2319,6 @@ def download_meal_template():
             elif r % 2 == 0:
                 cell.fill = sample_fill
 
-    # Create second sheet for 7-day import with auto-filled dates
-    ws2 = wb.create_sheet('Import 7 ngày')
-    
-    # Headers for 7-day sheet
-    for col, (h, w) in enumerate(zip(headers, col_widths), 1):
-        cell = ws2.cell(row=1, column=col, value=h)
-        cell.font = header_font
-        cell.fill = header_fill
-        cell.alignment = center
-        cell.border = border
-        ws2.column_dimensions[cell.column_letter].width = w
-
-    # Sample data for 7-day import with AUTO-FILLED dates
-    day_names = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật']
-    samples_7days = [
-        ['Cơm gà nướng', 'Gà nướng mật ong', 'Phở bò', 'Phở bò tái chín'],
-        ['Cơm sườn nướng', 'Sườn nướng BBQ', 'Bún chả', 'Bún chả Hà Nội'],
-        ['Cơm chiên dương châu', 'Cơm chiên hải sản', 'Mì quảng', 'Mì quảng tôm thịt'],
-        ['Cơm tấm', 'Cơm tấm sườn bì', 'Bún bò Huế', 'Bún bò đặc biệt'],
-        ['Cơm rang thập cẩm', 'Cơm rang hải sản', 'Phở gà', 'Phở gà ta'],
-        ['Cơm gà roti', 'Gà roti cà ri', 'Bún riêu', 'Bún riêu cua'],
-        ['Cơm thịt nướng', 'Thịt nướng BBQ', 'Hủ tiếu', 'Hủ tiếu Nam Vang'],
-    ]
-    
-    # Auto-fill dates for 7 days starting from today
-    for i, meal_data in enumerate(samples_7days):
-        auto_date = today + timedelta(days=i)
-        date_str = auto_date.strftime('%Y-%m-%d')
-        day_name = day_names[auto_date.weekday()]
-        
-        # Create row with auto-filled date
-        row_data = [date_str] + meal_data
-        
-        for c, val in enumerate(row_data, 1):
-            cell = ws2.cell(row=i+2, column=c, value=val)
-            cell.border = border
-            cell.alignment = Alignment(vertical='center')
-            
-            # Highlight date column with auto-filled dates
-            if c == 1:  # Date column - auto-filled
-                cell.fill = PatternFill(fill_type='solid', fgColor='E8F5E8')
-                # Add comment showing day name
-                cell.comment = openpyxl.comments.Comment(
-                    f'TỰ ĐỘNG ĐIỀN\n{day_name}\n({date_str})', 
-                    'System'
-                )
-            elif (i+2) % 2 == 0:
-                cell.fill = sample_fill
 
     buf = io.BytesIO()
     wb.save(buf)
@@ -2448,7 +2400,7 @@ def import_meals_excel():
                 errors.append(f'Dòng {row_num}: Thiếu tên món (cả Thường và Cải thiện đều bắt buộc)')
                 continue
 
-            # Handle date logic - AUTO-FILL if empty
+            # Handle date logic
             date_obj = None
             
             if is_7_days:
@@ -2456,27 +2408,38 @@ def import_meals_excel():
                 day_offset = (row_num - 2) % 7  # Cycle through 7 days
                 date_obj = start_date + timedelta(days=day_offset)
             else:
-                # For single day mode - auto-fill if date is empty/invalid
+                # For single day mode:
+                # - Empty date => SKIP row (per new rule)
+                # - Invalid overflow date (e.g. 2026-04-34) => SKIP row
                 if not date_val or str(date_val).strip().upper() in ['', 'IGNORE', 'AUTO', 'NULL']:
-                    # AUTO-FILL: Use today + row offset
-                    day_offset = row_num - 2  # Sequential days from today
-                    date_obj = start_date + timedelta(days=day_offset)
+                    errors.append(f'Dòng {row_num}: Ngày trống/không hợp lệ - đã bỏ qua dòng')
+                    continue
                 else:
-                    # Parse date from Excel
                     if isinstance(date_val, str):
+                        date_str = date_val.strip()
                         try:
-                            date_obj = datetime.strptime(date_val.strip(), '%Y-%m-%d').date()
+                            date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
                         except ValueError:
-                            # If invalid date format, auto-fill
-                            day_offset = row_num - 2
-                            date_obj = start_date + timedelta(days=day_offset)
-                            errors.append(f'Dòng {row_num}: Ngày không hợp lệ "{date_val}", đã tự động điền {date_obj}')
+                            errors.append(
+                                f'Dòng {row_num}: Ngày "{date_str}" không hợp lệ (vượt ngày trong tháng hoặc sai định dạng) - đã bỏ qua dòng'
+                            )
+                            continue
                     elif hasattr(date_val, 'date'):
                         date_obj = date_val.date()
                     else:
-                        # Auto-fill for any other case
-                        day_offset = row_num - 2
-                        date_obj = start_date + timedelta(days=day_offset)
+                        errors.append(f'Dòng {row_num}: Giá trị ngày không hợp lệ - đã bỏ qua dòng')
+                        continue
+
+            # Strict single-month rule:
+            # Determine target month from first valid date in file.
+            if 'target_month' not in locals():
+                target_month = (date_obj.year, date_obj.month)
+            else:
+                if (date_obj.year, date_obj.month) != target_month:
+                    errors.append(
+                        f'Dòng {row_num}: Ngày {date_obj.strftime("%Y-%m-%d")} khác tháng mục tiêu {target_month[0]}-{target_month[1]:02d} - đã bỏ qua dòng'
+                    )
+                    continue
 
             # Check for existing meals on this date
             existing_normal = Menu.query.filter_by(
@@ -2686,6 +2649,18 @@ def overtime():
             flash('Dữ liệu không hợp lệ', 'error')
             return redirect(url_for('overtime'))
         
+        # Không cho phép đăng ký tăng ca cho ngày hiện tại trở về trước hoặc ngày hiện tại sau 16h
+        now = datetime.now()
+        today = now.date()
+        current_hour = now.hour
+        
+        if overtime_date < today:
+            flash('Không thể đăng ký tăng ca cho ngày đã qua', 'error')
+            return redirect(url_for('overtime'))
+        elif overtime_date == today and current_hour >= 16:
+            flash('Không thể đăng ký tăng ca cho hôm nay sau 16h', 'error')
+            return redirect(url_for('overtime'))
+
         # Get department name from relationship
         department_name = current_user.dept.name if current_user.dept else 'Chưa xác định'
         

@@ -221,24 +221,6 @@
                     </div>
                 </div>
 
-                <!-- Section: Reasons Quick Select -->
-                <div>
-                    <h3 class="text-gray-900 text-base font-bold mb-4">Lý do tăng ca</h3>
-                    <div class="flex flex-wrap gap-1.5">
-                        <button type="button" onclick="selectReason('Gấp dự án')" class="reason-btn px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-700 border border-gray-200 text-xs font-medium hover:bg-gray-200 transition-colors">
-                            Gấp dự án
-                        </button>
-                        <button type="button" onclick="selectReason('Bù tiến độ')" class="reason-btn px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                            Bù tiến độ
-                        </button>
-                        <button type="button" onclick="selectReason('Trực hệ thống')" class="reason-btn px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                            Trực hệ thống
-                        </button>
-                        <button type="button" onclick="selectReason('Họp khách hàng')" class="reason-btn px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                            Họp khách hàng
-                        </button>
-                    </div>
-                </div>
 
                 <!-- Detailed Notes -->
                 <div>
@@ -411,40 +393,33 @@
             }
         }
 
-        // Generate date picker for current week (Monday to Sunday)
+        // Generate date picker for next 7 days (from today), no past dates
         function generateDatePicker() {
             const container = document.getElementById('date-picker');
             const today = new Date();
             const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-            
-            // Get Monday of current week
-            const currentDay = today.getDay();
-            const monday = new Date(today);
-            // If Sunday (0), go back 6 days to get Monday, otherwise go back (currentDay - 1) days
-            const daysToMonday = currentDay === 0 ? 6 : currentDay - 1;
-            monday.setDate(today.getDate() - daysToMonday);
-            
-            // Update month display
+
+            // Update month display by today's month/year
             const monthNames = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
                               'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
             document.getElementById('month-display').textContent = `${monthNames[today.getMonth()]}, ${today.getFullYear()}`;
-            
+
             container.innerHTML = '';
-            
-            // Generate 7 days from Monday to Sunday
+
+            // Show only 7 upcoming days including today
             for (let i = 0; i < 7; i++) {
-                const date = new Date(monday);
-                date.setDate(monday.getDate() + i);
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
                 const dateStr = date.toISOString().split('T')[0];
                 const dayNum = date.getDate();
                 const dayOfWeek = date.getDay();
                 const dayName = dayNames[dayOfWeek];
-                const isToday = date.toDateString() === today.toDateString();
-                
+                const isToday = i === 0;
+
                 const button = document.createElement('div');
                 button.className = `flex flex-col items-center justify-center w-[52px] h-20 rounded-xl cursor-pointer transition-all ${
-                    isToday 
-                        ? 'bg-blue-500 border border-blue-500' 
+                    isToday
+                        ? 'bg-blue-500 border border-blue-500'
                         : 'bg-gray-50 border border-transparent hover:border-gray-300'
                 }`;
                 button.onclick = () => selectDate(dateStr, button);
@@ -453,11 +428,11 @@
                     <p class="${isToday ? 'text-white' : 'text-gray-900'} text-lg font-bold">${dayNum}</p>
                     <div class="size-1.5 rounded-full ${isToday ? 'bg-white' : 'bg-gray-300'} mt-1"></div>
                 `;
-                
+
                 container.appendChild(button);
-                
-                // Auto-select today
-                if (isToday) {
+
+                // Auto-select first day (today)
+                if (i === 0) {
                     selectDate(dateStr, button);
                 }
             }

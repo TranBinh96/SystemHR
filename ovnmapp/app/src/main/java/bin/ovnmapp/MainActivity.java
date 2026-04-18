@@ -2,10 +2,6 @@ package bin.ovnmapp;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
-import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -52,17 +48,15 @@ public class MainActivity extends AppCompatActivity {
                 isScanning = false;
                 String content = result.getText();
                 Log.d("QRScanner", "Scanned: " + content);
-
-                // Dừng camera và ẩn đi
-                barcodeScanner.pause();
                 runOnUiThread(() -> {
+                    barcodeScanner.pause();
                     barcodeScanner.setVisibility(View.GONE);
-                    webView.setBackgroundColor(Color.WHITE);
-                    // Gửi kết quả về JS
+                    webView.setVisibility(View.VISIBLE);
                     String safe = content.replace("\\", "\\\\").replace("'", "\\'");
                     webView.evaluateJavascript("handleQRScanned('" + safe + "')", null);
-                });
-            }
+                    // Tự quét lại sau 4 giây
+                    webView.postDelayed(() -> startQRScanner(), 4000);
+                });            }
         }
 
         @Override
@@ -72,6 +66,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Force landscape
+        setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 
         // Giữ màn hình luôn sáng, không khóa
         getWindow().addFlags(
@@ -101,9 +98,14 @@ public class MainActivity extends AppCompatActivity {
         webView = findViewById(R.id.webView);
         barcodeScanner = findViewById(R.id.barcodeScanner);
 
-        // Cấu hình ZXing — camera settings sẽ được apply khi startQRScanner()
+        // Cấu hình ZXing — hỗ trợ QR_CODE và các barcode phổ biến
         barcodeScanner.getBarcodeView().setDecoderFactory(
-            new DefaultDecoderFactory(Arrays.asList(BarcodeFormat.QR_CODE))
+            new DefaultDecoderFactory(Arrays.asList(
+                BarcodeFormat.QR_CODE,
+                BarcodeFormat.CODE_128,
+                BarcodeFormat.CODE_39,
+                BarcodeFormat.EAN_13
+            ))
         );
         barcodeScanner.setStatusText(""); // Ẩn text mặc định của ZXing
 
@@ -134,6 +136,17 @@ public class MainActivity extends AppCompatActivity {
                 view.loadUrl(url);
                 return true;
             }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                Log.d("WebView", "Page: " + url);
+                if (!url.contains("qr-scanner")) {
+                    // Tắt camera khi chuyển sang trang khác
+                    stopQRScanner();
+                }
+                // Nếu về lại qr-scanner thì JS sẽ tự gọi initCamera()
+            }
         });
 
         webView.setWebChromeClient(new WebChromeClient() {
@@ -162,54 +175,48 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // Tìm đúng camera ID của camera trước dùng Camera2 API
-    private int getFrontCameraId() {
-        try {
-            CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-            String[] ids = manager.getCameraIdList();
-            for (String id : ids) {
-                CameraCharacteristics chars = manager.getCameraCharacteristics(id);
-                Integer facing = chars.get(CameraCharacteristics.LENS_FACING);
-                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                    Log.d("QRScanner", "Front camera found: id=" + id);
-                    return Integer.parseInt(id);
-                }
-            }
-        } catch (Exception e) {
-            Log.e("QRScanner", "getFrontCameraId error: " + e.getMessage());
-        }
-        Log.w("QRScanner", "Front camera not found, fallback to id=1");
-        return 1;
-    }
+    // Tọa độ scanner-frame (dp) do JS báo về
+    private int camX, camY, camW, camH;
 
-    // Tạo camera settings dùng camera trước
-    private CameraSettings buildCameraSettings() {
-        CameraSettings settings = new CameraSettings();
-        settings.setRequestedCameraId(getFrontCameraId());
-        return settings;
-    }
-
-    // Bắt đầu quét — hiện camera lên trên WebView
+    // Camera vừa khít với scanner-frame trong HTML
     private void startQRScanner() {
+        if (isScanning) return;
         isScanning = true;
         runOnUiThread(() -> {
-            barcodeScanner.setVisibility(View.VISIBLE);
-            webView.setBackgroundColor(Color.TRANSPARENT);
-            // Phải pause trước, set settings, rồi mới resume
+            float d = getResources().getDisplayMetrics().density;
+            if (camW > 0 && camH > 0) {
+                // Đặt barcodeScanner đúng vị trí scanner-frame
+                android.widget.FrameLayout.LayoutParams lp =
+                    new android.widget.FrameLayout.LayoutParams(
+                        (int)(camW * d), (int)(camH * d));
+                lp.leftMargin = (int)(camX * d);
+                lp.topMargin  = (int)(camY * d);
+                barcodeScanner.setLayoutParams(lp);
+                barcodeScanner.setVisibility(View.VISIBLE);
+                Log.d("QRScanner", "Camera in frame: "+camX+","+camY+" "+camW+"x"+camH);
+            } else {
+                // Fallback fullscreen
+                barcodeScanner.setLayoutParams(new android.widget.FrameLayout.LayoutParams(
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT));
+                barcodeScanner.setVisibility(View.VISIBLE);
+                Log.d("QRScanner", "Camera fullscreen fallback");
+            }
+            CameraSettings settings = new CameraSettings();
+            settings.setRequestedCameraId(1); // front camera
             barcodeScanner.pause();
-            barcodeScanner.getBarcodeView().setCameraSettings(buildCameraSettings());
+            barcodeScanner.getBarcodeView().setCameraSettings(settings);
             barcodeScanner.resume();
             barcodeScanner.decodeContinuous(barcodeCallback);
         });
     }
-
-    // Dừng quét — ẩn camera
+    // Dừng quét
     private void stopQRScanner() {
         isScanning = false;
         runOnUiThread(() -> {
             barcodeScanner.pause();
             barcodeScanner.setVisibility(View.GONE);
-            webView.setBackgroundColor(Color.WHITE);
+            webView.setVisibility(View.VISIBLE);
             webView.evaluateJavascript("handleQRCancelled()", null);
         });
     }
@@ -219,6 +226,22 @@ public class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public void startQRScan() {
             Log.d("QRScanner", "startQRScan called");
+            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED) {
+                startQRScanner();
+            } else {
+                ActivityCompat.requestPermissions(
+                    MainActivity.this,
+                    new String[]{Manifest.permission.CAMERA},
+                    CAMERA_PERMISSION_REQUEST
+                );
+            }
+        }
+
+        @JavascriptInterface
+        public void initCamera(int x, int y, int w, int h) {
+            Log.d("QRScanner", "initCamera: " + x + "," + y + " " + w + "x" + h);
+            camX = x; camY = y; camW = w; camH = h;
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
                     == PackageManager.PERMISSION_GRANTED) {
                 startQRScanner();

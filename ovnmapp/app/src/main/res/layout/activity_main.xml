@@ -3,17 +3,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- WebView nằm dưới -->
+    <!-- WebView luôn hiển thị -->
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Camera QR scanner nằm trên WebView, mặc định ẩn -->
+    <!-- Camera nằm đè lên WebView, vị trí set từ Java -->
     <com.journeyapps.barcodescanner.DecoratedBarcodeView
         android:id="@+id/barcodeScanner"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:visibility="gone" />
 
 </FrameLayout>

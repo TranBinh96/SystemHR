@@ -112,8 +112,9 @@
                 </div>
             </header>
 
-            <main class="p-6 pb-24 lg:pb-6">
-                <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <!-- Fixed Summary Section -->
+            <div class="fixed top-16 left-0 right-0 lg:left-72 z-30 bg-slate-50 dark:bg-slate-900 shadow-md border-b border-slate-200 dark:border-slate-700 px-6 py-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="text-xs text-slate-400 font-medium mr-1 hidden sm:inline">Tổng quan:</span>
                         <div class="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -139,7 +140,9 @@
                         <button onclick="changePeriod('month')" id="btn-month" class="px-4 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 rounded">Tháng</button>
                     </div>
                 </div>
+            </div>
 
+            <main class="p-6 pb-24 lg:pb-6" style="margin-top: 80px;">
                 <div class="w-full">
                     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                         <div class="p-6 border-b border-slate-100 dark:border-slate-800">
@@ -152,11 +155,11 @@
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <div class="flex items-center gap-1.5">
                                             <span class="text-xs font-semibold text-slate-500 whitespace-nowrap">Từ ngày</span>
-                                            <input type="date" id="filterDateFrom" onchange="applyGlobalFilter()" class="px-2.5 py-1.5 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                            <input type="date" id="filterDateFrom" onchange="loadStatistics()" class="px-2.5 py-1.5 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                                         </div>
                                         <div class="flex items-center gap-1.5">
                                             <span class="text-xs font-semibold text-slate-500 whitespace-nowrap">Đến ngày</span>
-                                            <input type="date" id="filterDateTo" onchange="applyGlobalFilter()" class="px-2.5 py-1.5 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                            <input type="date" id="filterDateTo" onchange="loadStatistics()" class="px-2.5 py-1.5 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                                         </div>
                                         <div class="relative min-w-[200px]">
                                             <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-base">search</span>
@@ -169,6 +172,10 @@
                                         <button onclick="exportToExcel()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                                             <span class="material-symbols-outlined text-base">download</span>
                                             Xuất Excel
+                                        </button>
+                                        <button onclick="runAutoRegister()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm">
+                                            <span class="material-symbols-outlined text-base">autorenew</span>
+                                            Chạy Auto 30 ngày
                                         </button>
                                     </div>
                                 </div>
@@ -245,15 +252,21 @@
                 tomorrow.setDate(today.getDate() + 1);
                 fromDate = toDate = tomorrow;
             } else if (period === 'week') {
-                const sevenDaysAgo = new Date(today);
-                sevenDaysAgo.setDate(today.getDate() - 7);
-                fromDate = sevenDaysAgo;
-                toDate = today;
+                // Tuần hiện tại: Từ thứ 2 đến chủ nhật
+                const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ...
+                const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Nếu chủ nhật thì lùi 6 ngày, còn lại lùi về thứ 2
+                const monday = new Date(today);
+                monday.setDate(today.getDate() + diff);
+                const sunday = new Date(monday);
+                sunday.setDate(monday.getDate() + 6);
+                fromDate = monday;
+                toDate = sunday;
             } else if (period === 'month') {
-                const thirtyDaysAgo = new Date(today);
-                thirtyDaysAgo.setDate(today.getDate() - 30);
-                fromDate = thirtyDaysAgo;
-                toDate = today;
+                // Tháng hiện tại: Từ ngày 1 đến ngày cuối tháng
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                fromDate = firstDay;
+                toDate = lastDay;
             }
             
             if (fromDate) {
@@ -268,7 +281,16 @@
         }
 
         function loadStatistics() {
-            fetch('/admin/stats/data?period=' + currentPeriod)
+            // Lấy giá trị từ bộ lọc ngày
+            const dateFrom = document.getElementById('filterDateFrom').value;
+            const dateTo = document.getElementById('filterDateTo').value;
+            
+            // Tạo URL với date_from và date_to
+            let url = '/admin/stats/data?period=' + currentPeriod;
+            if (dateFrom) url += '&date_from=' + dateFrom;
+            if (dateTo) url += '&date_to=' + dateTo;
+            
+            fetch(url)
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data.success) {
@@ -287,24 +309,23 @@
 
         function applyGlobalFilter() {
             const q = document.getElementById('globalSearch').value.toLowerCase().trim();
-            const dateFrom = document.getElementById('filterDateFrom').value;
-            const dateTo = document.getElementById('filterDateTo').value;
 
             filteredRegistrations = allRegistrations.filter(function(r) {
                 if (q && !r.user_name.toLowerCase().includes(q) &&
                     !r.employee_id.toLowerCase().includes(q) &&
                     !(r.department || '').toLowerCase().includes(q)) return false;
                 
-                if (dateFrom || dateTo) {
-                    const dateParts = r.date.split('/');
-                    if (dateParts.length === 3) {
-                        const rDateFormatted = dateParts[2] + '-' + dateParts[1].padStart(2, '0') + '-' + dateParts[0].padStart(2, '0');
-                        if (dateFrom && rDateFormatted < dateFrom) return false;
-                        if (dateTo && rDateFormatted > dateTo) return false;
-                    }
-                }
                 return true;
             });
+            
+            // Update summary cards based on filtered data
+            const filteredTotal = filteredRegistrations.length;
+            const filteredNormal = filteredRegistrations.filter(function(r) { return !r.is_special; }).length;
+            const filteredSpecial = filteredRegistrations.filter(function(r) { return r.is_special; }).length;
+            document.getElementById('total-meals').textContent = filteredTotal;
+            document.getElementById('normal-meals').textContent = filteredNormal;
+            document.getElementById('special-meals').textContent = filteredSpecial;
+            
             currentPage = 1;
             renderDayGroups();
         }
@@ -313,9 +334,8 @@
             document.getElementById('globalSearch').value = '';
             document.getElementById('filterDateFrom').value = '';
             document.getElementById('filterDateTo').value = '';
-            filteredRegistrations = allRegistrations.slice();
             currentPage = 1;
-            renderDayGroups();
+            loadStatistics(); // Load lại dữ liệu từ server
         }
 
         function groupByDate(regs) {
@@ -326,6 +346,7 @@
                 map[r.date].items.push(r);
             });
             
+            // Sắp xếp từ ngày gần nhất đến ngày xa nhất (giảm dần)
             return Object.values(map).sort(function(a, b) {
                 const parseDate = function(dateStr) {
                     const parts = dateStr.split('/');
@@ -334,7 +355,7 @@
                     }
                     return new Date(dateStr);
                 };
-                return parseDate(b.date) - parseDate(a.date);
+                return parseDate(b.date) - parseDate(a.date); // Đảo ngược để ngày gần nhất lên trên
             });
         }
 
@@ -354,7 +375,7 @@
                 return;
             }
 
-            let tableHTML = '<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 dark:bg-slate-800/50"><tr><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Ngày</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Nhân viên</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Mã NV</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Phòng ban</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Món ăn</th><th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Loại</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-700">';
+            let tableHTML = '<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-sm border-collapse"><thead class="bg-slate-50 dark:bg-slate-800/50"><tr><th class="px-4 py-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Ngày</th><th class="px-4 py-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Nhân viên</th><th class="px-4 py-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Mã NV</th><th class="px-4 py-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Phòng ban</th><th class="px-4 py-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Món ăn</th><th class="px-4 py-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider border border-slate-200 dark:border-slate-700">Loại</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-700">';
 
             pageGroups.forEach(function(g) {
                 const dateParts = g.date.split('/');
@@ -374,17 +395,17 @@
                     tableHTML += '<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 ' + borderClass + '">';
                     
                     if (index === 0) {
-                        tableHTML += '<td rowspan="' + g.items.length + '" class="px-4 py-3 border-r border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30"><div class="flex flex-col items-center"><div class="w-12 h-12 rounded-lg bg-gradient-to-br from-green-400 to-emerald-600 flex flex-col items-center justify-center text-white shadow-sm mb-2"><span class="text-xs font-bold">' + dayName + '</span><span class="text-lg font-black leading-none">' + dayNumber + '</span></div><div class="text-xs text-slate-500 text-center"><div>' + g.date + '</div><div class="mt-1"><span class="text-slate-600 dark:text-slate-400">' + (g.normal + g.special) + ' suất</span></div></div></div></td>';
+                        tableHTML += '<td rowspan="' + g.items.length + '" class="px-4 py-3 border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30"><div class="flex flex-col items-center"><div class="w-12 h-12 rounded-lg bg-gradient-to-br from-green-400 to-emerald-600 flex flex-col items-center justify-center text-white shadow-sm mb-2"><span class="text-xs font-medium">' + dayName + '</span><span class="text-lg font-medium leading-none">' + dayNumber + '</span></div><div class="text-xs text-slate-500 text-center"><div>' + g.date + '</div><div class="mt-1"><span class="text-slate-600 dark:text-slate-400 font-medium">' + (g.normal + g.special) + ' suất</span></div></div></div></td>';
                     }
                     
                     const mealTypeClass = r.is_special ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
                     const dotClass = r.is_special ? 'bg-blue-500' : 'bg-slate-400';
                     
-                    tableHTML += '<td class="px-4 py-3"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold">' + r.user_name.charAt(0).toUpperCase() + '</div><span class="font-medium text-slate-900 dark:text-slate-100">' + r.user_name + '</span></div></td>';
-                    tableHTML += '<td class="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono text-xs">' + r.employee_id + '</td>';
-                    tableHTML += '<td class="px-4 py-3 text-slate-600 dark:text-slate-400">' + r.department + '</td>';
-                    tableHTML += '<td class="px-4 py-3"><div class="font-medium text-slate-900 dark:text-slate-100">' + r.meal_name + '</div></td>';
-                    tableHTML += '<td class="px-4 py-3"><span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ' + mealTypeClass + '"><span class="w-2 h-2 rounded-full ' + dotClass + '"></span>' + r.meal_type + '</span></td>';
+                    tableHTML += '<td class="px-4 py-3 text-center text-sm font-normal text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700">' + r.user_name + '</td>';
+                    tableHTML += '<td class="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400 font-normal border border-slate-200 dark:border-slate-700">' + r.employee_id + '</td>';
+                    tableHTML += '<td class="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400 font-normal border border-slate-200 dark:border-slate-700">' + r.department + '</td>';
+                    tableHTML += '<td class="px-4 py-3 text-center border border-slate-200 dark:border-slate-700"><div class="text-sm font-normal text-slate-900 dark:text-slate-100">' + r.meal_name + '</div></td>';
+                    tableHTML += '<td class="px-4 py-3 text-center border border-slate-200 dark:border-slate-700"><span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-normal ' + mealTypeClass + '"><span class="w-2 h-2 rounded-full ' + dotClass + '"></span>' + r.meal_type + '</span></td>';
                     tableHTML += '</tr>';
                 });
             });
@@ -405,7 +426,7 @@
             const prevClass = prevDisabled ? 'text-slate-300 border-slate-200 cursor-not-allowed' : 'text-slate-700 border-slate-300 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-800';
             const nextClass = nextDisabled ? 'text-slate-300 border-slate-200 cursor-not-allowed' : 'text-slate-700 border-slate-300 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-800';
 
-            document.getElementById('pagination-controls').innerHTML = '<button onclick="changePage(' + (currentPage-1) + ')" ' + (prevDisabled ? 'disabled' : '') + ' class="px-3 py-1.5 text-xs font-bold rounded-lg border ' + prevClass + '">← Trước</button><span class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400">' + currentPage + ' / ' + totalPages + '</span><button onclick="changePage(' + (currentPage+1) + ')" ' + (nextDisabled ? 'disabled' : '') + ' class="px-3 py-1.5 text-xs font-bold rounded-lg border ' + nextClass + '">Sau →</button>';
+            document.getElementById('pagination-controls').innerHTML = '<button onclick="changePage(' + (currentPage-1) + ')" ' + (prevDisabled ? 'disabled' : '') + ' class="px-3 py-1.5 text-xs font-bold rounded-lg border ' + prevClass + '">← Trước</button><span class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 font-medium">' + currentPage + ' / ' + totalPages + '</span><button onclick="changePage(' + (currentPage+1) + ')" ' + (nextDisabled ? 'disabled' : '') + ' class="px-3 py-1.5 text-xs font-bold rounded-lg border ' + nextClass + '">Sau →</button>';
         }
 
         function changePage(page) {
@@ -415,6 +436,37 @@
             currentPage = page;
             renderDayGroups();
             document.getElementById('dayGroupsContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function runAutoRegister() {
+            if (!confirm('Bạn có chắc muốn chạy tự động đăng ký 30 ngày cho tất cả user?\n\nQuá trình này có thể mất vài giây. Xem console để biết chi tiết.')) {
+                return;
+            }
+            
+            showNotification('Đang chạy auto-register 30 ngày...', 'info');
+            
+            fetch('/admin/auto-register/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    // Reload data sau 2 giây
+                    setTimeout(function() {
+                        loadData();
+                    }, 2000);
+                } else {
+                    showNotification(data.message || 'Có lỗi xảy ra', 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                showNotification('Lỗi kết nối: ' + error.message, 'error');
+            });
         }
 
         function exportToExcel() {
@@ -440,8 +492,17 @@
 
         function showNotification(message, type) {
             const n = document.createElement('div');
-            const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
-            const icon = type === 'success' ? 'check_circle' : 'error';
+            let bgColor, icon;
+            if (type === 'success') {
+                bgColor = 'bg-green-500';
+                icon = 'check_circle';
+            } else if (type === 'info') {
+                bgColor = 'bg-blue-500';
+                icon = 'info';
+            } else {
+                bgColor = 'bg-red-500';
+                icon = 'error';
+            }
             n.className = 'fixed top-4 right-4 z-50 p-4 rounded-xl shadow-xl ' + bgColor + ' text-white text-sm font-medium flex items-center gap-2';
             n.innerHTML = '<span class="material-symbols-outlined text-base">' + icon + '</span>' + message;
             document.body.appendChild(n);

@@ -347,7 +347,21 @@ def admin_users():
         return redirect(url_for('dashboard'))
     
     from models import Department
-    users = User.query.order_by(User.created_at.desc()).all()
+    
+    # Get all users
+    users = User.query.all()
+    
+    # Sort by employee_id numerically
+    # Numeric IDs first (sorted as integers), then alphabetic IDs
+    def sort_key(user):
+        emp_id = user.employee_id
+        if emp_id.isdigit():
+            return (0, int(emp_id))  # Numeric IDs: sort as integers
+        else:
+            return (1, emp_id.lower())  # Non-numeric IDs: sort alphabetically
+    
+    users.sort(key=sort_key)
+    
     departments = Department.query.order_by(Department.name.asc()).all()
     
     return render_template('admin_users.html', users=users, departments=departments)
@@ -359,7 +373,18 @@ def admin_users_list():
     if current_user.role != 'admin':
         return {'success': False, 'message': 'Không có quyền'}, 403
     
-    users = User.query.order_by(User.created_at.desc()).all()
+    # Get all users
+    users = User.query.all()
+    
+    # Sort by employee_id numerically
+    def sort_key(user):
+        emp_id = user.employee_id
+        if emp_id.isdigit():
+            return (0, int(emp_id))
+        else:
+            return (1, emp_id.lower())
+    
+    users.sort(key=sort_key)
     
     users_data = []
     for user in users:
@@ -455,12 +480,12 @@ def edit_user(user_id):
     if current_user.role != 'admin':
         return {'success': False, 'message': 'Không có quyền'}, 403
     
-    from models import Position
     from werkzeug.utils import secure_filename
     import os
     from datetime import datetime
     
     user = User.query.get_or_404(user_id)
+    print(f"\n[EDIT USER] Bắt đầu edit user ID: {user_id}, Name: {user.name}")
     
     # Handle both JSON and FormData
     try:
@@ -469,14 +494,19 @@ def edit_user(user_id):
         else:
             data = request.form.to_dict()
         
+        print(f"[EDIT USER] Data received: {data}")
+        
         if 'name' in data:
             user.name = data['name']
+            print(f"[EDIT USER] Updated name: {user.name}")
+            
         if 'employee_id' in data:
             # Check if employee_id already exists
             existing = User.query.filter(User.employee_id == data['employee_id'], User.id != user_id).first()
             if existing:
                 return {'success': False, 'message': 'Mã nhân viên đã tồn tại'}, 400
             user.employee_id = data['employee_id']
+            print(f"[EDIT USER] Updated employee_id: {user.employee_id}")
         
         # Handle department - find department_id from name
         if 'department' in data:
@@ -484,31 +514,57 @@ def edit_user(user_id):
             dept = Department.query.filter_by(name=data['department']).first()
             if dept:
                 user.department_id = dept.id
+                print(f"[EDIT USER] Updated department: {dept.name}")
             else:
                 user.department_id = None
+                print(f"[EDIT USER] Department not found, set to None")
         
         if 'role' in data:
             user.role = data['role']
+            print(f"[EDIT USER] Updated role: {user.role}")
+        
+        deleted_count = 0  # Số đăng ký cơm đã xóa
+        
         if 'work_status' in data:
+            old_status = user.work_status
             user.work_status = data['work_status']
+            print(f"[EDIT USER] Updated work_status: {old_status} → {user.work_status}")
+            
+            # Khi nghỉ việc: Xóa tất cả đăng ký cơm trong tương lai
+            if data['work_status'] == 'resigned':
+                print(f"[EDIT USER] User resigned, deleting future meal registrations...")
+                
+                from models import MealRegistration
+                from datetime import date
+                today = date.today()
+                future_registrations = MealRegistration.query.filter(
+                    MealRegistration.user_id == user.id,
+                    MealRegistration.date >= today
+                ).all()
+                
+                deleted_count = len(future_registrations)
+                for reg in future_registrations:
+                    db.session.delete(reg)
+                
+                print(f"[EDIT USER] Deleted {deleted_count} future meal registrations")
+        
         if 'is_active' in data:
+            old_active = user.is_active
             # Convert string 'true'/'false' to boolean
             user.is_active = data['is_active'] in ['true', 'True', True, 1, '1']
+            print(f"[EDIT USER] Updated is_active: {old_active} → {user.is_active}")
         
         # Handle permission fields
         if 'can_approve' in data:
             user.can_approve = data['can_approve'] in ['true', 'True', True, 1, '1']
         if 'can_register' in data:
             user.can_register = data['can_register'] in ['true', 'True', True, 1, '1']
-        if 'citizen_id' in data:
-            user.citizen_id = data['citizen_id'] if data['citizen_id'] else None
-        if 'hometown' in data:
-            user.hometown = data['hometown'] if data['hometown'] else None
         
         # Handle password update
         if 'password' in data and data['password']:
             from werkzeug.security import generate_password_hash
             user.password = generate_password_hash(data['password'])
+            print(f"[EDIT USER] Password updated")
         
         # Handle avatar upload
         if 'avatar' in request.files:
@@ -534,14 +590,37 @@ def edit_user(user_id):
                     
                     # Update user avatar_url
                     user.avatar_url = f"/static/uploads/avatars/{new_filename}"
+                    print(f"[EDIT USER] Avatar uploaded: {new_filename}")
         
+        print(f"[EDIT USER] Committing changes to database...")
         db.session.commit()
+        print(f"[EDIT USER] ✓ Database commit successful")
         
-        return {'success': True, 'message': f'Đã cập nhật thông tin {user.name}'}
+        # Tự động đăng ký suất ăn CHỈ KHI user đang làm việc
+        success_message = f'Đã cập nhật thông tin {user.name}'
+        
+        # Nếu nghỉ việc, thông báo đã xóa đăng ký
+        if user.work_status == 'resigned':
+            if deleted_count > 0:
+                success_message += f' và xóa {deleted_count} đăng ký cơm trong tương lai'
+        else:
+            # Chỉ auto-register khi đang làm việc
+            try:
+                if user.work_status == 'working':
+                    print(f"[EDIT USER] User is working, running auto-register...")
+                    auto_result = auto_register_meals_for_user(user.id, days=30)
+                    print(f"[EDIT USER] Auto-register result: {auto_result}")
+                    if auto_result['success'] and auto_result['registered'] > 0:
+                        success_message += f' và tự động đăng ký {auto_result["registered"]} ngày'
+            except Exception as auto_error:
+                print(f"[EDIT USER] Warning: Auto-register failed but user update succeeded: {auto_error}")
+        
+        print(f"[EDIT USER] ✓ Success: {success_message}\n")
+        return {'success': True, 'message': success_message}
     
     except Exception as e:
         db.session.rollback()
-        print(f"Error in edit_user: {e}")
+        print(f"[EDIT USER] ❌ Error: {e}")
         import traceback
         traceback.print_exc()
         return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
@@ -653,7 +732,14 @@ def add_user():
         db.session.add(new_user)
         db.session.commit()
         
-        return {'success': True, 'message': f'Đã thêm nhân viên {new_user.name}'}
+        # Tự động đăng ký suất ăn 30 ngày cho user mới
+        auto_result = auto_register_meals_for_user(new_user.id, days=30)
+        
+        success_message = f'Đã thêm nhân viên {new_user.name}'
+        if auto_result['success']:
+            success_message += f' và tự động đăng ký {auto_result["registered"]} ngày'
+        
+        return {'success': True, 'message': success_message}
     
     except Exception as e:
         db.session.rollback()
@@ -677,7 +763,241 @@ def reset_user_password(user_id):
     
     return {'success': True, 'message': f'Đã reset mật khẩu của {user.name} về 123456'}
 
-# ============= DEPARTMENT MANAGEMENT ROUTES =============
+
+@app.route('/admin/users/download-template')
+@login_required
+def download_users_template():
+    """Download Excel template for importing users"""
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment
+    import io
+    from flask import send_file
+    
+    # Create workbook
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Users Template"
+    
+    # Header style
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_alignment = Alignment(horizontal="center", vertical="center")
+    
+    # Define headers
+    headers = [
+        "Mã nhân viên *",
+        "Họ và tên *", 
+        "Phòng ban *",
+        "Mật khẩu",
+        "Quyền",
+        "Trạng thái",
+        "Quyền phê duyệt",
+        "Quyền đăng ký"
+    ]
+    
+    # Write headers
+    for col, header in enumerate(headers, start=1):
+        cell = ws.cell(row=1, column=col)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_alignment
+    
+    # Add example data
+    example_data = [
+        ["10001", "Nguyễn Văn A", "Phòng IT", "123456", "user", "working", "false", "false"],
+        ["10002", "Trần Thị B", "Phòng HR", "123456", "user", "working", "false", "false"],
+        ["20001", "Lê Văn C", "Phòng Sản xuất", "123456", "user", "working", "false", "false"]
+    ]
+    
+    for row_idx, row_data in enumerate(example_data, start=2):
+        for col_idx, value in enumerate(row_data, start=1):
+            ws.cell(row=row_idx, column=col_idx, value=value)
+    
+    # Add instructions sheet
+    ws_instructions = wb.create_sheet("Hướng dẫn")
+    instructions = [
+        ["HƯỚNG DẪN IMPORT USERS"],
+        [""],
+        ["Các cột bắt buộc (có dấu *):"],
+        ["- Mã nhân viên: Mã duy nhất của nhân viên (VD: 10001, 20001)"],
+        ["- Họ và tên: Tên đầy đủ của nhân viên"],
+        ["- Phòng ban: Tên phòng ban (nếu chưa có sẽ tự động tạo mới)"],
+        [""],
+        ["Các cột tùy chọn:"],
+        ["- Mật khẩu: Mặc định là 123456 nếu để trống"],
+        ["- Quyền: user hoặc admin (mặc định: user)"],
+        ["- Trạng thái: working, business_trip, resigned (mặc định: working)"],
+        ["- Quyền phê duyệt: true hoặc false (mặc định: false)"],
+        ["- Quyền đăng ký: true hoặc false (mặc định: false)"],
+        [""],
+        ["Lưu ý:"],
+        ["- Không xóa dòng tiêu đề"],
+        ["- Mã nhân viên không được trùng"],
+        ["- Phòng ban chưa tồn tại sẽ được tự động tạo mới"],
+        ["- Xóa các dòng ví dụ trước khi import dữ liệu thật"]
+    ]
+    
+    for row_idx, instruction in enumerate(instructions, start=1):
+        ws_instructions.cell(row=row_idx, column=1, value=instruction[0])
+        if row_idx == 1:
+            ws_instructions.cell(row=row_idx, column=1).font = Font(bold=True, size=14)
+    
+    # Adjust column widths
+    ws.column_dimensions['A'].width = 15
+    ws.column_dimensions['B'].width = 25
+    ws.column_dimensions['C'].width = 20
+    ws.column_dimensions['D'].width = 12
+    ws.column_dimensions['E'].width = 12
+    ws.column_dimensions['F'].width = 15
+    ws.column_dimensions['G'].width = 18
+    ws.column_dimensions['H'].width = 18
+    
+    ws_instructions.column_dimensions['A'].width = 60
+    
+    # Save to BytesIO
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=f'users_template_{datetime.now().strftime("%Y%m%d")}.xlsx'
+    )
+
+
+@app.route('/admin/users/import', methods=['POST'])
+@login_required
+def import_users_excel():
+    """Import users from Excel file"""
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    if 'file' not in request.files:
+        return {'success': False, 'message': 'Không có file được tải lên'}, 400
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        return {'success': False, 'message': 'Không có file được chọn'}, 400
+    
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        return {'success': False, 'message': 'File phải là định dạng Excel (.xlsx hoặc .xls)'}, 400
+    
+    import openpyxl
+    from models import Department
+    
+    try:
+        wb = openpyxl.load_workbook(file, data_only=True)
+        ws = wb.active
+        
+        # Skip header row
+        rows = list(ws.iter_rows(min_row=2, values_only=True))
+        
+        if not rows:
+            return {'success': False, 'message': 'File Excel không có dữ liệu'}, 400
+        
+        success_count = 0
+        error_count = 0
+        errors = []
+        
+        for row_idx, row in enumerate(rows, start=2):
+            try:
+                # Skip empty rows
+                if not any(row):
+                    continue
+                
+                employee_id = str(row[0]).strip() if row[0] else None
+                name = str(row[1]).strip() if row[1] else None
+                department_name = str(row[2]).strip() if row[2] else None
+                password = str(row[3]).strip() if row[3] else '123456'
+                role = str(row[4]).strip().lower() if row[4] else 'user'
+                work_status = str(row[5]).strip().lower() if row[5] else 'working'
+                can_approve = str(row[6]).strip().lower() == 'true' if row[6] else False
+                can_register = str(row[7]).strip().lower() == 'true' if row[7] else False
+                
+                # Validate required fields
+                if not employee_id or not name or not department_name:
+                    errors.append(f"Dòng {row_idx}: Thiếu thông tin bắt buộc (Mã NV, Tên, Phòng ban)")
+                    error_count += 1
+                    continue
+                
+                # Check if user already exists
+                existing_user = User.query.filter_by(employee_id=employee_id).first()
+                if existing_user:
+                    errors.append(f"Dòng {row_idx}: Mã nhân viên {employee_id} đã tồn tại")
+                    error_count += 1
+                    continue
+                
+                # Find or create department
+                department = Department.query.filter_by(name=department_name).first()
+                if not department:
+                    # Auto-create department if not exists
+                    department = Department(
+                        code=department_name.upper().replace(' ', '_')[:50],  # Generate code from name
+                        name=department_name,
+                        description=f'Tự động tạo từ import'
+                    )
+                    db.session.add(department)
+                    db.session.flush()  # Get department.id without committing
+                
+                # Validate role
+                if role not in ['user', 'admin']:
+                    role = 'user'
+                
+                # Validate work_status
+                if work_status not in ['working', 'business_trip', 'resigned']:
+                    work_status = 'working'
+                
+                # Create new user
+                new_user = User(
+                    employee_id=employee_id,
+                    name=name,
+                    department_id=department.id,
+                    role=role,
+                    work_status=work_status,
+                    is_active=True,
+                    can_approve=can_approve,
+                    can_register=can_register
+                )
+                new_user.set_password(password)
+                
+                db.session.add(new_user)
+                success_count += 1
+                
+            except Exception as e:
+                errors.append(f"Dòng {row_idx}: Lỗi - {str(e)}")
+                error_count += 1
+                continue
+        
+        # Commit all changes
+        if success_count > 0:
+            db.session.commit()
+        
+        # Prepare response message
+        message = f"Import thành công {success_count} user"
+        if error_count > 0:
+            message += f", {error_count} lỗi"
+        
+        return {
+            'success': True,
+            'message': message,
+            'success_count': success_count,
+            'error_count': error_count,
+            'errors': errors[:10]  # Limit to first 10 errors
+        }
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': f'Lỗi khi đọc file: {str(e)}'}, 500
+
+
+
 
 @app.route('/admin/departments')
 @login_required
@@ -1417,7 +1737,30 @@ def admin_stats():
         flash('Không có quyền truy cập', 'error')
         return redirect(url_for('dashboard'))
     
+    # Tự động chạy auto-register 30 ngày mỗi khi vào trang thống kê
+    try:
+        print("\n[ADMIN STATS] Tự động chạy auto-register 30 ngày...")
+        auto_register_meals_for_30_days()
+    except Exception as e:
+        print(f"[ADMIN STATS] Lỗi khi chạy auto-register: {str(e)}")
+    
     return render_template('admin_stats.html')
+
+
+@app.route('/admin/auto-register/run', methods=['POST'])
+@login_required
+def run_auto_register():
+    """Manually trigger auto-register for 30 days"""
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    try:
+        print("\n[MANUAL TRIGGER] Admin chạy thủ công auto-register 30 ngày...")
+        auto_register_meals_for_30_days()
+        return {'success': True, 'message': 'Đã chạy tự động đăng ký 30 ngày thành công! Xem console để biết chi tiết.'}
+    except Exception as e:
+        print(f"[MANUAL TRIGGER] Lỗi: {str(e)}")
+        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
 
 
 @app.route('/admin/stats/data')
@@ -1428,85 +1771,35 @@ def get_stats_data():
         return {'success': False, 'message': 'Không có quyền'}, 403
     
     from datetime import datetime, timedelta
-    from sqlalchemy import func
+    from sqlalchemy import func, or_
     from models import Menu
     
-    period = request.args.get('period', 'week')  # week, tomorrow, month
+    # Lấy date range từ request parameters (từ bộ lọc người dùng chọn)
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
     
-    # Calculate date range
     today = datetime.now().date()
-    if period == 'tomorrow':
-        tomorrow = today + timedelta(days=1)
-        start_date = tomorrow
-        end_date = tomorrow
-    elif period == 'week':
-        # Current week (Monday to Sunday)
+    
+    # Nếu có date_from và date_to từ bộ lọc, dùng chúng
+    if date_from and date_to:
+        try:
+            start_date = datetime.strptime(date_from, '%Y-%m-%d').date()
+            end_date = datetime.strptime(date_to, '%Y-%m-%d').date()
+        except:
+            # Nếu parse lỗi, dùng tuần hiện tại
+            start_date = today - timedelta(days=today.weekday())
+            end_date = start_date + timedelta(days=6)
+    else:
+        # Nếu không có bộ lọc, mặc định lấy tuần hiện tại
         start_date = today - timedelta(days=today.weekday())
         end_date = start_date + timedelta(days=6)
-    else:  # month
-        start_date = today.replace(day=1)
-        # Last day of month
-        if today.month == 12:
-            end_date = today.replace(day=31)
-        else:
-            end_date = (today.replace(month=today.month + 1, day=1) - timedelta(days=1))
     
-    # AUTO-REGISTER: Tự động đăng ký cho user chưa đăng ký trong khoảng thời gian này
-    # Chỉ áp dụng cho nhân viên có mã bắt đầu bằng 10 hoặc 20
-    from sqlalchemy import or_
-    auto_registered_count = 0
-    current_date = start_date
+    period = request.args.get('period', 'custom')  # Để biết loại period cho chart
     
-    while current_date <= end_date:
-        # Chỉ đăng ký cho ngày hôm nay trở đi (không đăng ký cho quá khứ)
-        if current_date >= today:
-            # Lấy menu bình thường cho ngày này
-            normal_menu = Menu.query.filter(
-                Menu.date == current_date,
-                Menu.is_special == False,
-                Menu.is_active == True,
-                Menu.meal_type == 'lunch'
-            ).first()
-            
-            if normal_menu:
-                # Lấy tất cả user có trạng thái hoạt động và mã bắt đầu bằng 10 hoặc 20
-                active_users = User.query.filter(
-                    User.work_status.in_(['working', 'business_trip']),
-                    User.can_register == True,
-                    or_(
-                        User.employee_id.like('10%'),
-                        User.employee_id.like('20%')
-                    )
-                ).all()
-                
-                for user in active_users:
-                    # Kiểm tra xem user đã đăng ký chưa
-                    existing = MealRegistration.query.filter_by(
-                        user_id=user.id,
-                        date=current_date
-                    ).first()
-                    
-                    if not existing:
-                        # Tự động đăng ký suất ăn bình thường
-                        new_registration = MealRegistration(
-                            user_id=user.id,
-                            date=current_date,
-                            meal_id=normal_menu.id,
-                            meal_type='lunch',
-                            has_meal=True,
-                            notes='Tự động đăng ký bởi hệ thống'
-                        )
-                        db.session.add(new_registration)
-                        auto_registered_count += 1
-        
-        current_date += timedelta(days=1)
+    # AUTO-REGISTER đã được tắt - sử dụng nút "Chạy Auto 30 ngày" hoặc đợi 16:00
+    # Hoặc auto-register sẽ chạy khi tạo/edit user
     
-    # Commit tất cả đăng ký tự động
-    if auto_registered_count > 0:
-        db.session.commit()
-        print(f"✅ AUTO-REGISTER: Đã tự động đăng ký {auto_registered_count} suất ăn")
-    
-    # Get registrations for the period with proper joins - only employee_id starting with 10 or 20
+    # Get registrations for the period with proper joins - only working users with employee_id starting with 10 or 20
     registrations = MealRegistration.query.join(
         User,
         MealRegistration.user_id == User.id
@@ -1517,6 +1810,7 @@ def get_stats_data():
         MealRegistration.date >= start_date,
         MealRegistration.date <= end_date,
         MealRegistration.has_meal == True,
+        User.work_status == 'working',  # CHỈ lấy user đang làm việc
         or_(
             User.employee_id.like('10%'),
             User.employee_id.like('20%')
@@ -3062,21 +3356,106 @@ def service_worker():
     return app.send_static_file('service-worker.js')
 
 # ============= AUTO REGISTER MEALS SCHEDULER =============
-def auto_register_meals_for_tomorrow():
+def auto_register_meals_for_user(user_id, days=30):
     """
-    Tự động đăng ký suất ăn bình thường cho user chưa đăng ký
+    Tự động đăng ký suất ăn cho 1 user cụ thể
+    Dùng khi tạo user mới hoặc kích hoạt lại user
+    
+    Args:
+        user_id: ID của user cần đăng ký
+        days: Số ngày cần đăng ký (mặc định 30)
+    
+    Returns:
+        dict: Kết quả đăng ký {success: bool, registered: int, skipped: int, message: str}
+    """
+    try:
+        from models import Menu, MealRegistration
+        
+        user = User.query.get(user_id)
+        if not user:
+            return {'success': False, 'registered': 0, 'skipped': 0, 'message': 'User không tồn tại'}
+        
+        # Kiểm tra điều kiện - chỉ cần work_status = 'working'
+        if user.work_status != 'working':
+            return {'success': False, 'registered': 0, 'skipped': 0, 'message': 'User không đang làm việc'}
+        
+        # Kiểm tra mã nhân viên
+        if not (user.employee_id.startswith('10') or user.employee_id.startswith('20')):
+            return {'success': False, 'registered': 0, 'skipped': 0, 'message': 'Mã nhân viên không thuộc 10xx hoặc 20xx'}
+        
+        today = datetime.now().date()
+        registered_count = 0
+        skipped_count = 0
+        
+        # Lặp qua số ngày cần đăng ký
+        for day_offset in range(1, days + 1):
+            target_date = today + timedelta(days=day_offset)
+            
+            # Kiểm tra đã có đăng ký chưa
+            existing = MealRegistration.query.filter_by(
+                user_id=user.id,
+                date=target_date
+            ).first()
+            
+            if existing:
+                skipped_count += 1
+                continue
+            
+            # Lấy menu bình thường
+            normal_menu = Menu.query.filter(
+                Menu.date == target_date,
+                Menu.is_special == False,
+                Menu.is_active == True,
+                Menu.meal_type == 'lunch'
+            ).first()
+            
+            if not normal_menu:
+                skipped_count += 1
+                continue
+            
+            # Tạo đăng ký mới
+            new_registration = MealRegistration(
+                user_id=user.id,
+                date=target_date,
+                meal_id=normal_menu.id,
+                meal_type='lunch',
+                has_meal=True,
+                notes='Tự động đăng ký bởi hệ thống'
+            )
+            db.session.add(new_registration)
+            registered_count += 1
+        
+        db.session.commit()
+        
+        return {
+            'success': True,
+            'registered': registered_count,
+            'skipped': skipped_count,
+            'message': f'Đã đăng ký {registered_count} ngày, bỏ qua {skipped_count} ngày'
+        }
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'registered': 0, 'skipped': 0, 'message': f'Lỗi: {str(e)}'}
+
+
+def auto_register_meals_for_30_days():
+    """
+    Tự động đăng ký suất ăn bình thường cho 30 ngày tới
     Chỉ áp dụng cho nhân viên có mã bắt đầu bằng 10 hoặc 20
     Chạy tự động lúc 16h hàng ngày
     """
     with app.app_context():
         try:
             from sqlalchemy import or_
-            tomorrow = datetime.now().date() + timedelta(days=1)
-            print(f"\n=== [AUTO REGISTER] Bắt đầu tự động đăng ký suất ăn cho ngày {tomorrow.strftime('%d/%m/%Y')} ===")
+            today = datetime.now().date()
+            start_date = today + timedelta(days=1)  # Bắt đầu từ ngày mai
+            end_date = today + timedelta(days=30)   # Đến 30 ngày sau
             
-            # Lấy tất cả user đang hoạt động và có mã bắt đầu bằng 10 hoặc 20
+            print(f"\n=== [AUTO REGISTER] Bắt đầu tự động đăng ký 30 ngày ({start_date.strftime('%d/%m/%Y')} → {end_date.strftime('%d/%m/%Y')}) ===")
+            
+            # Lấy tất cả user đang làm việc và có mã bắt đầu bằng 10 hoặc 20
             active_users = User.query.filter(
-                User.is_active == True,
                 User.work_status == 'working',
                 or_(
                     User.employee_id.like('10%'),
@@ -3084,52 +3463,65 @@ def auto_register_meals_for_tomorrow():
                 )
             ).all()
             
-            print(f"[AUTO REGISTER] Tìm thấy {len(active_users)} user đang hoạt động (mã 10xx, 20xx)")
+            print(f"[AUTO REGISTER] Tìm thấy {len(active_users)} user đang làm việc (mã 10xx, 20xx)")
             
-            # Lấy menu bình thường cho ngày mai
             from models import Menu, MealRegistration
-            normal_menu = Menu.query.filter(
-                Menu.date == tomorrow,
-                Menu.is_special == False,
-                Menu.is_active == True,
-                Menu.meal_type == 'lunch'
-            ).first()
             
-            if not normal_menu:
-                print(f"[AUTO REGISTER] ⚠️  Không tìm thấy menu bình thường cho ngày {tomorrow.strftime('%d/%m/%Y')}")
-                return
+            total_registered = 0
+            total_skipped = 0
+            days_processed = 0
             
-            print(f"[AUTO REGISTER] Menu bình thường: {normal_menu.dish_name}")
-            
-            registered_count = 0
-            auto_registered_count = 0
-            
-            for user in active_users:
-                # Kiểm tra xem user đã đăng ký chưa
-                existing_registration = MealRegistration.query.filter_by(
-                    user_id=user.id,
-                    date=tomorrow
+            # Lặp qua 30 ngày
+            for day_offset in range(1, 31):
+                target_date = today + timedelta(days=day_offset)
+                
+                # Lấy menu bình thường cho ngày này
+                normal_menu = Menu.query.filter(
+                    Menu.date == target_date,
+                    Menu.is_special == False,
+                    Menu.is_active == True,
+                    Menu.meal_type == 'lunch'
                 ).first()
                 
-                if existing_registration:
-                    registered_count += 1
-                else:
-                    # Tự động đăng ký suất ăn bình thường
-                    new_registration = MealRegistration(
+                if not normal_menu:
+                    print(f"[AUTO REGISTER] Ngày {target_date.strftime('%d/%m')}: Không có menu bình thường - Bỏ qua")
+                    continue
+                
+                day_registered = 0
+                day_skipped = 0
+                
+                for user in active_users:
+                    # Kiểm tra xem user đã đăng ký chưa (dù bình thường hay cải thiện)
+                    existing_registration = MealRegistration.query.filter_by(
                         user_id=user.id,
-                        date=tomorrow,
-                        meal_id=normal_menu.id,
-                        meal_type='lunch',
-                        has_meal=True,
-                        notes='Tự động đăng ký bởi hệ thống'
-                    )
-                    db.session.add(new_registration)
-                    auto_registered_count += 1
+                        date=target_date
+                    ).first()
+                    
+                    if existing_registration:
+                        day_skipped += 1
+                    else:
+                        # Tự động đăng ký suất ăn bình thường
+                        new_registration = MealRegistration(
+                            user_id=user.id,
+                            date=target_date,
+                            meal_id=normal_menu.id,
+                            meal_type='lunch',
+                            has_meal=True,
+                            notes='Tự động đăng ký bởi hệ thống'
+                        )
+                        db.session.add(new_registration)
+                        day_registered += 1
+                
+                total_registered += day_registered
+                total_skipped += day_skipped
+                days_processed += 1
+                
+                print(f"[AUTO REGISTER] Ngày {target_date.strftime('%d/%m')}: {normal_menu.dish_name[:30]} | Đã có: {day_skipped} | Tự động: {day_registered}")
             
             db.session.commit()
             
-            print(f"[AUTO REGISTER] ✓ Hoàn thành!")
-            print(f"[AUTO REGISTER] Tổng: {len(active_users)} | Đã đăng ký: {registered_count} | Tự động: {auto_registered_count}")
+            print(f"\n[AUTO REGISTER] ✓ Hoàn thành!")
+            print(f"[AUTO REGISTER] Tổng: {days_processed} ngày | {len(active_users)} users | Đã có: {total_skipped} | Tự động: {total_registered}")
             
         except Exception as e:
             print(f"[AUTO REGISTER] ❌ Lỗi: {str(e)}")
@@ -3138,10 +3530,10 @@ def auto_register_meals_for_tomorrow():
 # Initialize scheduler
 scheduler = BackgroundScheduler()
 scheduler.add_job(
-    func=auto_register_meals_for_tomorrow,
+    func=auto_register_meals_for_30_days,
     trigger=CronTrigger(hour=16, minute=0),  # Chạy lúc 16:00 hàng ngày
     id='auto_register_meals',
-    name='Tự động đăng ký suất ăn',
+    name='Tự động đăng ký suất ăn 30 ngày',
     replace_existing=True
 )
 scheduler.start()

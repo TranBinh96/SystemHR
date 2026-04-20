@@ -33,8 +33,6 @@
         
     {% include 'includes/admin_sidebar_styles.html' %}
     </style>
-    <!-- CSRF Token for AJAX requests -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="bg-slate-50 dark:bg-slate-900">
     <div class="flex h-screen">
@@ -2792,12 +2790,10 @@
                     let existingIds = [];
                     
                     try {
-                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
                         const checkResponse = await fetch('{{ url_for("check_users_exist") }}', {
                             method: 'POST',
                             headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': csrfToken || ''
+                                'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({ employee_ids: employeeIds })
                         });
@@ -2883,18 +2879,13 @@
                 const formData = new FormData();
                 formData.append('file', fileToUpload);
                 
-                // Get CSRF token from meta tag
-                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-                
                 console.log('Import debug:');
                 console.log('  - File:', fileToUpload.name, fileToUpload.size, 'bytes');
-                console.log('  - CSRF token:', csrfToken ? csrfToken.substring(0, 20) + '...' : 'NOT FOUND');
                 console.log('  - FormData entries:', Array.from(formData.entries()).map(e => [e[0], e[1].name || e[1]]));
 
                 const response = await fetch('{{ url_for("import_users_excel") }}', {
                     method: 'POST',
-                    body: formData,
-                    headers: csrfToken ? {'X-CSRFToken': csrfToken} : {}
+                    body: formData
                 });
 
                 // Hide loading toast

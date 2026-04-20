@@ -31,7 +31,7 @@ login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
 
 # Initialize CSRF Protection
-csrf = CSRFProtect(app)
+# csrf = CSRFProtect(app)  # Tắt tạm thời để debug
 
 # Initialize JWT
 jwt = JWTManager(app)

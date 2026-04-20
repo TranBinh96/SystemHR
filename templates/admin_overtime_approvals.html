@@ -350,15 +350,19 @@
                 tomorrow.setDate(today.getDate() + 1);
                 fromDate = toDate = tomorrow;
             } else if (period === 'week') {
-                const sevenDaysAgo = new Date(today);
-                sevenDaysAgo.setDate(today.getDate() - 7);
-                fromDate = sevenDaysAgo;
-                toDate = today;
+                // Lấy cả tuần hiện tại (từ thứ 2 đến chủ nhật)
+                const currentDay = today.getDay(); // 0 = CN, 1 = T2, ..., 6 = T7
+                const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay; // Tính offset đến thứ 2
+                
+                fromDate = new Date(today);
+                fromDate.setDate(today.getDate() + mondayOffset); // Thứ 2 tuần này
+                
+                toDate = new Date(fromDate);
+                toDate.setDate(fromDate.getDate() + 6); // Chủ nhật tuần này
             } else if (period === 'month') {
-                const thirtyDaysAgo = new Date(today);
-                thirtyDaysAgo.setDate(today.getDate() - 30);
-                fromDate = thirtyDaysAgo;
-                toDate = today;
+                // Lấy cả tháng hiện tại (từ ngày 1 đến ngày cuối tháng)
+                fromDate = new Date(today.getFullYear(), today.getMonth(), 1); // Ngày 1 tháng này
+                toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Ngày cuối tháng này
             }
             
             if (fromDate) {
@@ -374,14 +378,25 @@
 
         function loadStatistics() {
             fetch('/admin/overtime-requests/list?status=approved')
-                .then(function(r) { return r.json(); })
+                .then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                    }
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Server returned non-JSON response');
+                    }
+                    return response.json();
+                })
                 .then(function(data) {
                     if (data.success) {
                         allRegistrations = data.requests.map(function(r) {
                             return {
+                                id: r.id,  // Thêm ID field
                                 date: r.overtime_date,
                                 user_name: r.employee_name,
                                 employee_id: r.employee_id,
+                                employee_name: r.employee_name,  // Thêm employee_name
                                 department: r.department,
                                 reason: r.reason,
                                 total_hours: r.total_hours,
@@ -396,6 +411,10 @@
                         updateSummaryCards();
                         applyGlobalFilter();
                     }
+                })
+                .catch(function(error) {
+                    console.error('Error loading statistics:', error);
+                    showNotification('Lỗi khi tải dữ liệu: ' + error.message, 'error');
                 });
         }
 
@@ -846,6 +865,9 @@
             html += '</tr></thead><tbody>';
             
             items.forEach(function(r, index) {
+                // Debug log để kiểm tra data
+                console.log('Request data:', r);
+                
                 const statusClass = r.status === 'approved' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : r.status === 'pending' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
                 const statusText = r.status === 'approved' ? 'Đã duyệt' : r.status === 'pending' ? 'Chờ duyệt' : 'Từ chối';
                 
@@ -862,6 +884,10 @@
                 }
                 
                 const employeeName = r.employee_name || r.requester_name || 'N/A';
+                const requestId = r.id || r.request_id || 'undefined';
+                
+                // Debug log cho ID
+                console.log('Request ID:', requestId, 'Employee:', employeeName);
                 
                 html += '<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">';
                 html += '<td class="px-4 py-3 text-center border border-slate-200 dark:border-slate-700"><span class="font-semibold text-slate-600 dark:text-slate-400">' + (index + 1) + '</span></td>';
@@ -871,7 +897,7 @@
                 html += '<td class="px-4 py-3 border border-slate-200 dark:border-slate-700"><div class="text-slate-600 dark:text-slate-400 text-sm whitespace-pre-wrap">' + (r.reason || '-') + '</div></td>';
                 html += '<td class="px-4 py-3 text-center border border-slate-200 dark:border-slate-700"><div class="text-slate-700 dark:text-slate-300 text-xs">' + approverDisplay + '</div></td>';
                 html += '<td class="px-4 py-3 text-center border border-slate-200 dark:border-slate-700"><span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ' + statusClass + '">' + statusText + '</span></td>';
-                html += '<td class="px-4 py-3 text-center border border-slate-200 dark:border-slate-700"><button onclick="event.stopPropagation(); deleteOvertimeRequestFromModal(' + r.id + ', \'' + employeeName.replace(/'/g, "\\'") + '\')" class="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Xóa yêu cầu"><span class="material-symbols-outlined text-sm">delete</span></button></td>';
+                html += '<td class="px-4 py-3 text-center border border-slate-200 dark:border-slate-700"><button onclick="event.stopPropagation(); deleteOvertimeRequestFromModal(' + requestId + ', \'' + employeeName.replace(/'/g, "\\'") + '\')" class="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Xóa yêu cầu"><span class="material-symbols-outlined text-sm">delete</span></button></td>';
                 html += '</tr>';
             });
             
@@ -895,6 +921,13 @@
         });
 
         function deleteOvertimeRequestFromModal(requestId, employeeName) {
+            // Validate requestId
+            if (!requestId || requestId === 'undefined') {
+                console.error('Invalid requestId:', requestId);
+                showNotification('Lỗi: ID yêu cầu không hợp lệ', 'error');
+                return;
+            }
+            
             // Store pending delete info
             pendingDeleteRequest = { id: requestId, name: employeeName };
             
@@ -915,6 +948,14 @@
             const requestId = pendingDeleteRequest.id;
             const employeeName = pendingDeleteRequest.name;
             
+            // Validate requestId again
+            if (!requestId || requestId === 'undefined') {
+                console.error('Invalid requestId in confirmDelete:', requestId);
+                showNotification('Lỗi: ID yêu cầu không hợp lệ', 'error');
+                closeDeleteConfirm();
+                return;
+            }
+            
             // Close confirmation modal
             closeDeleteConfirm();
 
@@ -924,7 +965,18 @@
                     'Content-Type': 'application/json'
                 }
             })
-            .then(function(response) { return response.json(); })
+            .then(function(response) {
+                // Check if response is ok
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                }
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server returned non-JSON response');
+                }
+                return response.json();
+            })
             .then(function(data) {
                 if (data.success) {
                     showNotification('Đã xóa yêu cầu thành công!', 'success');

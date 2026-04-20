@@ -6,7 +6,7 @@
     <title>Admin Dashboard - OKI VIETNAM HR</title>
     <meta name="theme-color" content="#136dec"/>
     <link rel="manifest" href="/static/manifest.json"/>
-    <link rel="icon" type="image/svg+xml" href="/static/icon.svg"/>
+    <link rel="icon" type="image/png" href="/static/icon.png"/>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -67,7 +67,7 @@
                             <span class="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">Hôm nay</span>
                         </div>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <!-- Người dùng hoạt động -->
                             <div class="flex items-start gap-4">
                                 <div class="w-14 h-14 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
@@ -91,22 +91,18 @@
                                     <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">người</p>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Đăng ký cơm ngày mai - Full width -->
-                        <div class="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+
+                            <!-- Đăng ký cơm ngày mai -->
                             <div class="flex items-start gap-4">
                                 <div class="w-14 h-14 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center flex-shrink-0">
                                     <span class="material-symbols-outlined text-purple-600 dark:text-purple-400 text-3xl">restaurant</span>
                                 </div>
                                 <div class="flex-1">
                                     <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Đăng ký cơm ngày mai</p>
-                                    <div class="flex items-center gap-6">
-                                        <p class="text-4xl font-black text-slate-900 dark:text-slate-100">{{ total_meals or 0 }}</p>
-                                        <div class="flex items-center gap-4">
-                                            <span class="text-sm text-slate-400 dark:text-slate-500">Thường: <span class="font-bold text-slate-600 dark:text-slate-300 text-lg">{{ normal_meals or 0 }}</span></span>
-                                            <span class="text-sm text-slate-400 dark:text-slate-500">Cải thiện: <span class="font-bold text-purple-600 dark:text-purple-400 text-lg">{{ special_meals or 0 }}</span></span>
-                                        </div>
+                                    <p class="text-4xl font-black text-slate-900 dark:text-slate-100">{{ total_meals or 0 }}</p>
+                                    <div class="flex flex-col gap-1 mt-1">
+                                        <span class="text-xs text-slate-400 dark:text-slate-500">Thường: <span class="font-bold text-slate-600 dark:text-slate-300">{{ normal_meals or 0 }}</span></span>
+                                        <span class="text-xs text-slate-400 dark:text-slate-500">Cải thiện: <span class="font-bold text-purple-600 dark:text-purple-400">{{ special_meals or 0 }}</span></span>
                                     </div>
                                 </div>
                             </div>

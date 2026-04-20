@@ -175,6 +175,11 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(employee_id=form.employee_id.data).first()
         if user and check_password_hash(user.password, form.password.data):
+            # Auto-activate if work_status is 'working'
+            if user.work_status == 'working' and not user.is_active:
+                user.is_active = True
+                db.session.commit()
+            
             # Check if account is active
             if not user.is_active:
                 flash('Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.', 'error')
@@ -189,7 +194,6 @@ def login():
             session['user_name'] = user.name
             session.permanent = True  # Make session permanent (3 weeks)
             
-            flash('Login successful!', 'success')
             next_page = request.args.get('next')
             return redirect(next_page or url_for('dashboard'))
         else:
@@ -530,9 +534,16 @@ def edit_user(user_id):
             user.work_status = data['work_status']
             print(f"[EDIT USER] Updated work_status: {old_status} → {user.work_status}")
             
-            # Khi nghỉ việc: Xóa tất cả đăng ký cơm trong tương lai
+            # Auto-activate khi chuyển sang 'working'
+            if data['work_status'] == 'working' and not user.is_active:
+                user.is_active = True
+                print(f"[EDIT USER] Auto-activated is_active = True (work_status = working)")
+            
+            # Khi nghỉ việc: Xóa tất cả đăng ký cơm trong tương lai và vô hiệu hóa tài khoản
             if data['work_status'] == 'resigned':
                 print(f"[EDIT USER] User resigned, deleting future meal registrations...")
+                user.is_active = False  # Tự động vô hiệu hóa khi nghỉ việc
+                print(f"[EDIT USER] Auto-deactivated is_active = False (work_status = resigned)")
                 
                 from models import MealRegistration
                 from datetime import date
@@ -557,6 +568,9 @@ def edit_user(user_id):
         # Handle permission fields
         if 'can_approve' in data:
             user.can_approve = data['can_approve'] in ['true', 'True', True, 1, '1']
+            # Người có quyền phê duyệt tự động có quyền đăng ký
+            if user.can_approve:
+                user.can_register = True
         if 'can_register' in data:
             user.can_register = data['can_register'] in ['true', 'True', True, 1, '1']
         
@@ -1192,7 +1206,6 @@ def list_overtime_requests():
                     'employee_name': r.employee_name or '',
                     'employee_id': r.employee_id or '',
                     'department': r.department or '',
-                    'position': r.position or '',
                     'overtime_date': r.overtime_date.strftime('%Y-%m-%d') if r.overtime_date else '',
                     'start_time': r.start_time.strftime('%H:%M') if r.start_time else '',
                     'end_time': r.end_time.strftime('%H:%M') if r.end_time else '',
@@ -1225,6 +1238,29 @@ def list_overtime_requests():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 # ============= END OVERTIME APPROVAL ROUTES =============
+
+@app.route('/admin/overtime-requests/<int:request_id>/delete', methods=['POST'])
+@login_required
+def delete_overtime_request(request_id):
+    """Delete an overtime request (admin only)"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Bạn không có quyền xóa yêu cầu này'}), 403
+    
+    try:
+        overtime_request = OvertimeRequest.query.get(request_id)
+        if not overtime_request:
+            return jsonify({'success': False, 'message': 'Không tìm thấy yêu cầu'}), 404
+        
+        db.session.delete(overtime_request)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Đã xóa yêu cầu thành công'})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting overtime request: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': 'Có lỗi xảy ra khi xóa yêu cầu'}), 500
 
 # ============= MANAGER OVERTIME APPROVAL ROUTES =============
 @app.route('/manager/overtime-approvals')
@@ -1311,7 +1347,6 @@ def get_manager_overtime_requests():
                 'employee_name': r.employee_name,
                 'employee_id': r.employee_id,
                 'department': r.department,
-                'position': r.position or '',
                 'overtime_date': r.overtime_date.strftime('%Y-%m-%d'),
                 'start_time': r.start_time.strftime('%H:%M') if r.start_time else '00:00',
                 'end_time': r.end_time.strftime('%H:%M') if r.end_time else '00:00',
@@ -2666,7 +2701,6 @@ def overtime():
             existing_request.user_id = current_user.id
             existing_request.employee_id = current_user.employee_id
             existing_request.employee_name = current_user.name
-            existing_request.position = current_user.pos.name if current_user.pos else 'Chưa xác định'
             existing_request.total_hours = num_people  # Store number of people in total_hours field
             existing_request.reason = reason
             existing_request.status = 'pending'
@@ -2683,7 +2717,6 @@ def overtime():
                 employee_id=current_user.employee_id,
                 employee_name=current_user.name,
                 department=department_name,
-                position=current_user.pos.name if current_user.pos else 'Chưa xác định',
                 overtime_date=overtime_date,
                 start_time=time(17, 0),  # Dummy value
                 end_time=time(19, 0),    # Dummy value
@@ -2797,7 +2830,8 @@ def self_approve_overtime_request(request_id):
 @login_required
 def leave():
     # Check if user has permission to register leave
-    if not current_user.can_register:
+    # Managers (can_approve=True) automatically have registration permission
+    if not current_user.can_register and not current_user.can_approve:
         flash('Bạn không có quyền đăng ký nghỉ phép', 'error')
         return redirect(url_for('dashboard'))
     
@@ -2837,7 +2871,6 @@ def leave():
             employee_id=current_user.employee_id,
             employee_name=current_user.name,
             department=current_user.dept.name if current_user.dept else 'Chưa xác định',
-            position=current_user.pos.name if current_user.pos else 'Chưa xác định',
             leave_type=leave_type,
             start_date=start_date_obj,
             end_date=end_date_obj,
@@ -2952,7 +2985,6 @@ def exit_entry():
             employee_id=current_user.employee_id,
             employee_name=current_user.name,
             department=current_user.dept.name if current_user.dept else 'Chưa xác định',
-            position=current_user.pos.name if current_user.pos else 'Chưa xác định',
             request_date=request_date_obj,
             exit_time=exit_time_obj,
             entry_time=entry_time_obj,

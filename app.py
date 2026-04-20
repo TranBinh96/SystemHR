@@ -4,6 +4,7 @@ from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
+from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -28,6 +29,9 @@ migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
+
+# Initialize CSRF Protection
+csrf = CSRFProtect(app)
 
 # Initialize JWT
 jwt = JWTManager(app)
@@ -885,23 +889,73 @@ def download_users_template():
     )
 
 
-@app.route('/admin/users/import', methods=['POST'])
+
+
+@app.route('/admin/users/check-exists', methods=['POST'])
 @login_required
-def import_users_excel():
-    """Import users from Excel file"""
+def check_users_exist():
+    """Check if users exist by employee_id"""
     if current_user.role != 'admin':
         return {'success': False, 'message': 'Không có quyền'}, 403
     
+    try:
+        data = request.get_json()
+        employee_ids = data.get('employee_ids', [])
+        
+        if not employee_ids:
+            return {'success': True, 'existing_ids': []}
+        
+        # Query existing users
+        existing_users = User.query.filter(User.employee_id.in_(employee_ids)).all()
+        existing_ids = [user.employee_id for user in existing_users]
+        
+        return {
+            'success': True,
+            'existing_ids': existing_ids
+        }
+    except Exception as e:
+        print(f"Error checking users: {str(e)}")
+        return {'success': False, 'message': str(e)}, 500
+
+
+@app.route('/admin/users/import', methods=['POST', 'OPTIONS'])
+@login_required
+def import_users_excel():
+    """Import users from Excel file"""
+    # Handle OPTIONS request for CORS
+    if request.method == 'OPTIONS':
+        return '', 204
+    
+    if current_user.role != 'admin':
+        return {'success': False, 'message': 'Không có quyền'}, 403
+    
+    # Debug logging
+    print(f"\n=== IMPORT REQUEST DEBUG ===")
+    print(f"Request method: {request.method}")
+    print(f"Request content type: {request.content_type}")
+    print(f"Request files keys: {list(request.files.keys())}")
+    print(f"Request form keys: {list(request.form.keys())}")
+    print(f"Request files: {request.files}")
+    print(f"Request data: {request.data[:100] if request.data else 'No data'}")
+    
     if 'file' not in request.files:
+        print("ERROR: 'file' not in request.files")
+        print(f"Available keys: {list(request.files.keys())}")
         return {'success': False, 'message': 'Không có file được tải lên'}, 400
     
     file = request.files['file']
+    print(f"File received: {file.filename}")
     
     if file.filename == '':
+        print("ERROR: file.filename is empty")
         return {'success': False, 'message': 'Không có file được chọn'}, 400
     
     if not file.filename.endswith(('.xlsx', '.xls')):
+        print(f"ERROR: Invalid file extension: {file.filename}")
         return {'success': False, 'message': 'File phải là định dạng Excel (.xlsx hoặc .xls)'}, 400
+    
+    print(f"File validation passed, starting import...")
+    print(f"=== END DEBUG ===\n")
     
     import openpyxl
     from models import Department
@@ -916,6 +970,8 @@ def import_users_excel():
         if not rows:
             return {'success': False, 'message': 'File Excel không có dữ liệu'}, 400
         
+        print(f"[IMPORT] Total rows to process: {len(rows)}")
+        
         success_count = 0
         error_count = 0
         errors = []
@@ -924,7 +980,10 @@ def import_users_excel():
             try:
                 # Skip empty rows
                 if not any(row):
+                    print(f"[IMPORT] Row {row_idx}: Empty row, skipping")
                     continue
+                
+                print(f"[IMPORT] Processing row {row_idx}: {row[:3]}")  # Print first 3 columns
                 
                 employee_id = str(row[0]).strip() if row[0] else None
                 name = str(row[1]).strip() if row[1] else None
@@ -935,16 +994,13 @@ def import_users_excel():
                 can_approve = str(row[6]).strip().lower() == 'true' if row[6] else False
                 can_register = str(row[7]).strip().lower() == 'true' if row[7] else False
                 
+                print(f"[IMPORT] Row {row_idx}: employee_id={employee_id}, name={name}, dept={department_name}")
+                
                 # Validate required fields
                 if not employee_id or not name or not department_name:
-                    errors.append(f"Dòng {row_idx}: Thiếu thông tin bắt buộc (Mã NV, Tên, Phòng ban)")
-                    error_count += 1
-                    continue
-                
-                # Check if user already exists
-                existing_user = User.query.filter_by(employee_id=employee_id).first()
-                if existing_user:
-                    errors.append(f"Dòng {row_idx}: Mã nhân viên {employee_id} đã tồn tại")
+                    error_msg = f"Dòng {row_idx}: Thiếu thông tin bắt buộc (Mã NV, Tên, Phòng ban)"
+                    print(f"[IMPORT] {error_msg}")
+                    errors.append(error_msg)
                     error_count += 1
                     continue
                 
@@ -968,35 +1024,62 @@ def import_users_excel():
                 if work_status not in ['working', 'business_trip', 'resigned']:
                     work_status = 'working'
                 
-                # Create new user
-                new_user = User(
-                    employee_id=employee_id,
-                    name=name,
-                    department_id=department.id,
-                    role=role,
-                    work_status=work_status,
-                    is_active=True,
-                    can_approve=can_approve,
-                    can_register=can_register
-                )
-                new_user.set_password(password)
-                
-                db.session.add(new_user)
-                success_count += 1
+                # Check if user already exists - UPDATE instead of skip
+                existing_user = User.query.filter_by(employee_id=employee_id).first()
+                if existing_user:
+                    # UPDATE existing user
+                    existing_user.name = name
+                    existing_user.department_id = department.id
+                    existing_user.role = role
+                    existing_user.work_status = work_status
+                    existing_user.can_approve = can_approve
+                    existing_user.can_register = can_register
+                    # Only update password if provided and not default
+                    if password and password != '123456':
+                        existing_user.set_password(password)
+                    success_count += 1
+                    print(f"[IMPORT] Updated user: {employee_id}")
+                else:
+                    # CREATE new user
+                    new_user = User(
+                        employee_id=employee_id,
+                        name=name,
+                        department_id=department.id,
+                        role=role,
+                        work_status=work_status,
+                        is_active=True,
+                        can_approve=can_approve,
+                        can_register=can_register
+                    )
+                    new_user.set_password(password)
+                    db.session.add(new_user)
+                    success_count += 1
+                    print(f"[IMPORT] Created user: {employee_id}")
                 
             except Exception as e:
-                errors.append(f"Dòng {row_idx}: Lỗi - {str(e)}")
+                error_msg = f"Dòng {row_idx}: Lỗi - {str(e)}"
+                print(f"[IMPORT] {error_msg}")
+                import traceback
+                print(traceback.format_exc())
+                errors.append(error_msg)
                 error_count += 1
                 continue
+        
+        print(f"[IMPORT] Finished processing. Success: {success_count}, Errors: {error_count}")
         
         # Commit all changes
         if success_count > 0:
             db.session.commit()
+            print(f"[IMPORT] Committed {success_count} changes to database")
+        else:
+            print(f"[IMPORT] No changes to commit")
         
         # Prepare response message
         message = f"Import thành công {success_count} user"
         if error_count > 0:
             message += f", {error_count} lỗi"
+        
+        print(f"[IMPORT] Response: {message}")
         
         return {
             'success': True,
@@ -1004,10 +1087,13 @@ def import_users_excel():
             'success_count': success_count,
             'error_count': error_count,
             'errors': errors[:10]  # Limit to first 10 errors
-        }
+        }, 200
         
     except Exception as e:
         db.session.rollback()
+        import traceback
+        print(f"Import error: {str(e)}")
+        print(traceback.format_exc())
         return {'success': False, 'message': f'Lỗi khi đọc file: {str(e)}'}, 500
 
 

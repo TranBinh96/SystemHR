@@ -33,6 +33,8 @@
         
     {% include 'includes/admin_sidebar_styles.html' %}
     </style>
+    <!-- CSRF Token for AJAX requests -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="bg-slate-50 dark:bg-slate-900">
     <div class="flex h-screen">
@@ -2748,10 +2750,7 @@
 
         function closeImportConfirmModal() {
             document.getElementById('importConfirmModal').classList.add('hidden');
-            const fileInput = document.getElementById('importFileInput');
-            if (fileInput) fileInput.value = '';
-            importFileData = null;
-            importPreviewData = [];
+            // Don't reset file here - it will be reset after successful import
         }
 
         async function handleImportFile(input) {
@@ -2766,15 +2765,16 @@
                 return;
             }
 
-            // Store file
+            // Store file FIRST - before reading
             importFileData = file;
+            console.log('File stored:', file.name, file.size, 'bytes');
 
             // Show file info
             document.getElementById('importFileName').textContent = file.name;
             
             // Read Excel file using FileReader
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
@@ -2787,16 +2787,50 @@
                     importPreviewData = rows;
                     document.getElementById('importRowCount').textContent = rows.length;
                     
+                    // Check which users already exist
+                    const employeeIds = rows.map(row => row[0]).filter(id => id);
+                    let existingIds = [];
+                    
+                    try {
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+                        const checkResponse = await fetch('{{ url_for("check_users_exist") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken || ''
+                            },
+                            body: JSON.stringify({ employee_ids: employeeIds })
+                        });
+                        
+                        if (checkResponse.ok) {
+                            const result = await checkResponse.json();
+                            existingIds = result.existing_ids || [];
+                            console.log('Existing users:', existingIds);
+                        }
+                    } catch (error) {
+                        console.error('Error checking existing users:', error);
+                    }
+                    
                     // Show preview in table
                     const previewBody = document.getElementById('importPreviewBody');
                     previewBody.innerHTML = '';
                     
                     rows.forEach((row, index) => {
+                        const employeeId = row[0];
+                        const isExisting = existingIds.includes(employeeId);
+                        
                         const tr = document.createElement('tr');
-                        tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700/50';
+                        // Yellow background for existing users
+                        tr.className = isExisting 
+                            ? 'bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30' 
+                            : 'hover:bg-slate-50 dark:hover:bg-slate-700/50';
+                        
                         tr.innerHTML = `
                             <td class="px-3 py-2 text-sm text-slate-500">${index + 1}</td>
-                            <td class="px-3 py-2 text-sm font-medium">${row[0] || ''}</td>
+                            <td class="px-3 py-2 text-sm font-medium">
+                                ${row[0] || ''}
+                                ${isExisting ? '<span class="ml-2 px-2 py-0.5 text-xs bg-yellow-200 text-yellow-800 rounded">UPDATE</span>' : ''}
+                            </td>
                             <td class="px-3 py-2 text-sm">${row[1] || ''}</td>
                             <td class="px-3 py-2 text-sm">${row[2] || ''}</td>
                             <td class="px-3 py-2 text-sm">
@@ -2830,12 +2864,16 @@
         }
 
         async function confirmImport() {
-            if (!importFileData) {
-                showNotification('Không có file để import', 'error');
+            // Get file BEFORE closing modal
+            const fileInput = document.getElementById('importFileInput');
+            const fileToUpload = importFileData || (fileInput && fileInput.files[0]);
+            
+            if (!fileToUpload) {
+                showNotification('Không tìm thấy file để import', 'error');
                 return;
             }
 
-            // Close modal
+            // Close modal AFTER getting file
             closeImportConfirmModal();
 
             // Show loading
@@ -2843,28 +2881,51 @@
 
             try {
                 const formData = new FormData();
-                formData.append('file', importFileData);
+                formData.append('file', fileToUpload);
+                
+                // Get CSRF token from meta tag
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+                
+                console.log('Import debug:');
+                console.log('  - File:', fileToUpload.name, fileToUpload.size, 'bytes');
+                console.log('  - CSRF token:', csrfToken ? csrfToken.substring(0, 20) + '...' : 'NOT FOUND');
+                console.log('  - FormData entries:', Array.from(formData.entries()).map(e => [e[0], e[1].name || e[1]]));
 
                 const response = await fetch('{{ url_for("import_users_excel") }}', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    headers: csrfToken ? {'X-CSRFToken': csrfToken} : {}
                 });
-
-                const result = await response.json();
 
                 // Hide loading toast
                 if (loadingToast && loadingToast.remove) {
                     loadingToast.remove();
                 }
 
+                // Check if response is ok
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Import error response:', response.status, errorText);
+                    showNotification(`Lỗi ${response.status}: ${errorText || 'Import thất bại'}`, 'error');
+                    // Reset file on error
+                    resetImportData();
+                    return;
+                }
+
+                const result = await response.json();
+
                 if (result.success) {
                     showNotification(result.message, 'success');
+                    // Reset file on success
+                    resetImportData();
                     // Refresh table after 500ms
                     setTimeout(() => {
                         refreshTableData();
                     }, 500);
                 } else {
                     showNotification(result.message || 'Import thất bại', 'error');
+                    // Reset file on error
+                    resetImportData();
                 }
             } catch (error) {
                 // Hide loading toast
@@ -2873,8 +2934,14 @@
                 }
                 console.error('Import error:', error);
                 showNotification('Lỗi khi import file: ' + error.message, 'error');
+                // Reset file on error
+                resetImportData();
             }
+        }
 
+        function resetImportData() {
+            const fileInput = document.getElementById('importFileInput');
+            if (fileInput) fileInput.value = '';
             importFileData = null;
             importPreviewData = [];
         }

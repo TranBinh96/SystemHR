@@ -389,13 +389,18 @@
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
             
-            // Registration rules:
-            // - Can only register for tomorrow (not today or past dates)
-            // - Can register for tomorrow only before 4 PM (16h) today
+            // NEW LOGIC: 
+            // - TODAY: Lock registration, only show QR ticket button
+            // - TOMORROW and beyond: Allow registration (before 4 PM for tomorrow)
             let canRegister = true;
+            let isTodaySelected = selectedDay.getTime() === today.getTime();
             
-            // Block past dates and today (before today or today)
-if (selectedDay < today) {
+            // Block past dates
+            if (selectedDay < today) {
+                canRegister = false;
+            }
+            // Block TODAY - only allow QR ticket
+            else if (isTodaySelected) {
                 canRegister = false;
             }
             // Block tomorrow if after 16h today
@@ -406,11 +411,24 @@ if (selectedDay < today) {
             // Combine both checks
             const isDisabled = !canRegister || isLocked;
             
-            // No warning banner - removed per user request
+            // Warning banner for TODAY
             let warningBanner = '';
+            if (isTodaySelected) {
+                warningBanner = `
+                    <div class="col-span-2 lg:col-span-4 mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-yellow-600 text-2xl">info</span>
+                            <div>
+                                <p class="font-semibold text-yellow-800">Ngày hôm nay đã khóa đăng ký</p>
+                                <p class="text-sm text-yellow-700 mt-1">Bạn chỉ có thể xem và lấy phiếu suất ăn. Để đăng ký, vui lòng chọn ngày mai trở đi.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
             
-            // If no meal selected, auto-select "Bình Thường" (is_special = false) ONLY on first load
-            if (!selectedId && !window.hasAutoSelected && !isDisabled) {
+            // If no meal selected, auto-select "Bình Thường" (is_special = false) ONLY on first load and NOT today
+            if (!selectedId && !window.hasAutoSelected && !isDisabled && !isTodaySelected) {
                 const normalMeal = menus.find(m => !m.is_special);
                 if (normalMeal) {
                     selectedId = normalMeal.id;
@@ -425,19 +443,26 @@ if (selectedDay < today) {
                 selectedMealId = selectedId;
             }
             
-            // Add QR ticket action button only when special meal is selected (no card)
+            // QR ticket button - Show for TODAY or when special meal is selected
             const selectedMeal = menus.find(m => m.id === selectedId);
             let qrButtonHtml = '';
-            if (selectedMeal && selectedMeal.is_special) {
+            
+            // Show QR button if:
+            // 1. TODAY is selected (regardless of meal type)
+            // 2. OR special meal is selected (any day)
+            if (isTodaySelected || (selectedMeal && selectedMeal.is_special)) {
+                const buttonText = isTodaySelected ? 'Lấy phiếu suất ăn' : 'Lấy phiếu cải thiện';
+                const buttonColor = isTodaySelected ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700';
+                
                 qrButtonHtml = `
-                    <div class="col-span-2 lg:col-span-4 flex justify-center mb-2">
+                    <div class="col-span-2 lg:col-span-4 flex justify-center mb-4">
                         <button
                             type="button"
                             onclick="openQrModal('https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(username)}')"
-                            class="inline-flex items-center gap-2 px-5 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold text-sm transition-colors shadow"
+                            class="inline-flex items-center gap-2 px-6 py-3 ${buttonColor} text-white rounded-lg font-bold text-base transition-colors shadow-lg"
                         >
-                            <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1">qr_code</span>
-                            Lấy phiếu cải thiện
+                            <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1">qr_code</span>
+                            ${buttonText}
                         </button>
                     </div>
                 `;

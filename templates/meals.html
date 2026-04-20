@@ -255,10 +255,18 @@
 
             const now = new Date();
             const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const currentHour = now.getHours();
 
-            // Hiển thị đúng 7 ngày liên tiếp: hôm nay + 6 ngày tiếp theo
-            const startDate = new Date(todayOnly);
-            startDate.setDate(todayOnly.getDate() + (currentWeekOffset * 7));
+            // NEW LOGIC: After 14h (2 PM), hide today and show from tomorrow
+            let startDate = new Date(todayOnly);
+            
+            // If after 14h, start from tomorrow
+            if (currentHour >= 14) {
+                startDate.setDate(todayOnly.getDate() + 1);
+            }
+            
+            // Apply week offset
+            startDate.setDate(startDate.getDate() + (currentWeekOffset * 7));
 
             let html = '';
             for (let i = 0; i < 7; i++) {

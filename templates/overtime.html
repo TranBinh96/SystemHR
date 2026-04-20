@@ -522,10 +522,13 @@
         }
 
         function loadPendingRequests() {
-            fetch('/overtime/my-requests')
+            // Add timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            fetch(`/overtime/my-requests?_=${timestamp}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
+                        console.log('Loaded requests:', data.requests.length);
                         // Store all requests globally for time calculation
                         window.allRequests = data.requests;
                         renderMyRequests(data.requests);
@@ -545,9 +548,15 @@
             const myRequestsSection = document.getElementById('my-requests-section');
             const tabBadge = document.getElementById('tab-status-badge');
             
+            console.log('Rendering requests:', requests.length);
+            
             if (requests.length === 0) {
                 // Ẩn cả section "Yêu cầu của bạn"
                 myRequestsSection.classList.add('hidden');
+                // Hide badge when no requests
+                tabBadge.classList.add('hidden');
+                tabBadge.textContent = '0';
+                console.log('No requests - badge hidden');
                 return;
             } else {
                 // Hiện section "Yêu cầu của bạn"
@@ -556,13 +565,17 @@
             
             // Count only pending requests from user's own requests
             const myPendingCount = requests.filter(r => r.status === 'pending').length;
+            console.log('Pending count:', myPendingCount);
             
             // Update badge - only show user's pending count
             if (myPendingCount > 0) {
                 tabBadge.textContent = myPendingCount;
                 tabBadge.classList.remove('hidden');
+                console.log('Badge updated to:', myPendingCount);
             } else {
                 tabBadge.classList.add('hidden');
+                tabBadge.textContent = '0';
+                console.log('No pending requests - badge hidden');
             }
             
             // Pagination logic
@@ -729,8 +742,10 @@
         function confirmAction() {
             if (pendingCancelId) {
                 pendingCancelId();
+                // Don't close modal here - let the callback handle it
+            } else {
+                closeConfirmModal();
             }
-            closeConfirmModal();
         }
         
         function cancelRequest(id) {
@@ -739,6 +754,14 @@
                 'Bạn có chắc muốn hủy yêu cầu này?',
                 () => {
                     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+                    
+                    // Show loading state
+                    const confirmBtn = document.querySelector('#confirmModal button[onclick="confirmAction()"]');
+                    if (confirmBtn) {
+                        confirmBtn.disabled = true;
+                        confirmBtn.textContent = 'Đang xử lý...';
+                    }
+                    
                     fetch(`/overtime/${id}/cancel`, {
                         method: 'POST',
                         headers: csrfToken ? {'X-CSRFToken': csrfToken} : {}
@@ -746,15 +769,39 @@
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
-                            // Reload danh sách ngay lập tức, không hiện thông báo
-                            loadPendingRequests();
+                            console.log('Cancel successful, reloading data...');
+                            
+                            // Close modal first
+                            closeConfirmModal();
+                            
+                            // Wait a bit longer to ensure server has committed the change
+                            setTimeout(() => {
+                                loadPendingRequests();
+                                console.log('Data reloaded after cancel');
+                            }, 300);
                         } else {
-                            showConfirmModal('Lỗi', data.message, null);
+                            // Reset button state
+                            if (confirmBtn) {
+                                confirmBtn.disabled = false;
+                                confirmBtn.textContent = 'Xác nhận';
+                            }
+                            closeConfirmModal();
+                            setTimeout(() => {
+                                showConfirmModal('Lỗi', data.message, null);
+                            }, 100);
                         }
                     })
                     .catch(err => {
                         console.error('Error:', err);
-                        showConfirmModal('Lỗi', 'Có lỗi xảy ra', null);
+                        // Reset button state
+                        if (confirmBtn) {
+                            confirmBtn.disabled = false;
+                            confirmBtn.textContent = 'Xác nhận';
+                        }
+                        closeConfirmModal();
+                        setTimeout(() => {
+                            showConfirmModal('Lỗi', 'Có lỗi xảy ra', null);
+                        }, 100);
                     });
                 }
             );

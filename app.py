@@ -265,30 +265,36 @@ def admin_dashboard():
         flash('You do not have permission to access this page', 'error')
         return render_template('dashboard.html', user=current_user.name)
     
-    # Calculate stats - exclude resigned users and only count employee_id starting with 10 or 20
-    from sqlalchemy import or_
+    # Calculate stats - only count users with work_status='working' and employee_id starting with 10 or 20
+    from sqlalchemy import or_, and_
     
     total_users = User.query.filter(
-        User.work_status != 'resigned',
-        or_(
-            User.employee_id.like('10%'),
-            User.employee_id.like('20%')
+        and_(
+            User.work_status == 'working',
+            or_(
+                User.employee_id.like('10%'),
+                User.employee_id.like('20%')
+            )
         )
     ).count()
     
     working_users = User.query.filter(
-        User.work_status == 'working',
-        or_(
-            User.employee_id.like('10%'),
-            User.employee_id.like('20%')
+        and_(
+            User.work_status == 'working',
+            or_(
+                User.employee_id.like('10%'),
+                User.employee_id.like('20%')
+            )
         )
     ).count()
     
     business_trip_users = User.query.filter(
-        User.work_status == 'business_trip',
-        or_(
-            User.employee_id.like('10%'),
-            User.employee_id.like('20%')
+        and_(
+            User.work_status == 'business_trip',
+            or_(
+                User.employee_id.like('10%'),
+                User.employee_id.like('20%')
+            )
         )
     ).count()
     
@@ -309,13 +315,14 @@ def admin_dashboard():
     from models import Menu
     tomorrow = today + timedelta(days=1)
     
-    # Get all meal registrations for tomorrow - only employee_id starting with 10 or 20
+    # Get all meal registrations for tomorrow - only active users with employee_id starting with 10 or 20
     tomorrow_meals = MealRegistration.query.join(
         User,
         MealRegistration.user_id == User.id
     ).filter(
         MealRegistration.date == tomorrow,
         MealRegistration.has_meal == True,
+        User.work_status == 'working',  # Chỉ đếm user đang hoạt động
         or_(
             User.employee_id.like('10%'),
             User.employee_id.like('20%')

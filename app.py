@@ -1865,12 +1865,13 @@ def admin_stats():
         flash('Không có quyền truy cập', 'error')
         return redirect(url_for('dashboard'))
     
-    # Tự động chạy auto-register 30 ngày mỗi khi vào trang thống kê
-    try:
-        print("\n[ADMIN STATS] Tự động chạy auto-register 30 ngày...")
-        auto_register_meals_for_30_days()
-    except Exception as e:
-        print(f"[ADMIN STATS] Lỗi khi chạy auto-register: {str(e)}")
+    # TẮT auto-register khi vào trang thống kê để tránh chạy quá nhiều lần
+    # Admin có thể dùng nút "Chạy Auto 30 ngày" nếu cần
+    # try:
+    #     print("\n[ADMIN STATS] Tự động chạy auto-register 30 ngày...")
+    #     auto_register_meals_for_30_days()
+    # except Exception as e:
+    #     print(f"[ADMIN STATS] Lỗi khi chạy auto-register: {str(e)}")
     
     return render_template('admin_stats.html')
 
@@ -3471,6 +3472,7 @@ def auto_register_meals_for_user(user_id, days=30):
     """
     try:
         from models import Menu, MealRegistration
+        from sqlalchemy.exc import IntegrityError
         
         user = User.query.get(user_id)
         if not user:
@@ -3488,11 +3490,13 @@ def auto_register_meals_for_user(user_id, days=30):
         registered_count = 0
         skipped_count = 0
         
+        print(f"[AUTO REGISTER USER] Bắt đầu đăng ký cho {user.name} ({user.employee_id}) - {days} ngày")
+        
         # Lặp qua số ngày cần đăng ký
         for day_offset in range(1, days + 1):
             target_date = today + timedelta(days=day_offset)
             
-            # Kiểm tra đã có đăng ký chưa
+            # Kiểm tra đã có đăng ký chưa - QUAN TRỌNG: Chỉ 1 đăng ký/user/ngày
             existing = MealRegistration.query.filter_by(
                 user_id=user.id,
                 date=target_date
@@ -3514,19 +3518,30 @@ def auto_register_meals_for_user(user_id, days=30):
                 skipped_count += 1
                 continue
             
-            # Tạo đăng ký mới
-            new_registration = MealRegistration(
-                user_id=user.id,
-                date=target_date,
-                meal_id=normal_menu.id,
-                meal_type='lunch',
-                has_meal=True,
-                notes='Tự động đăng ký bởi hệ thống'
-            )
-            db.session.add(new_registration)
-            registered_count += 1
+            # Tạo đăng ký mới với xử lý lỗi IntegrityError
+            try:
+                new_registration = MealRegistration(
+                    user_id=user.id,
+                    date=target_date,
+                    meal_id=normal_menu.id,
+                    meal_type='lunch',
+                    has_meal=True,
+                    notes='Tự động đăng ký bởi hệ thống'
+                )
+                db.session.add(new_registration)
+                db.session.flush()  # Flush để kiểm tra constraint ngay lập tức
+                registered_count += 1
+                
+            except IntegrityError:
+                # Nếu có lỗi unique constraint, rollback và bỏ qua
+                db.session.rollback()
+                skipped_count += 1
+                print(f"[AUTO REGISTER USER] Ngày {target_date}: Đã có đăng ký (IntegrityError)")
+                continue
         
         db.session.commit()
+        
+        print(f"[AUTO REGISTER USER] Hoàn thành: {registered_count} đăng ký mới, {skipped_count} bỏ qua")
         
         return {
             'success': True,
@@ -3537,6 +3552,7 @@ def auto_register_meals_for_user(user_id, days=30):
         
     except Exception as e:
         db.session.rollback()
+        print(f"[AUTO REGISTER USER] Lỗi: {str(e)}")
         return {'success': False, 'registered': 0, 'skipped': 0, 'message': f'Lỗi: {str(e)}'}
 
 
@@ -3549,6 +3565,7 @@ def auto_register_meals_for_30_days():
     with app.app_context():
         try:
             from sqlalchemy import or_
+            from sqlalchemy.exc import IntegrityError
             today = datetime.now().date()
             start_date = today + timedelta(days=1)  # Bắt đầu từ ngày mai
             end_date = today + timedelta(days=30)   # Đến 30 ngày sau
@@ -3570,6 +3587,7 @@ def auto_register_meals_for_30_days():
             
             total_registered = 0
             total_skipped = 0
+            total_errors = 0
             days_processed = 0
             
             # Lặp qua 30 ngày
@@ -3590,6 +3608,7 @@ def auto_register_meals_for_30_days():
                 
                 day_registered = 0
                 day_skipped = 0
+                day_errors = 0
                 
                 for user in active_users:
                     # Kiểm tra xem user đã đăng ký chưa (dù bình thường hay cải thiện)
@@ -3601,28 +3620,45 @@ def auto_register_meals_for_30_days():
                     if existing_registration:
                         day_skipped += 1
                     else:
-                        # Tự động đăng ký suất ăn bình thường
-                        new_registration = MealRegistration(
-                            user_id=user.id,
-                            date=target_date,
-                            meal_id=normal_menu.id,
-                            meal_type='lunch',
-                            has_meal=True,
-                            notes='Tự động đăng ký bởi hệ thống'
-                        )
-                        db.session.add(new_registration)
-                        day_registered += 1
+                        # Tự động đăng ký suất ăn bình thường với xử lý lỗi
+                        try:
+                            new_registration = MealRegistration(
+                                user_id=user.id,
+                                date=target_date,
+                                meal_id=normal_menu.id,
+                                meal_type='lunch',
+                                has_meal=True,
+                                notes='Tự động đăng ký bởi hệ thống'
+                            )
+                            db.session.add(new_registration)
+                            db.session.flush()  # Flush để kiểm tra constraint ngay
+                            day_registered += 1
+                            
+                        except IntegrityError:
+                            # Nếu có lỗi unique constraint, rollback và bỏ qua
+                            db.session.rollback()
+                            day_errors += 1
+                            print(f"[AUTO REGISTER] Lỗi duplicate cho {user.employee_id} ngày {target_date.strftime('%d/%m')}")
+                            continue
+                
+                # Commit sau mỗi ngày để tránh rollback toàn bộ
+                try:
+                    db.session.commit()
+                except Exception as e:
+                    print(f"[AUTO REGISTER] Lỗi commit ngày {target_date.strftime('%d/%m')}: {str(e)}")
+                    db.session.rollback()
+                    day_errors += day_registered
+                    day_registered = 0
                 
                 total_registered += day_registered
                 total_skipped += day_skipped
+                total_errors += day_errors
                 days_processed += 1
                 
-                print(f"[AUTO REGISTER] Ngày {target_date.strftime('%d/%m')}: {normal_menu.dish_name[:30]} | Đã có: {day_skipped} | Tự động: {day_registered}")
-            
-            db.session.commit()
+                print(f"[AUTO REGISTER] Ngày {target_date.strftime('%d/%m')}: {normal_menu.dish_name[:30]} | Đã có: {day_skipped} | Tự động: {day_registered} | Lỗi: {day_errors}")
             
             print(f"\n[AUTO REGISTER] ✓ Hoàn thành!")
-            print(f"[AUTO REGISTER] Tổng: {days_processed} ngày | {len(active_users)} users | Đã có: {total_skipped} | Tự động: {total_registered}")
+            print(f"[AUTO REGISTER] Tổng: {days_processed} ngày | {len(active_users)} users | Đã có: {total_skipped} | Tự động: {total_registered} | Lỗi: {total_errors}")
             
         except Exception as e:
             print(f"[AUTO REGISTER] ❌ Lỗi: {str(e)}")

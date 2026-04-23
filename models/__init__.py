@@ -219,6 +219,9 @@ class LeaveRequest(db.Model):
 
 class MealRegistration(db.Model):
     __tablename__ = 'meal_registrations'
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'date', name='unique_user_date_meal'),
+    )
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)

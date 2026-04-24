@@ -10,6 +10,9 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
+# Import timezone utilities
+from utils.timezone_utils import now, today, utcnow, format_local_datetime, format_local_date
+
 from models import db, User, OvertimeRequest, LeaveRequest, MealRegistration, ExitEntryRequest
 from config import Config
 from translations import get_translation
@@ -121,7 +124,7 @@ def check_user_activity():
         
         # Check last activity
         if current_user.last_activity:
-            inactive_duration = datetime.utcnow() - current_user.last_activity
+            inactive_duration = utcnow() - current_user.last_activity  # Use timezone-aware UTC
             max_inactive = timedelta(seconds=app.config['AUTO_LOGOUT_DURATION'])
             
             if inactive_duration > max_inactive:
@@ -132,7 +135,7 @@ def check_user_activity():
         
         # Update last activity
         try:
-            current_user.last_activity = datetime.utcnow()
+            current_user.last_activity = utcnow()  # Use timezone-aware UTC
             db.session.commit()
         except:
             db.session.rollback()
@@ -190,7 +193,7 @@ def login():
                 return render_template('login.html', form=form)
             
             # Update last activity on login
-            user.last_activity = datetime.utcnow()
+            user.last_activity = utcnow()  # Use timezone-aware UTC
             db.session.commit()
             
             # Login user with remember me for 3 weeks
@@ -300,10 +303,10 @@ def admin_dashboard():
     
     # Calculate overtime stats for today
     from datetime import date
-    today = date.today()
+    today_date = today()  # Use timezone-aware today
     
     today_overtime = OvertimeRequest.query.filter(
-        OvertimeRequest.overtime_date == today,
+        OvertimeRequest.overtime_date == today_date,
         OvertimeRequest.status == 'approved'
     ).all()
     
@@ -313,7 +316,7 @@ def admin_dashboard():
     # Calculate meal stats for tomorrow
     from datetime import timedelta
     from models import Menu
-    tomorrow = today + timedelta(days=1)
+    tomorrow = today_date + timedelta(days=1)
     
     # Get all meal registrations for tomorrow - only active users with employee_id starting with 10 or 20
     tomorrow_meals = MealRegistration.query.join(
@@ -558,10 +561,10 @@ def edit_user(user_id):
                 
                 from models import MealRegistration
                 from datetime import date
-                today = date.today()
+                today_date = today()
                 future_registrations = MealRegistration.query.filter(
                     MealRegistration.user_id == user.id,
-                    MealRegistration.date >= today
+                    MealRegistration.date >= today_date
                 ).all()
                 
                 deleted_count = len(future_registrations)
@@ -606,7 +609,7 @@ def edit_user(user_id):
                     os.makedirs(upload_folder, exist_ok=True)
                     
                     # Generate unique filename
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    timestamp = now().strftime('%Y%m%d_%H%M%S')
                     new_filename = f"{user.employee_id}_{timestamp}.{file_ext}"
                     filepath = os.path.join(upload_folder, new_filename)
                     
@@ -744,7 +747,7 @@ def add_user():
                     os.makedirs(upload_folder, exist_ok=True)
                     
                     # Generate unique filename
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    timestamp = now().strftime('%Y%m%d_%H%M%S')
                     new_filename = f"{new_user.employee_id}_{timestamp}.{file_ext}"
                     filepath = os.path.join(upload_folder, new_filename)
                     
@@ -892,7 +895,7 @@ def download_users_template():
         output,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         as_attachment=True,
-        download_name=f'users_template_{datetime.now().strftime("%Y%m%d")}.xlsx'
+        download_name=f'users_template_{today().strftime("%Y%m%d")}.xlsx'
     )
 
 
@@ -1607,8 +1610,8 @@ def get_overtime_reports_data():
     from datetime import datetime, timedelta
     
     period_type = request.args.get('period_type', 'month')
-    period_value = int(request.args.get('period_value', datetime.now().month))
-    year = int(request.args.get('year', datetime.now().year))
+    period_value = int(request.args.get('period_value', now().month))
+    year = int(request.args.get('year', now().year))
     
     # Calculate date range
     if period_type == 'month':
@@ -1738,8 +1741,8 @@ def export_overtime_reports():
         return redirect(url_for('overtime_reports'))
     
     period_type = request.args.get('period_type', 'month')
-    period_value = int(request.args.get('period_value', datetime.now().month))
-    year = int(request.args.get('year', datetime.now().year))
+    period_value = int(request.args.get('period_value', now().month))
+    year = int(request.args.get('year', now().year))
     
     # Calculate date range
     if period_type == 'month':
@@ -1838,8 +1841,8 @@ def admin_meals():
     from datetime import datetime, timedelta
     
     # Get current week (Monday to Sunday)
-    today = datetime.now().date()
-    start_of_week = today - timedelta(days=today.weekday())  # Monday
+    today_date = today()
+    start_of_week = today_date - timedelta(days=today_date.weekday())  # Monday
     
     days_of_week = []
     day_names = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']
@@ -1881,15 +1884,15 @@ def admin_stats():
 def run_auto_register():
     """Manually trigger auto-register for 30 days"""
     if current_user.role != 'admin':
-        return {'success': False, 'message': 'Không có quyền'}, 403
+        return jsonify({'success': False, 'message': 'Không có quyền'}), 403
     
     try:
         print("\n[MANUAL TRIGGER] Admin chạy thủ công auto-register 30 ngày...")
         auto_register_meals_for_30_days()
-        return {'success': True, 'message': 'Đã chạy tự động đăng ký 30 ngày thành công! Xem console để biết chi tiết.'}
+        return jsonify({'success': True, 'message': 'Đã chạy tự động đăng ký 30 ngày thành công! Xem console để biết chi tiết.'})
     except Exception as e:
         print(f"[MANUAL TRIGGER] Lỗi: {str(e)}")
-        return {'success': False, 'message': f'Lỗi: {str(e)}'}, 500
+        return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'}), 500
 
 
 @app.route('/admin/stats/data')
@@ -1907,7 +1910,7 @@ def get_stats_data():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     
-    today = datetime.now().date()
+    today_date = today()
     
     # Nếu có date_from và date_to từ bộ lọc, dùng chúng
     if date_from and date_to:
@@ -1916,11 +1919,11 @@ def get_stats_data():
             end_date = datetime.strptime(date_to, '%Y-%m-%d').date()
         except:
             # Nếu parse lỗi, dùng tuần hiện tại
-            start_date = today - timedelta(days=today.weekday())
+            start_date = today_date - timedelta(days=today_date.weekday())
             end_date = start_date + timedelta(days=6)
     else:
         # Nếu không có bộ lọc, mặc định lấy tuần hiện tại
-        start_date = today - timedelta(days=today.weekday())
+        start_date = today_date - timedelta(days=today_date.weekday())
         end_date = start_date + timedelta(days=6)
     
     period = request.args.get('period', 'custom')  # Để biết loại period cho chart
@@ -1990,7 +1993,7 @@ def get_stats_data():
             # Error processing registration
             continue
     
-    return {
+    return jsonify({
         'success': True,
         'period': period,
         'start_date': start_date.strftime('%d/%m/%Y'),
@@ -2002,7 +2005,7 @@ def get_stats_data():
         },
         'daily_data': daily_data,
         'registrations': registration_list
-    }
+    })
 
 @app.route('/admin/meal-registrations/list')
 def list_meal_registrations():
@@ -2323,7 +2326,7 @@ def upload_meal_image():
     
     # Generate unique filename
     from datetime import datetime
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = now().strftime('%Y%m%d_%H%M%S')
     new_filename = f"{timestamp}_{filename}"
     file_path = os.path.join(upload_dir, new_filename)
     
@@ -2397,11 +2400,11 @@ def download_meal_template():
     ws.row_dimensions[1].height = 22
 
     # Sample rows for single day import with auto-filled dates
-    today = datetime.now().date()
+    today_date = today()
     samples = [
-        [(today + timedelta(days=0)).strftime('%Y-%m-%d'), 'Cơm gà xối mỡ', 'Gà chiên giòn, cơm trắng', 'Bún bò Huế', 'Bún bò đặc biệt'],
-        [(today + timedelta(days=1)).strftime('%Y-%m-%d'), 'Cơm sườn nướng', 'Sườn nướng BBQ', 'Phở bò', 'Phở bò tái chín'],
-        [(today + timedelta(days=2)).strftime('%Y-%m-%d'), 'Cơm chiên dương châu', 'Cơm chiên hải sản', 'Mì quảng', 'Mì quảng tôm thịt'],
+        [(today_date + timedelta(days=0)).strftime('%Y-%m-%d'), 'Cơm gà xối mỡ', 'Gà chiên giòn, cơm trắng', 'Bún bò Huế', 'Bún bò đặc biệt'],
+        [(today_date + timedelta(days=1)).strftime('%Y-%m-%d'), 'Cơm sườn nướng', 'Sườn nướng BBQ', 'Phở bò', 'Phở bò tái chín'],
+        [(today_date + timedelta(days=2)).strftime('%Y-%m-%d'), 'Cơm chiên dương châu', 'Cơm chiên hải sản', 'Mì quảng', 'Mì quảng tôm thịt'],
     ]
     sample_fill = PatternFill(fill_type='solid', fgColor='F5F5F5')
     for r, row in enumerate(samples, 2):
@@ -2469,11 +2472,11 @@ def import_meals_excel():
             try:
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
             except ValueError:
-                start_date = datetime.now().date()
+                start_date = today()
         elif is_7_days:
-            start_date = datetime.now().date()
+            start_date = today()
         else:
-            start_date = datetime.now().date()
+            start_date = today()
 
         day_names = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật']
 
@@ -2745,14 +2748,14 @@ def overtime():
             return redirect(url_for('overtime'))
         
         # Không cho phép đăng ký tăng ca cho ngày hiện tại trở về trước hoặc ngày hiện tại sau 16h
-        now = datetime.now()
-        today = now.date()
-        current_hour = now.hour
+        current_time = now()
+        today_date = current_time.date()
+        current_hour = current_time.hour
         
-        if overtime_date < today:
+        if overtime_date < today_date:
             flash('Không thể đăng ký tăng ca cho ngày đã qua', 'error')
             return redirect(url_for('overtime'))
-        elif overtime_date == today and current_hour >= 16:
+        elif overtime_date == today_date and current_hour >= 16:
             flash('Không thể đăng ký tăng ca cho hôm nay sau 16h', 'error')
             return redirect(url_for('overtime'))
 
@@ -3151,8 +3154,8 @@ def meals():
         return redirect(url_for('meals'))
     
     # Get current week (Monday to Sunday)
-    today = datetime.now().date()
-    start_of_week = today - timedelta(days=today.weekday())  # Monday
+    today_date = today()
+    start_of_week = today_date - timedelta(days=today_date.weekday())  # Monday
     
     days_of_week = []
     day_names = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']
@@ -3193,20 +3196,20 @@ def get_menu_for_date(date):
     ).first()
     
     # Check if registration is locked (after 4 PM for next day)
-    now = datetime.now()
-    today = now.date()
-    current_hour = now.hour
+    current_time = now()
+    today_date = current_time.date()
+    current_hour = current_time.hour
     
     # If it's after 4 PM (16:00) and the selected date is tomorrow, lock registration
     is_locked = False
     if current_hour >= 16:
         from datetime import timedelta
-        tomorrow = today + timedelta(days=1)
+        tomorrow = today_date + timedelta(days=1)
         if date_obj == tomorrow:
             is_locked = True
     
     # Also lock if the date is in the past
-    if date_obj < today:
+    if date_obj < today_date:
         is_locked = True
     
     return {
@@ -3235,8 +3238,8 @@ def get_week_registrations():
     week_offset = int(request.args.get('offset', 0))
     
     # Calculate week start (Monday)
-    today = datetime.now().date()
-    today_with_offset = today + timedelta(days=week_offset * 7)
+    today_date = today()
+    today_with_offset = today_date + timedelta(days=week_offset * 7)
     week_start = today_with_offset - timedelta(days=today_with_offset.weekday())
     
     # Get registrations for the week
@@ -3282,18 +3285,18 @@ def register_meal():
         return {'success': False, 'message': 'Ngày không hợp lệ'}, 400
     
     # Check if registration is locked
-    now = datetime.now()
-    today = now.date()
-    current_hour = now.hour
+    current_time = now()
+    today_date = current_time.date()
+    current_hour = current_time.hour
     
     # If it's after 4 PM (16:00) and trying to register for tomorrow, deny
     if current_hour >= 16:
-        tomorrow = today + timedelta(days=1)
+        tomorrow = today_date + timedelta(days=1)
         if date_obj == tomorrow:
             return {'success': False, 'message': 'Đã quá thời gian đăng ký cho ngày mai (sau 16h)'}, 403
     
     # Don't allow registration for past dates
-    if date_obj < today:
+    if date_obj < today_date:
         return {'success': False, 'message': 'Không thể đăng ký cho ngày đã qua'}, 403
     
     # Check if registration exists
@@ -3337,18 +3340,18 @@ def cancel_meal():
         return {'success': False, 'message': 'Ngày không hợp lệ'}, 400
     
     # Check if cancellation is locked
-    now = datetime.now()
-    today = now.date()
-    current_hour = now.hour
+    current_time = now()
+    today_date = current_time.date()
+    current_hour = current_time.hour
     
     # If it's after 4 PM (16:00) and trying to cancel for tomorrow, deny
     if current_hour >= 16:
-        tomorrow = today + timedelta(days=1)
+        tomorrow = today_date + timedelta(days=1)
         if date_obj == tomorrow:
             return {'success': False, 'message': 'Đã quá thời gian hủy đăng ký cho ngày mai (sau 16h)'}, 403
     
     # Don't allow cancellation for past dates
-    if date_obj < today:
+    if date_obj < today_date:
         return {'success': False, 'message': 'Không thể hủy đăng ký cho ngày đã qua'}, 403
     
     # Find and delete registration
@@ -3371,7 +3374,7 @@ def profile():
     from sqlalchemy import func
     
     # Calculate total overtime hours for current year
-    current_year = datetime.now().year
+    current_year = now().year
     total_overtime_hours = db.session.query(
         func.sum(OvertimeRequest.total_hours)
     ).filter(
@@ -3387,10 +3390,10 @@ def profile():
     ).count()
     
     # Check if today has special meal registration
-    today = datetime.now().date()
+    today_date = today()
     today_meal = MealRegistration.query.filter(
         MealRegistration.user_id == current_user.id,
-        MealRegistration.date == today
+        MealRegistration.date == today_date
     ).first()
     
     has_special_meal_today = False
@@ -3402,7 +3405,7 @@ def profile():
                          total_overtime_hours=float(total_overtime_hours),
                          total_meals=total_meals,
                          has_special_meal_today=has_special_meal_today,
-                         now=datetime.now(),
+                         now=now(),
                          timedelta=timedelta)
 
 @app.route('/change-password', methods=['GET', 'POST'])
@@ -3486,7 +3489,7 @@ def auto_register_meals_for_user(user_id, days=30):
         if not (user.employee_id.startswith('10') or user.employee_id.startswith('20')):
             return {'success': False, 'registered': 0, 'skipped': 0, 'message': 'Mã nhân viên không thuộc 10xx hoặc 20xx'}
         
-        today = datetime.now().date()
+        today_date = today()
         registered_count = 0
         skipped_count = 0
         
@@ -3494,7 +3497,7 @@ def auto_register_meals_for_user(user_id, days=30):
         
         # Lặp qua số ngày cần đăng ký
         for day_offset in range(1, days + 1):
-            target_date = today + timedelta(days=day_offset)
+            target_date = today_date + timedelta(days=day_offset)
             
             # Kiểm tra đã có đăng ký chưa - QUAN TRỌNG: Chỉ 1 đăng ký/user/ngày
             existing = MealRegistration.query.filter_by(
@@ -3564,11 +3567,12 @@ def auto_register_meals_for_30_days():
     """
     with app.app_context():
         try:
+            from datetime import timedelta
             from sqlalchemy import or_
             from sqlalchemy.exc import IntegrityError
-            today = datetime.now().date()
-            start_date = today + timedelta(days=1)  # Bắt đầu từ ngày mai
-            end_date = today + timedelta(days=30)   # Đến 30 ngày sau
+            today_date = today()  # Use timezone-aware today
+            start_date = today_date + timedelta(days=1)  # Bắt đầu từ ngày mai
+            end_date = today_date + timedelta(days=30)   # Đến 30 ngày sau
             
             print(f"\n=== [AUTO REGISTER] Bắt đầu tự động đăng ký 30 ngày ({start_date.strftime('%d/%m/%Y')} → {end_date.strftime('%d/%m/%Y')}) ===")
             
@@ -3592,7 +3596,7 @@ def auto_register_meals_for_30_days():
             
             # Lặp qua 30 ngày
             for day_offset in range(1, 31):
-                target_date = today + timedelta(days=day_offset)
+                target_date = today_date + timedelta(days=day_offset)
                 
                 # Lấy menu bình thường cho ngày này
                 normal_menu = Menu.query.filter(
@@ -3668,7 +3672,7 @@ def auto_register_meals_for_30_days():
 scheduler = BackgroundScheduler()
 scheduler.add_job(
     func=auto_register_meals_for_30_days,
-    trigger=CronTrigger(hour=16, minute=0),  # Chạy lúc 16:00 hàng ngày
+    trigger=CronTrigger(hour=16, minute=0, timezone='Asia/Ho_Chi_Minh'),  # 16:00 VN time
     id='auto_register_meals',
     name='Tự động đăng ký suất ăn 30 ngày',
     replace_existing=True

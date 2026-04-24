@@ -3,23 +3,23 @@
     <div class="flex justify-around items-center h-20 px-4">
         <a class="flex flex-col items-center gap-1 {% if request.endpoint == 'admin_dashboard' %}text-primary{% else %}text-slate-400 dark:text-slate-500{% endif %}" href="{{ url_for('admin_dashboard') }}">
             <span class="material-symbols-outlined text-2xl" {% if request.endpoint == 'admin_dashboard' %}style="font-variation-settings: 'FILL' 1"{% endif %}>dashboard</span>
-            <span class="text-[10px] font-bold uppercase tracking-tighter">Bảng Điều Khiển</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Dashboard</span>
         </a>
         <a class="flex flex-col items-center gap-1 {% if request.endpoint == 'admin_users' %}text-primary{% else %}text-slate-400 dark:text-slate-500{% endif %}" href="{{ url_for('admin_users') }}">
             <span class="material-symbols-outlined text-2xl" {% if request.endpoint == 'admin_users' %}style="font-variation-settings: 'FILL' 1"{% endif %}>group</span>
-            <span class="text-[10px] font-bold uppercase tracking-tighter">Người Dùng</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Users</span>
         </a>
-        <a class="flex flex-col items-center gap-1 {% if request.endpoint == 'admin_overtime_approvals' %}text-primary{% else %}text-slate-400 dark:text-slate-500{% endif %}" href="{{ url_for('admin_overtime_approvals') }}">
-            <span class="material-symbols-outlined text-2xl" {% if request.endpoint == 'admin_overtime_approvals' %}style="font-variation-settings: 'FILL' 1"{% endif %}>schedule</span>
-            <span class="text-[10px] font-bold uppercase tracking-tighter">Làm Thêm</span>
+        <a class="flex flex-col items-center gap-1 {% if request.endpoint == 'admin_departments' %}text-primary{% else %}text-slate-400 dark:text-slate-500{% endif %}" href="{{ url_for('admin_departments') }}">
+            <span class="material-symbols-outlined text-2xl" {% if request.endpoint == 'admin_departments' %}style="font-variation-settings: 'FILL' 1"{% endif %}>corporate_fare</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Phòng Ban</span>
         </a>
-        <a class="flex flex-col items-center gap-1 {% if request.endpoint == 'admin_meals' %}text-primary{% else %}text-slate-400 dark:text-slate-500{% endif %}" href="{{ url_for('admin_meals') }}">
-            <span class="material-symbols-outlined text-2xl" {% if request.endpoint == 'admin_meals' %}style="font-variation-settings: 'FILL' 1"{% endif %}>restaurant</span>
-            <span class="text-[10px] font-bold uppercase tracking-tighter">Thực Đơn</span>
+        <a class="flex flex-col items-center gap-1 {% if request.endpoint == 'admin_stats' %}text-primary{% else %}text-slate-400 dark:text-slate-500{% endif %}" href="{{ url_for('admin_stats') }}">
+            <span class="material-symbols-outlined text-2xl" {% if request.endpoint == 'admin_stats' %}style="font-variation-settings: 'FILL' 1"{% endif %}>bar_chart</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Thống Kê</span>
         </a>
-        <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('profile') }}">
-            <span class="material-symbols-outlined text-2xl">person</span>
-            <span class="text-[10px] font-bold uppercase tracking-tighter">Cá Nhân</span>
+        <a class="flex flex-col items-center gap-1 text-red-500 dark:text-red-400" href="{{ url_for('logout') }}">
+            <span class="material-symbols-outlined text-2xl">logout</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Logout</span>
         </a>
     </div>
 </nav>

@@ -488,24 +488,6 @@
         </div>
     </div>
 
-    <!-- Mobile Bottom Navigation -->
-    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 z-50">
-        <div class="grid grid-cols-4 gap-1 p-2">
-            <a href="{{ url_for('admin_dashboard') }}" class="flex flex-col items-center py-2 px-1 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-xl mb-1">dashboard</span>
-                <span class="text-xs font-medium">Trang chủ</span>
-            </a>
-            <a href="{{ url_for('admin_users') }}" class="flex flex-col items-center py-2 px-1 text-primary bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <span class="material-symbols-outlined text-xl mb-1" style="font-variation-settings: 'FILL' 1">group</span>
-                <span class="text-xs font-medium">Người dùng</span>
-            </a>
-            <a href="{{ url_for('admin_departments') }}" class="flex flex-col items-center py-2 px-1 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-xl mb-1">corporate_fare</span>
-                <span class="text-xs font-medium">Phòng ban</span>
-            </a>
-        </div>
-    </div>
-
     <!-- Custom Confirmation Modal -->
     <div id="confirmModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
@@ -1900,28 +1882,8 @@
 
         // Mobile-specific filter function
         function filterUsersMobile() {
-            const searchTerm = document.getElementById('mobileSearchInput').value.toLowerCase();
-            const userCards = document.querySelectorAll('.user-card');
-
-            let visibleCount = 0;
-
-            userCards.forEach(card => {
-                const employeeId = card.dataset.employeeId;
-                const name = card.dataset.name;
-                const department = card.dataset.department;
-
-                const matchesSearch = !searchTerm || 
-                    employeeId.includes(searchTerm) || 
-                    name.includes(searchTerm) ||
-                    department.toLowerCase().includes(searchTerm);
-
-                if (matchesSearch) {
-                    card.style.display = '';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+            // Use the main filter function that handles both search and tabs
+            filterUsersByTab();
         }
 
         // Pagination Functions
@@ -2465,31 +2427,7 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar (Mobile Only) -->
-    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe shadow-2xl z-50">
-        <div class="flex justify-around items-center h-20 px-4">
-            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_dashboard') }}">
-                <span class="material-symbols-outlined text-2xl">dashboard</span>
-                <span class="text-[10px] font-bold uppercase tracking-tighter">Bảng Điều Khiển</span>
-            </a>
-            <a class="flex flex-col items-center gap-1 text-primary" href="{{ url_for('admin_users') }}">
-                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">group</span>
-                <span class="text-[10px] font-bold uppercase tracking-tighter">Người Dùng</span>
-            </a>
-            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('admin_departments') }}">
-                <span class="material-symbols-outlined text-2xl">corporate_fare</span>
-                <span class="text-[10px] font-bold uppercase tracking-tighter">Phòng Ban</span>
-            </a>
-            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="{{ url_for('profile') }}">
-                <span class="material-symbols-outlined text-2xl">settings</span>
-                <span class="text-[10px] font-bold uppercase tracking-tighter">Cài Đặt</span>
-            </a>
-            <a class="flex flex-col items-center gap-1 text-red-500 dark:text-red-400" href="{{ url_for('logout') }}">
-                <span class="material-symbols-outlined text-2xl">logout</span>
-                <span class="text-[10px] font-bold uppercase tracking-tighter">Đăng Xuất</span>
-            </a>
-        </div>
-    </nav>
+    {% include 'includes/admin_mobile_nav.html' %}
 
     <!-- Avatar Modal -->
     <div id="avatarModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -2627,6 +2565,7 @@
         // Run on load
         document.addEventListener('DOMContentLoaded', function() {
             filterDesktopByTab();
+            filterUsersByTab(); // Also filter mobile cards
         });
         
         function switchTab(tab) {
@@ -2667,7 +2606,9 @@
         
         function filterUsersByTab() {
             const userCards = document.querySelectorAll('.user-card');
+            console.log('filterUsersByTab: Found', userCards.length, 'cards, currentTab:', currentTab);
             
+            let visibleCount = 0;
             userCards.forEach(card => {
                 const workStatus = card.dataset.status;
                 let shouldShow = false;
@@ -2682,17 +2623,24 @@
                 
                 // Also apply search filter
                 const searchTerm = document.getElementById('mobileSearchInput').value.toLowerCase();
-                const employeeId = card.dataset.employeeId;
-                const name = card.dataset.name;
-                const department = card.dataset.department;
+                const employeeId = card.dataset.employeeId || '';
+                const name = card.dataset.name || '';
+                const department = card.dataset.department || '';
                 
                 const matchesSearch = !searchTerm || 
                     employeeId.includes(searchTerm) || 
                     name.includes(searchTerm) ||
                     department.toLowerCase().includes(searchTerm);
                 
-                card.style.display = (shouldShow && matchesSearch) ? '' : 'none';
+                if (shouldShow && matchesSearch) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
             });
+            
+            console.log('filterUsersByTab: Showing', visibleCount, 'cards');
         }
         
         function filterDesktopByTab() {
